@@ -2,7 +2,7 @@ package main
 
 import (
     "fmt"
-    // "flag"
+    // "flag" // want to implement a single download -f mode and accompanying -v verbose
     "os"
     "os/exec"
     "runtime"
