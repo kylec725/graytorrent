@@ -6,6 +6,6 @@ import (
     "github.com/kylec725/graytorrent/torrent"
 )
 
-func TestTorrentPrint(t *testing.T) {
-    torrent.TorrentPrint()
+func TestTrackerPrint(t *testing.T) {
+    torrent.TrackerPrint()
 }
