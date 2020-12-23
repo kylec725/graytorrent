@@ -1,12 +1,8 @@
-package torrent_test
+package torrent
 
-import (
-	"testing"
-
-	"github.com/kylec725/graytorrent/torrent"
-)
+import "testing"
 
 func TestTrackerPrint(t *testing.T) {
-	var ta torrent.Tracker = 2
+	var ta Tracker = 2
 	ta.Print()
 }
