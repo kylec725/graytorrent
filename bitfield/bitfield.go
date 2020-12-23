@@ -23,7 +23,7 @@ func (bf Bitfield) Print() {
 func (bf Bitfield) Has(index int) bool {
 	byteIndex := index / 8
 	offset := index % 8
-	return bf[byteIndex]>>(7-offset)&1 == 1
+	return bf[byteIndex] >> (7 - offset) & 1 == 1
 }
 
 // Set a bit to indicate a new piece
