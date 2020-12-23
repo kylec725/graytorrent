@@ -11,12 +11,12 @@ import (
 // Bitfield tracks the pieces of a torrent that one has
 type Bitfield []byte
 
-// Print the bitfield in a human-readable form
-func (bf Bitfield) Print() {
+func (bf Bitfield) String() string {
+	var bitstring string
 	for _, n := range bf {
-		fmt.Printf("%08b ", n)
+		bitstring += fmt.Sprintf("%08b ", n)
 	}
-	fmt.Printf("\n")
+	return bitstring
 }
 
 // Has checks if we have a piece
