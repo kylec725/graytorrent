@@ -1,9 +1,13 @@
 package torrent
 
 import (
-    "fmt"
+	"fmt"
 )
 
-func TrackerPrint() {
-    fmt.Println("This is the tracker file")
+// Tracker stores information about a torrent tracker
+type Tracker int
+
+// Print the torrent in a human-readable form
+func (tr Tracker) Print() {
+	fmt.Println("This is the tracker file")
 }

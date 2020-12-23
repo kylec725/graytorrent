@@ -1,11 +1,12 @@
 package torrent_test
 
 import (
-    "testing"
+	"testing"
 
-    "github.com/kylec725/graytorrent/torrent"
+	"github.com/kylec725/graytorrent/torrent"
 )
 
 func TestTorrentPrint(t *testing.T) {
-    torrent.TorrentPrint()
+	var to torrent.Torrent = 7
+	to.Print()
 }

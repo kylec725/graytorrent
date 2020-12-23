@@ -1,11 +1,12 @@
 package torrent_test
 
 import (
-    "testing"
+	"testing"
 
-    "github.com/kylec725/graytorrent/torrent"
+	"github.com/kylec725/graytorrent/torrent"
 )
 
 func TestTrackerPrint(t *testing.T) {
-    torrent.TrackerPrint()
+	var ta torrent.Tracker = 2
+	ta.Print()
 }
