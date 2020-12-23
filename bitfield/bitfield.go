@@ -1,3 +1,7 @@
+/*
+Package bitfield is a wrapper for storing bitfields and checking
+for pieces and modifying the bitfield.
+*/
 package bitfield
 
 import (
