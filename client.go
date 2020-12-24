@@ -39,7 +39,8 @@ func Clear() {
 
 // PrintStatus returns current torrents and their status
 func PrintStatus(s string) {
-	fmt.Printf("--- Status --- %s\n", s)
+	fmt.Println("--- Commands [new] [start] [stop] [remove] [quit]")
+	fmt.Printf("--- Status %s\n", s)
 	// for torrent in range(torrents)
 	// torrent.Print()
 }
