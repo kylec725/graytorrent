@@ -1,11 +1,11 @@
 package torrent
 
 import (
-	"testing"
-	"fmt"
+    "testing"
+    "fmt"
 )
 
 func TestTrackerPrint(t *testing.T) {
-	var ta Tracker = 2
-	fmt.Println(ta)
+    var ta Tracker = 2
+    fmt.Println(ta)
 }

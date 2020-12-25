@@ -11,12 +11,36 @@ pieces of the torrent.
 package torrent
 
 import (
-	// "fmt"
+    "fmt"
+    "io/ioutil"
+
+    // bencode "github.com/jackpal/bencode-go"
 )
 
 // Torrent stores metainfo and current progress on a torrent
-type Torrent int
+type Torrent struct {
+    Filename string
+    Announce string
+    PieceLen int
+    Hash [][20]byte
+}
+
+type bencodeFile struct {
+    PieceHash string
+    PieceLen int
+    Length int
+    Name string
+}
 
 func (to Torrent) String() string {
-	return "This is a torrent"
+    return "This is a torrent"
+}
+
+func (to Torrent) read() {
+    contents, err := ioutil.ReadFile(to.Filename)
+    if err != nil {
+        fmt.Println(err)
+    }
+
+    fmt.Printf("file: %v\n", string(contents))
 }
