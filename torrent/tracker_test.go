@@ -6,6 +6,6 @@ import (
 )
 
 func TestTrackerPrint(t *testing.T) {
-    var ta Tracker = 2
+    var ta Tracker
     fmt.Println(ta)
 }

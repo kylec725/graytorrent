@@ -11,36 +11,76 @@ pieces of the torrent.
 package torrent
 
 import (
-    "fmt"
-    "io/ioutil"
+    "os"
+    "strconv"
 
-    // bencode "github.com/jackpal/bencode-go"
+    bencode "github.com/jackpal/bencode-go"
 )
 
 // Torrent stores metainfo and current progress on a torrent
 type Torrent struct {
     Filename string
     Announce string
-    PieceLen int
+    PieceLength int
     Hash [][20]byte
 }
 
+// Use struct with nested struct to decode the bencoded file
+type bencodeMeta struct {
+    Info bencodeInfo `bencode:"info"`
+    Announce string `bencode:"announce"`
+    AnnounceList [][]string `bencode:"announce-list"`
+    Encoding string `bencode:"encoding"`
+}
+
+type bencodeInfo struct {
+    PieceLength int `bencode:"piece length"`
+    Pieces []byte `bencode:"pieces"`
+    Name string `bencode:"name"`
+    Length int `bencode:"length"`
+    Files []bencodeFile `bencode:"files"`
+}
+
 type bencodeFile struct {
-    PieceHash string
-    PieceLen int
-    Length int
-    Name string
+    Length int `bencode:"length"`
+    Path []string `bencode:"path"`
 }
 
-func (to Torrent) String() string {
-    return "This is a torrent"
-}
+func (meta bencodeMeta) String() string {
+    var result string
+    result += "Name: " + meta.Info.Name + "\n"
+    result += "Announce: " + meta.Announce + "\n"
+    for _, addr := range meta.AnnounceList {
+        result += "Announce: " + addr[0] + "\n"
+    }
+    result += "Encoding: " + meta.Encoding + "\n"
+    result += "PieceLength: " + strconv.Itoa(meta.Info.PieceLength) + "\n"
 
-func (to Torrent) read() {
-    contents, err := ioutil.ReadFile(to.Filename)
-    if err != nil {
-        fmt.Println(err)
+    totalLen, paths := meta.Info.Length, ""
+    for _, file := range meta.Info.Files {
+        totalLen += file.Length
+        paths += file.Path[0] + " "
+    }
+    result += "Length: " + strconv.Itoa(totalLen) + "\n"
+    if paths != "" {
+        result += "Paths: " + paths + "\n"
     }
 
-    fmt.Printf("file: %v\n", string(contents))
+    return result
+}
+
+func (to Torrent) read() (bencodeMeta, error) {
+    var meta bencodeMeta
+    file, err := os.Open(to.Filename)
+    if err != nil {
+        return meta, err
+    }
+    defer file.Close()
+
+    err = bencode.Unmarshal(file, &meta)
+    if err != nil {
+        return meta, err
+    }
+
+    return meta, nil
 }
