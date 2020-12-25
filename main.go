@@ -57,7 +57,6 @@ func main() {
             fmt.Scanln(&input)
             result = "[new]"
             // make Torrent(input)
-
         case "start":
             fmt.Printf("Start -> ")
             fmt.Scanln(&input)
