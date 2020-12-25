@@ -69,7 +69,7 @@ func (meta bencodeMeta) String() string {
     return result
 }
 
-func (to Torrent) read() (bencodeMeta, error) {
+func (to Torrent) getMeta() (bencodeMeta, error) {
     var meta bencodeMeta
     file, err := os.Open(to.Filename)
     if err != nil {
