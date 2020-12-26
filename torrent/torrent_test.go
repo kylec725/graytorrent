@@ -19,4 +19,11 @@ func TestMeta(t *testing.T) {
         t.Error("Error getting multi metainfo:", err)
     }
     fmt.Println(meta)
+
+    to = Torrent{Filename: "../tmp/change.torrent"}
+    meta, err = to.getMeta()
+    if err != nil {
+        t.Error("Error getting multiple announce metainfo:", err)
+    }
+    fmt.Println(meta)
 }
