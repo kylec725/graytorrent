@@ -30,10 +30,7 @@ func init() {
 
 // Initialize GUI
 func init() {
-    // gui, err = gocui.NewGui(gocui.OutputNormal)
-    // if err != nil {
-    //     log.Fatalln("Fatal: Interface failed to load", err)
-    // }
+    // Stuff here from gui package
 }
 
 func main() {
@@ -41,22 +38,9 @@ func main() {
     defer gui.Close()
     log.Println("Graytorrent started")
 
-    // if err := gui.MainLoop(); err != nil && err != gocui.ErrQuit {
-    //     log.Fatal("Fatal: Interface crashed.", err)
-    // }
-
     // Send torrent stopped messages
     // Save torrent progresses to history file
 
     log.Println("Successful exit")
 }
 
-func layout(gui *gocui.Gui) error {
-    // Grab max values to create views
-    maxX, maxY := gui.Size()
-    if _, err := gui.SetView("xd", 10, 10, maxX-10, maxY-10); err != gocui.ErrUnknownView {
-        log.Fatalln("Fatal: Error creating view", err)
-    }
-
-    return nil
-}
