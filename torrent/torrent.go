@@ -14,6 +14,8 @@ import (
     "log"
     "os"
     "strconv"
+    "time"
+    "math/rand"
 
     bencode "github.com/jackpal/bencode-go"
 )
@@ -21,9 +23,11 @@ import (
 // Torrent stores metainfo and current progress on a torrent
 type Torrent struct {
     Filename string
-    Announce string
+    Trackers []Tracker
     PieceLength int
-    Hash [][20]byte
+    InfoHash [20]byte
+    PieceHashes [][20]byte
+    ID [20]byte
 }
 
 // Use struct with nested struct to decode the bencoded file
@@ -45,6 +49,21 @@ type bencodeInfo struct {
 type bencodeFile struct {
     Length int `bencode:"length"`
     Path []string `bencode:"path"`
+}
+
+func (to *Torrent) setID() {
+    rand.Seed(time.Now().UnixNano())
+    const chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+    id := "--GT0100--"
+
+    for i := 0; i < 10; i++ {
+        pos := rand.Intn(len(chars))
+        id += string(chars[pos])
+    }
+
+    for i, c := range id {
+        to.ID[i] = byte(c)
+    }
 }
 
 func (meta bencodeMeta) String() string {
