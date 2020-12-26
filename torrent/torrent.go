@@ -11,6 +11,7 @@ pieces of the torrent.
 package torrent
 
 import (
+    "log"
     "os"
     "strconv"
 
@@ -73,12 +74,14 @@ func (to Torrent) getMeta() (bencodeMeta, error) {
     var meta bencodeMeta
     file, err := os.Open(to.Filename)
     if err != nil {
+        log.Println("Could not open file:", to.Filename)
         return meta, err
     }
     defer file.Close()
 
     err = bencode.Unmarshal(file, &meta)
     if err != nil {
+        log.Println("Could not unmarshal bencoded file:", to.Filename)
         return meta, err
     }
 
