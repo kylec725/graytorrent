@@ -4,7 +4,7 @@ import (
     "testing"
     "fmt"
 
-    // "github.com/stretchr/testify/assert"
+    "github.com/stretchr/testify/assert"
 )
 
 func TestTrackerPrint(t *testing.T) {
@@ -14,4 +14,22 @@ func TestTrackerPrint(t *testing.T) {
     }
     tr := Tracker{"example.com/announce", false, 120, testID}
     fmt.Println(tr)
+}
+
+func TestGetTrackers(t *testing.T) {
+    assert := assert.New(t)
+
+    to := Torrent{Filename: "../tmp/change.torrent"}
+    meta, err := to.getMeta()
+    if assert.Nil(err) {
+        assert.NotNil(meta)
+    }
+
+    trackers, err := to.getTrackers()
+    if assert.Nil(err) {
+        for _, tr := range trackers {
+            assert.NotNil(tr)
+            fmt.Println(tr)
+        }
+    }
 }
