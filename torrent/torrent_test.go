@@ -40,5 +40,6 @@ func TestGetID(t *testing.T) {
     halfID := string(to.ID[0:10])
 
     fmt.Println("Generated ID:", string(to.ID[:]))
+    fmt.Println()
     assert.Equal("--GT0100--", halfID, "First half of ID was not set correctly")
 }

@@ -2,6 +2,7 @@ package torrent
 
 import (
     // "fmt"
+    "strconv"
 )
 
 // Tracker stores information about a torrent tracker
@@ -13,7 +14,12 @@ type Tracker struct {
 }
 
 func (tr Tracker) String() string {
-    return "This is a tracker"
+    var result string
+    result += "Announce: " + tr.Announce + "\n"
+    result += "Working: " + strconv.FormatBool(tr.Working) + "\n"
+    result += "Interval: " + strconv.Itoa(tr.Interval) + "\n"
+
+    return result
 }
 
 func (to Torrent) getTrackers() ([]Tracker, error) {
