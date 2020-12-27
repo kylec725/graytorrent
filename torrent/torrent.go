@@ -54,9 +54,9 @@ type bencodeFile struct {
 func (to *Torrent) setID() {
     rand.Seed(time.Now().UnixNano())
     const chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
-    id := "--GT0100--"
+    id := "-GT0100-"
 
-    for i := 0; i < 10; i++ {
+    for i := 0; i < 12; i++ {
         pos := rand.Intn(len(chars))
         id += string(chars[pos])
     }
