@@ -2,7 +2,7 @@ package bitfield
 
 import (
     "testing"
-    "fmt"
+    "strconv"
 
     "github.com/stretchr/testify/assert"
 )
@@ -13,18 +13,18 @@ func TestHas(t *testing.T) {
     var bf Bitfield = []byte{0b01010101, 0b10101010, 0b11001100}
     // Check first byte
     for i, want := 0, false; i < 8; i++ {
-        assert.Equal(want, bf.Has(i), fmt.Sprintf("Got wrong answer checking if we have piece %d", i))
+        assert.Equal(want, bf.Has(i), "Got wrong answer checking if we have piece " + strconv.Itoa(i))
         want = !want
     }
     // Check second byte
     for i, want := 8, true; i < 16; i++ {
-        assert.Equal(want, bf.Has(i), fmt.Sprintf("Got wrong answer checking if we have piece %d", i))
+        assert.Equal(want, bf.Has(i), "Got wrong answer checking if we have piece " + strconv.Itoa(i))
         want = !want
     }
     // Check third byte
     for i, want := 16, true; i < 24; i += 2 {
-        assert.Equal(want, bf.Has(i), fmt.Sprintf("Got wrong answer checking if we have piece %d", i))
-        assert.Equal(want, bf.Has(i + 1), fmt.Sprintf("Got wrong answer checking if we have piece %d", i))
+        assert.Equal(want, bf.Has(i), "Got wrong answer checking if we have piece " + strconv.Itoa(i))
+        assert.Equal(want, bf.Has(i + 1), "Got wrong answer checking if we have piece " + strconv.Itoa(i))
         want = !want
     }
 }
@@ -39,6 +39,6 @@ func TestSet(t *testing.T) {
     }
     // Checking has for every index should return true
     for i := 0; i < 24; i++ {
-        assert.Equal(true, bf.Has(i), fmt.Sprintf("Error setting bit at index %d", i))
+        assert.Equal(true, bf.Has(i), "Error setting bit at index " + strconv.Itoa(i))
     }
 }
