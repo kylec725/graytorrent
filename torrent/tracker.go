@@ -68,3 +68,8 @@ func (to Torrent) getTrackers() ([]Tracker, error) {
 
     return trackers, nil
 }
+
+func (tr Tracker) buildURL() (string, error) {
+
+    return "", nil
+}
