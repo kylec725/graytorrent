@@ -26,6 +26,15 @@ type Torrent struct {
     ID [20]byte
 }
 
+// Setup gets and sets up necessary properties of the torrent object
+func (to *Torrent) Setup() {
+    // get metadata
+    // setID
+    // get InfoHash
+    // get Trackers
+    // build tracker URLs
+}
+
 func (to *Torrent) setID() {
     rand.Seed(time.Now().UnixNano())
     const chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
@@ -39,8 +48,4 @@ func (to *Torrent) setID() {
     for i, c := range id {
         to.ID[i] = byte(c)
     }
-}
-
-func (to *Torrent) getInfoHash() {
-
 }
