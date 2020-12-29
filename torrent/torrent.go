@@ -41,6 +41,6 @@ func (to *Torrent) setID() {
     }
 }
 
-func (to *Torrent) setInfoHash() {
+func (to *Torrent) getInfoHash() {
 
 }
