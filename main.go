@@ -6,12 +6,13 @@ import (
 	"os"
 	"flag"
 
+    "github.com/kylec725/graytorrent/gui"
 	gocui "github.com/jroimartin/gocui"
 )
 
 var logFile *os.File
 var filename string
-var gui *gocui.Gui
+var g *gocui.Gui
 var err error
 
 func init() {
@@ -31,11 +32,12 @@ func init() {
 // Initialize GUI
 func init() {
     // Stuff here from gui package
+    g = gui.Setup()
 }
 
 func main() {
     defer logFile.Close()
-    defer gui.Close()
+    defer g.Close()
     log.Println("Graytorrent started")
 
     // Send torrent stopped messages
