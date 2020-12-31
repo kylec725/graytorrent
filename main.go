@@ -23,6 +23,7 @@ func init() {
         os.Exit(1)
     }
     log.SetOutput(logFile)
+    log.Println("Graytorrent started")
 
     // Get filename argument for single-torrent execution
     flag.StringVar(&filename, "f", "", "Filename of torrent file")
@@ -31,14 +32,12 @@ func init() {
 
 // Initialize GUI
 func init() {
-    // Stuff here from gui package
     g = gui.Setup()
 }
 
 func main() {
     defer logFile.Close()
     defer g.Close()
-    log.Println("Graytorrent started")
 
     // Send torrent stopped messages
     // Save torrent progresses to history file
