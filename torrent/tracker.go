@@ -6,6 +6,8 @@ import (
     "errors"
     "time"
     "math/rand"
+
+    "github.com/kylec725/graytorrent/metainfo"
 )
 
 // Tracker stores information about a torrent tracker
@@ -25,13 +27,8 @@ func (tr Tracker) String() string {
     return result
 }
 
-func (to Torrent) getTrackers() ([]Tracker, error) {
+func (to *Torrent) getTrackers(meta metainfo.BencodeMeta) error {
     // Get meta data of torrent file first
-    meta, err := to.getMeta()
-    if err != nil {
-        return nil, err
-    }
-
     numAnnounce := 0
     for _, group := range meta.AnnounceList {
         numAnnounce += len(group)
@@ -41,12 +38,12 @@ func (to Torrent) getTrackers() ([]Tracker, error) {
     if numAnnounce == 0 {
         // Check if announce list is empty
         if meta.Announce == "" {
-            return nil, errors.New("Did not get any announce urls")
+            return errors.New("Did not get any announce urls")
         }
 
         trackers := make([]Tracker, 1)
         trackers[0] = Tracker{meta.Announce, false, 120, to.ID}
-        return trackers, nil
+        return nil
     }
     
     // Make list of multiple trackers
@@ -66,10 +63,12 @@ func (to Torrent) getTrackers() ([]Tracker, error) {
         trackers[x], trackers[y] = trackers[y], trackers[x]
     })
 
-    return trackers, nil
+    // return trackers, nil
+    to.Trackers = trackers
+    return nil
 }
 
-func (tr Tracker) buildURL() (string, error) {
+func (tr Tracker) buildURL() string {
 
-    return "", nil
+    return ""
 }

@@ -14,11 +14,13 @@ import (
     // "log"
     "time"
     "math/rand"
+
+    // "github.com/kylec725/graytorrent/metainfo"
 )
 
 // Torrent stores metainfo and current progress on a torrent
 type Torrent struct {
-    Filename string
+    Name string
     Trackers []Tracker
     PieceLength int
     InfoHash [20]byte

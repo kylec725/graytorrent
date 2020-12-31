@@ -3,7 +3,6 @@ package torrent
 import (
     "testing"
     "fmt"
-    "encoding/hex"
 
     "github.com/stretchr/testify/assert"
 )
@@ -11,7 +10,7 @@ import (
 func TestGetID(t *testing.T) {
     assert := assert.New(t)
 
-    var to Torrent = Torrent{Filename: "../tmp/change.torrent"}
+    var to Torrent = Torrent{Name: "../tmp/change.torrent"}
     to.setID()
     halfID := string(to.ID[0:8])
 

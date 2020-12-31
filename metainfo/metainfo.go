@@ -11,8 +11,8 @@ import (
     bencode "github.com/jackpal/bencode-go"
 )
 
-// Use struct with nested struct to decode the bencoded file
-type bencodeMeta struct {
+// BencodeMeta stores metainfo about a torrent file
+type BencodeMeta struct {
     Info bencodeInfo `bencode:"info"`
     Announce string `bencode:"announce"`
     AnnounceList [][]string `bencode:"announce-list"`
@@ -32,7 +32,7 @@ type bencodeFile struct {
     Path []string `bencode:"path"`
 }
 
-func (meta bencodeMeta) String() string {
+func (meta BencodeMeta) String() string {
     var result string
     result += "Name: " + meta.Info.Name + "\n"
     result += "Announce: " + meta.Announce + "\n"
@@ -54,25 +54,27 @@ func (meta bencodeMeta) String() string {
     return result
 }
 
-func getMeta(filename string) (bencodeMeta, error) {
+// GetMeta grabs bencoded metainfo and stores into the BencodeMeta struct
+func GetMeta(filename string) (BencodeMeta, error) {
     file, err := os.Open(filename)
     if err != nil {
         log.Println("Could not open file:", filename)
-        return bencodeMeta{}, err
+        return BencodeMeta{}, err
     }
     defer file.Close()
 
-    var meta bencodeMeta
+    var meta BencodeMeta
     err = bencode.Unmarshal(file, &meta)
     if err != nil {
         log.Println("Could not unmarshal bencoded file:", filename)
-        return bencodeMeta{}, err
+        return BencodeMeta{}, err
     }
 
     return meta, nil
 }
 
-func getInfoHash(meta bencodeMeta) ([20]byte, error) {
+// GetInfoHash generates the infohash from the info section
+func GetInfoHash(meta BencodeMeta) ([20]byte, error) {
     var serialInfo bytes.Buffer
     err := bencode.Marshal(&serialInfo, meta.Info)
     if err != nil {
