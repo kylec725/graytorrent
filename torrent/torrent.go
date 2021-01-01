@@ -11,30 +11,48 @@ pieces of the torrent.
 package torrent
 
 import (
-    // "log"
+    "log"
     "time"
     "math/rand"
 
-    // "github.com/kylec725/graytorrent/metainfo"
+    "github.com/kylec725/graytorrent/metainfo"
 )
 
 // Torrent stores metainfo and current progress on a torrent
 type Torrent struct {
     Name string
     Trackers []Tracker
-    PieceLength int
+    Progress int // total number of pieces we have
+    PieceLength int // number of bytes per piece
+    TotalPieces int
     InfoHash [20]byte
     PieceHashes [][20]byte
-    ID [20]byte
+    PeerID [20]byte
 }
 
-// Setup gets and sets up necessary properties of the torrent object
+// Setup gets and sets up necessary properties of a new torrent object
 func (to *Torrent) Setup() {
-    // get metadata
-    // setID
-    // get InfoHash
-    // get Trackers
-    // build tracker URLs
+    // Get metainfo
+    meta, err := metainfo.GetMeta(to.Name)
+    if err != nil {
+        log.Println("Error getting metainfo for:", to.Name)
+    }
+    // Set info about file length
+    to.Progress = 0
+    to.PieceLength = meta.Info.PieceLength
+    to.TotalPieces = len(meta.Info.Pieces) / 20
+    // Set the peer ID
+    to.setID()
+    // Get the infohash from the metainfo
+    to.InfoHash, err = metainfo.GetInfoHash(meta)
+    if err != nil {
+        log.Println("Error getting the infohash for:", to.Name)
+    }
+    // Create trackers list from metainfo announce or announce-list
+    to.Trackers, err = getTrackers(meta)
+    if err != nil {
+        log.Println("Error creating trackers for:", to.Name)
+    }
 }
 
 func (to *Torrent) setID() {
@@ -48,6 +66,18 @@ func (to *Torrent) setID() {
     }
 
     for i, c := range id {
-        to.ID[i] = byte(c)
+        to.PeerID[i] = byte(c)
     }
 }
+
+// Send request to trackers concurrently to get list of peers
+// func (to *Torrent) createStarted() {
+//     for _, tr := range to.Trackers {
+//         bytesLeft := (to.TotalPieces - to.Progress) * to.PieceLength
+//         url, err := tr.buildURL(to.InfoHash, to.PeerID, 6881, bytesLeft, "started")
+//         if err != nil {
+//             log.Println("Error creating URL for:", tr.Announce)
+//             continue
+//         }
+//     }
+// }

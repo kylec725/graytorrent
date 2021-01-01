@@ -6,6 +6,8 @@ import (
     "errors"
     "time"
     "math/rand"
+    // "net/http"
+    "net/url"
 
     "github.com/kylec725/graytorrent/metainfo"
 )
@@ -15,7 +17,6 @@ type Tracker struct {
     Announce string
     Working bool
     Interval int
-    ID [20]byte
 }
 
 func (tr Tracker) String() string {
@@ -27,7 +28,7 @@ func (tr Tracker) String() string {
     return result
 }
 
-func (to *Torrent) getTrackers(meta metainfo.BencodeMeta) error {
+func getTrackers(meta metainfo.BencodeMeta) ([]Tracker, error) {
     // Get meta data of torrent file first
     numAnnounce := 0
     for _, group := range meta.AnnounceList {
@@ -36,14 +37,14 @@ func (to *Torrent) getTrackers(meta metainfo.BencodeMeta) error {
 
     // If announce-list empty, use announce only
     if numAnnounce == 0 {
-        // Check if announce list is empty
+        // Check if no announce strings exist
         if meta.Announce == "" {
-            return errors.New("Did not get any announce urls")
+            return []Tracker{}, errors.New("Did not get any announce urls")
         }
 
         trackers := make([]Tracker, 1)
-        trackers[0] = Tracker{meta.Announce, false, 120, to.ID}
-        return nil
+        trackers[0] = Tracker{meta.Announce, false, 120}
+        return trackers, nil
     }
     
     // Make list of multiple trackers
@@ -52,7 +53,7 @@ func (to *Torrent) getTrackers(meta metainfo.BencodeMeta) error {
     i := 0
     for _, group := range meta.AnnounceList {
         for _, announce := range group {
-            trackers[i] = Tracker{announce, false, 120, to.ID}
+            trackers[i] = Tracker{announce, false, 120}
             i++
         }
     }
@@ -63,12 +64,26 @@ func (to *Torrent) getTrackers(meta metainfo.BencodeMeta) error {
         trackers[x], trackers[y] = trackers[y], trackers[x]
     })
 
-    // return trackers, nil
-    to.Trackers = trackers
-    return nil
+    return trackers, nil
 }
 
-func (tr Tracker) buildURL() string {
+func (tr Tracker) buildURL(infoHash [20]byte, peerID [20]byte, port uint16, left int, event string) (string, error) {
+    base, err := url.Parse(tr.Announce)
+    if err != nil {
+        return "", err
+    }
 
-    return ""
+    params := url.Values{
+        "info_hash": []string{string(infoHash[:])},
+        "peer_id": []string{string(peerID[:])},
+        "port": []string{strconv.Itoa(int(port))},
+        "uploaded": []string{"0"},
+        "downloaded": []string{"0"},
+        "left": []string{strconv.Itoa(left)},
+        "compact": []string{"1"},
+        "event": []string{event},
+    }
+    base.RawQuery = params.Encode()
+
+    return base.String(), nil
 }
