@@ -54,7 +54,7 @@ func (meta BencodeMeta) String() string {
     return result
 }
 
-// GetMeta grabs bencoded metainfo and stores into the BencodeMeta struct
+// GetMeta grabs bencoded metainfo and stores it into the BencodeMeta struct
 func GetMeta(filename string) (BencodeMeta, error) {
     file, err := os.Open(filename)
     if err != nil {
@@ -73,7 +73,7 @@ func GetMeta(filename string) (BencodeMeta, error) {
     return meta, nil
 }
 
-// GetInfoHash generates the infohash from the info section
+// GetInfoHash generates the infohash of the torrent file
 func GetInfoHash(meta BencodeMeta) ([20]byte, error) {
     var serialInfo bytes.Buffer
     err := bencode.Marshal(&serialInfo, meta.Info)
