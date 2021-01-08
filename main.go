@@ -6,13 +6,14 @@ import (
 	"os"
 	"flag"
 
-    "github.com/kylec725/graytorrent/gui"
-	gocui "github.com/jroimartin/gocui"
+    // "github.com/kylec725/graytorrent/gui"
+    viper "github.com/spf13/viper"
+	// gocui "github.com/jroimartin/gocui"
 )
 
 var logFile *os.File
 var filename string
-var g *gocui.Gui
+// var g *gocui.Gui
 var err error
 
 func init() {
@@ -32,12 +33,38 @@ func init() {
 
 // Initialize GUI
 func init() {
-    g = gui.Setup()
+    // g = gui.Setup()
+}
+
+// Initialize config
+func init() {
+    viper.SetDefault("downloadpath", ".")
+    viper.SetDefault("network.port", 6881)
+    viper.SetDefault("network.connections.globalMax", 300)
+    viper.SetDefault("network.connections.torrentMax", 30)
+
+    viper.SetConfigName("config")
+    viper.SetConfigType("toml")
+    viper.AddConfigPath(".")
+    viper.AddConfigPath("~/.config/graytorrent")
+    viper.AddConfigPath("/etc/graytorrent")
+
+    if err := viper.ReadInConfig(); err != nil {
+        if _, ok := err.(viper.ConfigFileNotFoundError); ok {
+            // Config file not found, create default config
+            viper.SafeWriteConfig()
+        } else {
+            log.Println("Error reading in config file:", err)
+        }
+    }
+
+    // Check for live changes of the config file
+    viper.WatchConfig()
 }
 
 func main() {
     defer logFile.Close()
-    defer g.Close()
+    // defer g.Close()
 
     // Send torrent stopped messages
     // Save torrent progresses to history file
