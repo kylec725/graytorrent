@@ -38,7 +38,8 @@ func init() {
 
 // Initialize config
 func init() {
-    viper.SetDefault("downloadpath", ".")
+    viper.SetDefault("torrent.path", ".")
+    viper.SetDefault("torrent.autoseed", true)
     viper.SetDefault("network.port", 6881)
     viper.SetDefault("network.connections.globalMax", 300)
     viper.SetDefault("network.connections.torrentMax", 30)
