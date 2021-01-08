@@ -17,6 +17,9 @@ graytorrent
 # Logging file
 info.log
 
+# Config file
+config.toml
+
 # Dependency directories (remove the comment below to include it)
 # vendor/
 tmp/
