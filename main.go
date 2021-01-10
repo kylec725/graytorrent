@@ -7,6 +7,7 @@ import (
 	"flag"
 
     // "github.com/kylec725/graytorrent/gui"
+    "github.com/kylec725/graytorrent/connect"
     viper "github.com/spf13/viper"
 	// gocui "github.com/jroimartin/gocui"
 )
@@ -14,6 +15,7 @@ import (
 var logFile *os.File
 var filename string
 // var g *gocui.Gui
+var port uint16
 var err error
 
 func init() {
@@ -50,13 +52,19 @@ func init() {
     viper.AddConfigPath("~/.config/graytorrent")
     viper.AddConfigPath("/etc/graytorrent")
 
-    if err := viper.ReadInConfig(); err != nil {
+    if err = viper.ReadInConfig(); err != nil {
         if _, ok := err.(viper.ConfigFileNotFoundError); ok {
             // Config file not found, create default config
             viper.SafeWriteConfig()
         } else {
+            // Some other error was found
             log.Panic("Fatal error reading in config file:", err)
         }
+    }
+
+    port, err = connect.GetOpenPort(viper.GetIntSlice("network.portrange"))
+    if err != nil {
+        log.Fatalln("Open port could not be obtained for the client:", err)
     }
 
     // Check for live changes of the config file

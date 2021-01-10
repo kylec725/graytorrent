@@ -1,4 +1,4 @@
-package torrent
+package connect
 
 import (
     "testing"
@@ -10,7 +10,7 @@ import (
 func TestGetOpenPort(t *testing.T) {
     assert := assert.New(t)
 
-    port, err := getOpenPort()
+    port, err := GetOpenPort([2]int{ 6881, 6889 })
     assert.Nil(err)
     fmt.Println("Got open port:", port)
 }
