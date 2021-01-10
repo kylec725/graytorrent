@@ -5,21 +5,23 @@ import (
     "os"
     "strconv"
     "errors"
-)
 
-const basePort = 6881
-const portRange = 8
+    viper "github.com/spf13/viper"
+)
 
 // Finds a local unused port within a range
 func getOpenPort() (int, error) {
+    viper := viper.GetViper()
+    portRange := viper.GetIntSlice("network.portrange")
+
     hostname, err := os.Hostname()
     if err != nil {
         return 0, err
     }
-    for i, port := 0, basePort; i < portRange + 1; i++ {
-        _, err := net.Dial("tcp", hostname + ":" + strconv.Itoa(port + i))
+    for port := portRange[0]; port <= portRange[1]; port++ {
+        _, err := net.Dial("tcp", hostname + ":" + strconv.Itoa(port))
         if err != nil {
-            return port + i, nil
+            return port, nil
         }
     }
     return 0, errors.New("Open port not found")

@@ -40,7 +40,7 @@ func init() {
 func init() {
     viper.SetDefault("torrent.path", ".")
     viper.SetDefault("torrent.autoseed", true)
-    viper.SetDefault("network.port", 6881)
+    viper.SetDefault("network.portrange", [2]int{ 6881, 6889 })
     viper.SetDefault("network.connections.globalMax", 300)
     viper.SetDefault("network.connections.torrentMax", 30)
 
@@ -55,7 +55,7 @@ func init() {
             // Config file not found, create default config
             viper.SafeWriteConfig()
         } else {
-            log.Println("Error reading in config file:", err)
+            log.Panic("Fatal error reading in config file:", err)
         }
     }
 
