@@ -92,12 +92,13 @@ func (tr Tracker) buildURL(infoHash [20]byte, peerID [20]byte, port uint16, left
 func (tr Tracker) getPeers(req string) ([]peer.Peer, error) {
     resp, err := http.Get(req)
     // Resend the GET request several times until we receive a response
-    for i := 0; err != nil && i < 5; resp, err = http.Get(req) {
-        if err, ok := err.(*url.Error); !ok {
+    for i := 0; err != nil; resp, err = http.Get(req) {
+        if err, ok := err.(*url.Error); !ok || i == 5 {
             return []peer.Peer{}, err
         }
-        i++
     }
+
+    // TODO check the response status code
 
     // TODO parse the response
     fmt.Println("resp:", resp)
