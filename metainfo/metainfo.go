@@ -84,3 +84,12 @@ func GetInfoHash(meta BencodeMeta) ([20]byte, error) {
 
     return infoHash, nil
 }
+
+// GetLength returns the total torrent length
+func (meta BencodeMeta) GetLength() int {
+    totalLen := meta.Info.Length
+    for _, file := range meta.Info.Files {
+        totalLen += file.Length
+    }
+    return totalLen
+}

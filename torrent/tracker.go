@@ -1,15 +1,17 @@
 package torrent
 
 import (
-    // "fmt"
+    "fmt"
     "strconv"
     "errors"
     "time"
     "math/rand"
-    // "net/http"
+    // "net"
+    "net/http"
     "net/url"
 
     "github.com/kylec725/graytorrent/metainfo"
+    "github.com/kylec725/graytorrent/peer"
 )
 
 // Tracker stores information about a torrent tracker
@@ -86,4 +88,18 @@ func (tr Tracker) buildURL(infoHash [20]byte, peerID [20]byte, port uint16, left
     base.RawQuery = params.Encode()
 
     return base.String(), nil
+}
+
+func (tr Tracker) getPeers(req string) ([]peer.Peer, error) {
+    resp, err := http.Get(req)
+    // Resend the GET request until we receive a response
+    for ; err != nil; resp, err = http.Get(req) {
+        if err, ok := err.(*url.Error); !ok {
+            return []peer.Peer{}, err
+        }
+    }
+
+    // TODO: parse the response
+    fmt.Println("resp:", resp)
+    return []peer.Peer{}, nil
 }
