@@ -6,7 +6,6 @@ import (
     "errors"
     "time"
     "math/rand"
-    // "net"
     "net/http"
     "net/url"
 
@@ -92,14 +91,15 @@ func (tr Tracker) buildURL(infoHash [20]byte, peerID [20]byte, port uint16, left
 
 func (tr Tracker) getPeers(req string) ([]peer.Peer, error) {
     resp, err := http.Get(req)
-    // Resend the GET request until we receive a response
-    for ; err != nil; resp, err = http.Get(req) {
+    // Resend the GET request several times until we receive a response
+    for i := 0; err != nil && i < 5; resp, err = http.Get(req) {
         if err, ok := err.(*url.Error); !ok {
             return []peer.Peer{}, err
         }
+        i++
     }
 
-    // TODO: parse the response
+    // TODO parse the response
     fmt.Println("resp:", resp)
     return []peer.Peer{}, nil
 }
