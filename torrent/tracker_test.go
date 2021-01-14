@@ -8,6 +8,8 @@ import (
     "github.com/stretchr/testify/assert"
 )
 
+const debugTracker = false
+
 func TestGetTrackers(t *testing.T) {
     assert := assert.New(t)
 
@@ -21,7 +23,9 @@ func TestGetTrackers(t *testing.T) {
     if assert.Nil(err) {
         for _, tr := range to.Trackers {
             assert.NotNil(tr)
-            // fmt.Println(tr)
+            if debugTracker {
+                fmt.Println(tr)
+            }
         }
     }
 }
@@ -38,43 +42,10 @@ func TestBuildURL(t *testing.T) {
         // Build url with each tracker object
         url, err := tr.buildURL(to.InfoHash, to.PeerID, 6881, meta.Info.Length, "started")
         if err == nil {
-            // fmt.Println("tracker request:", url)
+            if debugTracker {
+                fmt.Println("tracker request:", url)
+            }
             assert.Equal("http://poole.cs.umd.edu:6969/announce?compact=1&downloaded=0&event=started&info_hash=Q%CB%DD%21%F2FYx%DAc%F0%91%B1y%18g2%CCX%05&left=810121&peer_id=" + string(to.PeerID[:]) + "&port=6881&uploaded=0", url, "Built tracker request was incorrect")
         }
-    }
-}
-
-func TestGetPeers(t *testing.T) {
-    assert := assert.New(t)
-
-    to := Torrent{Name: "../tmp/batonroad.torrent"}
-    to.Setup()
-    meta, _ := metainfo.GetMeta(to.Name)
-
-    var testTracker Tracker
-    var testURL string
-    for _, tr := range to.Trackers {
-        assert.NotNil(tr)
-
-        // Build url with each tracker object
-        url, err := tr.buildURL(to.InfoHash, to.PeerID, 6881, meta.GetLength(), "started")
-        assert.Nil(err)
-        
-        if tr.Announce[0:4] == "http" {
-            testTracker = tr
-            testURL = url
-        }
-    }
-    // fmt.Println(testTracker)
-    fmt.Println(testURL)
-
-    peerList, err := testTracker.getPeers(testURL)
-    if assert.Nil(err) {
-        testTracker.Working = true
-        for _, peer := range peerList {
-            fmt.Println("Peer:", peer)
-        }
-    } else {
-        testTracker.Working = false
     }
 }

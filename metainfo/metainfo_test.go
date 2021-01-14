@@ -7,6 +7,8 @@ import (
     "github.com/stretchr/testify/assert"
 )
 
+const debugMetainfo = false
+
 func TestMetaBasic(t *testing.T) {
     assert := assert.New(t)
 
