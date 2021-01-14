@@ -12,11 +12,13 @@ import (
 	// gocui "github.com/jroimartin/gocui"
 )
 
-var logFile *os.File
-var filename string
-// var g *gocui.Gui
-var port uint16
-var err error
+var (
+    logFile *os.File
+    filename string
+    port uint16
+    err error
+    // g *gocui.Gui
+)
 
 func init() {
     // Setup logging
