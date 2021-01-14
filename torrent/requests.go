@@ -14,8 +14,16 @@ const reqRetry = 5
 // Errors
 var (
     ErrReqRetry = errors.Errorf("Sent GET requests %d times with no response", reqRetry)
-    ErrBadStatusCode = errors.New("Did not get status code 200")
+    ErrBadStatusCode = errors.New("Expected status code 200")
 )
+
+type bencodeTrackerResp struct {
+    Interval int `bencode:"interval"`
+    Peers string `bencode:"peers"`
+    Failure string `bencode:"failure reason"`
+    Complete int `bencode:"complete"`
+    Incomplete int `bencode:"incomplete"`
+}
 
 func (tr *Tracker) getPeers(infoHash [20]byte, peerID [20]byte, port uint16, left int) ([]peer.Peer, error) {
     req, err := tr.buildURL(infoHash, peerID, port, left, "started")
@@ -42,11 +50,14 @@ func (tr *Tracker) getPeers(infoHash [20]byte, peerID [20]byte, port uint16, lef
     }
 
     if resp.StatusCode != 200 {
-        return nil, errors.Wrap(ErrBadStatusCode, "getPeers")
+        return nil, errors.Wrapf(ErrBadStatusCode, "getPeers: Got status code %d and reason %s", resp.StatusCode, trResp.Failure)
     }
 
-
+    // Update tracker information
     tr.Interval = trResp.Interval
+    tr.Complete = trResp.Complete
+    tr.Incomplete = trResp.Incomplete
+
     peersBytes := []byte(trResp.Peers)
 
     return peer.Unmarshal(peersBytes)
@@ -77,10 +88,13 @@ func (tr *Tracker) sendStopped(infoHash [20]byte, peerID [20]byte, port uint16, 
     }
 
     if resp.StatusCode != 200 {
-        return errors.Wrap(ErrBadStatusCode, "sendStopped")
+        return errors.Wrapf(ErrBadStatusCode, "sendStopped: Got status code %d and reason %s", resp.StatusCode, trResp.Failure)
     }
 
+    // Update tracker information
     tr.Interval = trResp.Interval
+    tr.Complete = trResp.Complete
+    tr.Incomplete = trResp.Incomplete
 
     return nil
 }

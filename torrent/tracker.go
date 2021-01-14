@@ -20,23 +20,12 @@ type Tracker struct {
     Announce string
     Working bool
     Interval int
+    Complete int
+    Incomplete int
 }
 
-type bencodeTrackerResp struct {
-    Interval int `bencode:"interval"`
-    Peers string `bencode:"peers,omitempty"`
-    Failure string `bencode:"failure reason,omitempty"`
-    Complete int `bencode:"complete"`
-    Incomplete int `bencode:"incomplete"`
-}
-
-func (tr Tracker) String() string {
-    var result string
-    result += "Announce: " + tr.Announce + "\n"
-    result += "Working: " + strconv.FormatBool(tr.Working) + "\n"
-    result += "Interval: " + strconv.Itoa(tr.Interval) + "\n"
-
-    return result
+func newTracker(announce string) Tracker {
+    return Tracker{announce, false, 180, 0, 0}
 }
 
 func getTrackers(meta metainfo.BencodeMeta) ([]Tracker, error) {
@@ -54,7 +43,7 @@ func getTrackers(meta metainfo.BencodeMeta) ([]Tracker, error) {
         }
 
         trackers := make([]Tracker, 1)
-        trackers[0] = Tracker{meta.Announce, false, 180}
+        trackers[0] = newTracker(meta.Announce)
         return trackers, nil
     }
     
@@ -64,7 +53,7 @@ func getTrackers(meta metainfo.BencodeMeta) ([]Tracker, error) {
     i := 0
     for _, group := range meta.AnnounceList {
         for _, announce := range group {
-            trackers[i] = Tracker{announce, false, 180}
+            trackers[i] = newTracker(announce)
             i++
         }
     }
