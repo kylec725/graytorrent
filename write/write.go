@@ -1,0 +1,5 @@
+package write
+
+import (
+    // "fmt"
+)
