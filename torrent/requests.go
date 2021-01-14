@@ -34,7 +34,7 @@ func (tr *Tracker) getPeers(infoHash [20]byte, peerID [20]byte, port uint16, lef
     resp, err := http.Get(req)
     // Resend the GET request several times until we receive a response
     for i := 0; err != nil; resp, err = http.Get(req) {
-        if !errors.Is(err, err.(*url.Error)) {
+        if err, ok := err.(*url.Error); !ok {
             return nil, errors.Wrap(err, "getPeers")
         } else if i++; i > reqRetry {
             return nil, errors.Wrap(ErrReqRetry, "getPeers")
@@ -72,7 +72,7 @@ func (tr *Tracker) sendStopped(infoHash [20]byte, peerID [20]byte, port uint16, 
     resp, err := http.Get(req)
     // Resend the GET request several times until we receive a response
     for i := 0; err != nil; resp, err = http.Get(req) {
-        if !errors.Is(err, err.(*url.Error)) {
+        if err, ok := err.(*url.Error); !ok {
             return errors.Wrap(err, "sendStopped")
         } else if i++; i > reqRetry {
             return errors.Wrap(ErrReqRetry, "sendStopped")
