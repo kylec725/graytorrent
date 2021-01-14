@@ -1,7 +1,6 @@
 package torrent
 
 import (
-    "fmt"
     "strconv"
     "errors"
     "time"
@@ -11,6 +10,7 @@ import (
 
     "github.com/kylec725/graytorrent/metainfo"
     "github.com/kylec725/graytorrent/peer"
+    bencode "github.com/jackpal/bencode-go"
 )
 
 // Tracker stores information about a torrent tracker
@@ -18,6 +18,11 @@ type Tracker struct {
     Announce string
     Working bool
     Interval int
+}
+
+type bencodeTrackerResp struct {
+    Interval int `bencode:"interval"`
+    Peers string `bencode:"peers"`
 }
 
 func (tr Tracker) String() string {
@@ -40,11 +45,11 @@ func getTrackers(meta metainfo.BencodeMeta) ([]Tracker, error) {
     if numAnnounce == 0 {
         // Check if no announce strings exist
         if meta.Announce == "" {
-            return []Tracker{}, errors.New("Did not get any announce urls")
+            return nil, errors.New("Did not get any announce urls")
         }
 
         trackers := make([]Tracker, 1)
-        trackers[0] = Tracker{meta.Announce, false, 120}
+        trackers[0] = Tracker{meta.Announce, false, 180}
         return trackers, nil
     }
     
@@ -54,7 +59,7 @@ func getTrackers(meta metainfo.BencodeMeta) ([]Tracker, error) {
     i := 0
     for _, group := range meta.AnnounceList {
         for _, announce := range group {
-            trackers[i] = Tracker{announce, false, 120}
+            trackers[i] = Tracker{announce, false, 180}
             i++
         }
     }
@@ -89,18 +94,32 @@ func (tr Tracker) buildURL(infoHash [20]byte, peerID [20]byte, port uint16, left
     return base.String(), nil
 }
 
-func (tr Tracker) getPeers(req string) ([]peer.Peer, error) {
+func (tr *Tracker) getPeers(req string) ([]peer.Peer, error) {
+    const getRetry = 5
     resp, err := http.Get(req)
     // Resend the GET request several times until we receive a response
     for i := 0; err != nil; resp, err = http.Get(req) {
-        if err, ok := err.(*url.Error); !ok || i == 5 {
-            return []peer.Peer{}, err
+        if err, ok := err.(*url.Error); !ok {
+            return nil, err
+        } else if i++; i > getRetry {
+            return nil, errors.New("Sent GET requests " + strconv.Itoa(getRetry) + " times with no response")
         }
     }
 
-    // TODO check the response status code
+    if resp.StatusCode != 200 {
+        return nil, errors.New("Did not get status code 200: Got status code " + strconv.Itoa(resp.StatusCode))
+    }
 
-    // TODO parse the response
-    fmt.Println("resp:", resp)
-    return []peer.Peer{}, nil
+    // Unmarshal tracker response to get new interval and list of peers
+    var trResp bencodeTrackerResp
+    err = bencode.Unmarshal(resp.Body, &trResp)
+    resp.Body.Close()
+    if err != nil {
+        return nil, err
+    }
+
+    tr.Interval = trResp.Interval
+    peersBytes := []byte(trResp.Peers)
+
+    return peer.Unmarshal(peersBytes)
 }

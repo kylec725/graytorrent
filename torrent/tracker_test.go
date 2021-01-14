@@ -57,7 +57,7 @@ func TestGetPeers(t *testing.T) {
         assert.NotNil(tr)
 
         // Build url with each tracker object
-        url, err := tr.buildURL(to.InfoHash, to.PeerID, 6881, meta.GetLength(), "stopped")
+        url, err := tr.buildURL(to.InfoHash, to.PeerID, 6881, meta.GetLength(), "started")
         assert.Nil(err)
         
         if tr.Announce[0:4] == "http" {
@@ -68,6 +68,13 @@ func TestGetPeers(t *testing.T) {
     // fmt.Println(testTracker)
     fmt.Println(testURL)
 
-    _, err := testTracker.getPeers(testURL)
-    assert.Nil(err)
+    peerList, err := testTracker.getPeers(testURL)
+    if assert.Nil(err) {
+        testTracker.Working = true
+        for _, peer := range peerList {
+            fmt.Println("Peer:", peer)
+        }
+    } else {
+        testTracker.Working = false
+    }
 }
