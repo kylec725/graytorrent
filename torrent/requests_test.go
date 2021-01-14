@@ -27,7 +27,7 @@ func TestTrackerReqs(t *testing.T) {
     }
 
     if debugRequests {
-        fmt.Println(testTracker)
+        fmt.Printf("Tracker%+v\n", testTracker)
     }
 
     peerList, err := testTracker.getPeers(to.InfoHash, to.PeerID, 6881, meta.GetLength())
