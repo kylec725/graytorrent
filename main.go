@@ -25,7 +25,7 @@ func init() {
     // Setup logging
     logFile, err = os.OpenFile("info.log", os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0644)
     if err != nil {
-        fmt.Fprintln(os.Stderr, "Error: could not open log file info.log", err)
+        fmt.Fprintln(os.Stderr, "Fatal: could not open log file info.log", err)
         os.Exit(1)
     }
     log.SetOutput(logFile)

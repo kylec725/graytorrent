@@ -1,13 +1,13 @@
 package metainfo
 
 import (
-    "log"
     "os"
     "strconv"
     "bytes"
     "crypto/sha1"
     // "fmt"
 
+    errors "github.com/pkg/errors"
     bencode "github.com/jackpal/bencode-go"
 )
 
@@ -58,16 +58,14 @@ func (meta BencodeMeta) String() string {
 func GetMeta(filename string) (BencodeMeta, error) {
     file, err := os.Open(filename)
     if err != nil {
-        log.Println("Could not open file:", filename)
-        return BencodeMeta{}, err
+        return BencodeMeta{}, errors.Wrapf(err, "GetMeta %s", filename)
     }
     defer file.Close()
 
     var meta BencodeMeta
     err = bencode.Unmarshal(file, &meta)
     if err != nil {
-        log.Println("Could not unmarshal bencoded file:", filename)
-        return BencodeMeta{}, err
+        return BencodeMeta{}, errors.Wrapf(err, "GetMeta %s", filename)
     }
 
     return meta, nil
@@ -78,7 +76,7 @@ func GetInfoHash(meta BencodeMeta) ([20]byte, error) {
     var serialInfo bytes.Buffer
     err := bencode.Marshal(&serialInfo, meta.Info)
     if err != nil {
-        return [20]byte{}, err
+        return [20]byte{}, errors.Wrap(err, "GetInfoHash")
     }
     infoHash := sha1.Sum(serialInfo.Bytes())
 

@@ -1,31 +1,35 @@
 package torrent
 
 import (
-    "strconv"
-    "errors"
     "net/http"
     "net/url"
-    "fmt"
 
     "github.com/kylec725/graytorrent/peer"
+    errors "github.com/pkg/errors"
     bencode "github.com/jackpal/bencode-go"
 )
 
 const reqRetry = 5
 
+// Errors
+var (
+    ErrReqRetry = errors.Errorf("Sent GET requests %d times with no response", reqRetry)
+    ErrBadStatusCode = errors.New("Did not get status code 200")
+)
+
 func (tr *Tracker) getPeers(infoHash [20]byte, peerID [20]byte, port uint16, left int) ([]peer.Peer, error) {
     req, err := tr.buildURL(infoHash, peerID, port, left, "started")
     if err != nil {
-        return nil, err
+        return nil, errors.Wrap(err, "getPeers")
     }
 
     resp, err := http.Get(req)
     // Resend the GET request several times until we receive a response
     for i := 0; err != nil; resp, err = http.Get(req) {
-        if err, ok := err.(*url.Error); !ok {
-            return nil, err
+        if !errors.Is(err, err.(*url.Error)) {
+            return nil, errors.Wrap(err, "getPeers")
         } else if i++; i > reqRetry {
-            return nil, errors.New("Sent GET requests " + strconv.Itoa(reqRetry) + " times with no response")
+            return nil, errors.Wrap(ErrReqRetry, "getPeers")
         }
     }
 
@@ -34,19 +38,16 @@ func (tr *Tracker) getPeers(infoHash [20]byte, peerID [20]byte, port uint16, lef
     err = bencode.Unmarshal(resp.Body, &trResp)
     resp.Body.Close()
     if err != nil {
-        return nil, err
+        return nil, errors.Wrap(err, "getPeers")
     }
 
     if resp.StatusCode != 200 {
-        return nil, errors.New("Got status code " + strconv.Itoa(resp.StatusCode) + ": " + trResp.Failure)
+        return nil, errors.Wrap(ErrBadStatusCode, "getPeers")
     }
 
 
     tr.Interval = trResp.Interval
     peersBytes := []byte(trResp.Peers)
-
-    fmt.Println("completed:", trResp.Complete)
-    fmt.Println("incompleted:", trResp.Incomplete)
 
     return peer.Unmarshal(peersBytes)
 }
@@ -54,16 +55,16 @@ func (tr *Tracker) getPeers(infoHash [20]byte, peerID [20]byte, port uint16, lef
 func (tr *Tracker) sendStopped(infoHash [20]byte, peerID [20]byte, port uint16, left int) error {
     req, err := tr.buildURL(infoHash, peerID, port, left, "stopped")
     if err != nil {
-        return err
+        return errors.Wrap(err, "sendStopped")
     }
 
     resp, err := http.Get(req)
     // Resend the GET request several times until we receive a response
     for i := 0; err != nil; resp, err = http.Get(req) {
-        if err, ok := err.(*url.Error); !ok {
-            return err
+        if !errors.Is(err, err.(*url.Error)) {
+            return errors.Wrap(err, "sendStopped")
         } else if i++; i > reqRetry {
-            return errors.New("Sent GET requests " + strconv.Itoa(reqRetry) + " times with no response")
+            return errors.Wrap(ErrReqRetry, "sendStopped")
         }
     }
 
@@ -72,11 +73,11 @@ func (tr *Tracker) sendStopped(infoHash [20]byte, peerID [20]byte, port uint16, 
     err = bencode.Unmarshal(resp.Body, &trResp)
     resp.Body.Close()
     if err != nil {
-        return err
+        return errors.Wrap(err, "sendStopped")
     }
 
     if resp.StatusCode != 200 {
-        return errors.New("Got status code " + strconv.Itoa(resp.StatusCode) + ": " + trResp.Failure)
+        return errors.Wrap(ErrBadStatusCode, "sendStopped")
     }
 
     tr.Interval = trResp.Interval

@@ -11,11 +11,11 @@ pieces of the torrent.
 package torrent
 
 import (
-    "log"
     "time"
     "math/rand"
 
     "github.com/kylec725/graytorrent/metainfo"
+    errors "github.com/pkg/errors"
 )
 
 // Torrent stores metainfo and current progress on a torrent
@@ -31,11 +31,11 @@ type Torrent struct {
 }
 
 // Setup gets and sets up necessary properties of a new torrent object
-func (to *Torrent) Setup() {
+func (to *Torrent) Setup() error {
     // Get metainfo
     meta, err := metainfo.GetMeta(to.Name)
     if err != nil {
-        log.Println("Error getting metainfo for:", to.Name)
+        return errors.Wrap(err, "Setup")
     }
     // Set info about file length
     to.Progress = 0
@@ -46,13 +46,14 @@ func (to *Torrent) Setup() {
     // Get the infohash from the metainfo
     to.InfoHash, err = metainfo.GetInfoHash(meta)
     if err != nil {
-        log.Println("Error getting the infohash for:", to.Name)
+        return errors.Wrap(err, "Setup")
     }
     // Create trackers list from metainfo announce or announce-list
     to.Trackers, err = getTrackers(meta)
     if err != nil {
-        log.Println("Error creating trackers for:", to.Name)
+        return errors.Wrap(err, "Setup")
     }
+    return nil
 }
 
 func (to *Torrent) setID() {

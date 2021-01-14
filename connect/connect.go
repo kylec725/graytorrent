@@ -8,7 +8,14 @@ import (
     "net"
     "os"
     "strconv"
-    "errors"
+    
+    errors "github.com/pkg/errors"
+)
+
+// Errors
+var (
+    ErrBadPortRange = errors.New("Bad port range")
+    ErrNoOpenPort = errors.New("Open port not found")
 )
 
 // GetOpenPort finds a local unused port within a range
@@ -18,7 +25,7 @@ func GetOpenPort(portRange []int) (uint16, error) {
         return 0, err
     }
     if len(portRange) < 2 {
-        return 0, errors.New("Need port range of two integers")
+        return 0, errors.Wrap(ErrBadPortRange, "GetOpenPort")
     }
     for port := portRange[0]; port <= portRange[1]; port++ {
         _, err := net.Dial("tcp", hostname + ":" + strconv.Itoa(port))
@@ -26,5 +33,5 @@ func GetOpenPort(portRange []int) (uint16, error) {
             return uint16(port), nil
         }
     }
-    return 0, errors.New("Open port not found")
+    return 0, errors.Wrap(ErrNoOpenPort, "GetOpenPort")
 }

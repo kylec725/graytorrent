@@ -6,9 +6,15 @@ package peer
 
 import (
     "net"
-    "errors"
     "encoding/binary"
     "strconv"
+
+    errors "github.com/pkg/errors"
+)
+
+// Errors
+var (
+    ErrBadPeers = errors.New("Received malformed peers list")
 )
 
 // Peer stores info about connecting to peers as well as their state
@@ -24,7 +30,7 @@ func (p Peer) String() string {
 // Unmarshal creates a list of Peers from a serialized list of peers
 func Unmarshal(peersBytes []byte) ([]Peer, error) {
     if len(peersBytes) % 6 != 0 {
-        return nil, errors.New("Received malformed peers list")
+        return nil, errors.Wrap(ErrBadPeers, "Unmarshal")
     }
 
     numPeers := len(peersBytes) / 6

@@ -2,12 +2,17 @@ package torrent
 
 import (
     "strconv"
-    "errors"
     "time"
     "math/rand"
     "net/url"
 
     "github.com/kylec725/graytorrent/metainfo"
+    errors "github.com/pkg/errors"
+)
+
+// Errors
+var (
+    ErrNoAnnounce = errors.New("Did not find any annouce urls")
 )
 
 // Tracker stores information about a torrent tracker
@@ -45,7 +50,7 @@ func getTrackers(meta metainfo.BencodeMeta) ([]Tracker, error) {
     if numAnnounce == 0 {
         // Check if no announce strings exist
         if meta.Announce == "" {
-            return nil, errors.New("Did not get any announce urls")
+            return nil, errors.Wrap(ErrNoAnnounce, "getTrackers")
         }
 
         trackers := make([]Tracker, 1)
@@ -76,7 +81,7 @@ func getTrackers(meta metainfo.BencodeMeta) ([]Tracker, error) {
 func (tr Tracker) buildURL(infoHash [20]byte, peerID [20]byte, port uint16, left int, event string) (string, error) {
     base, err := url.Parse(tr.Announce)
     if err != nil {
-        return "", err
+        return "", errors.Wrap(err, "buildURL")
     }
 
     params := url.Values{
