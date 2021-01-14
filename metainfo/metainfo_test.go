@@ -15,6 +15,9 @@ func TestMetaBasic(t *testing.T) {
 
     meta, err := GetMeta("../tmp/1056.txt.utf-8.torrent")
     if assert.Nil(err) {
+        if debugMetainfo {
+            fmt.Println(meta)
+        }
         assert.NotNil(meta)
     }
 }
@@ -24,11 +27,17 @@ func TestMetaExtra(t *testing.T) {
 
     meta, err := GetMeta("../tmp/shared.torrent")
     if assert.Nil(err) {
+        if debugMetainfo {
+            fmt.Println(meta)
+        }
         assert.NotNil(meta)
     }
 
     meta, err = GetMeta("../tmp/change.torrent")
     if assert.Nil(err) {
+        if debugMetainfo {
+            fmt.Println(meta)
+        }
         assert.NotNil(meta)
     }
 }
