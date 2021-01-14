@@ -1,5 +1,0 @@
-package torrent
-
-import (
-    // "fmt"
-)
