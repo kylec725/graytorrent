@@ -14,10 +14,11 @@ import (
 
 var (
     logFile *os.File
-    filename string
     port uint16
     err error
     // g *gocui.Gui
+
+    filename = *flag.String("file", "", "Filename of torrent file")
 )
 
 func init() {
