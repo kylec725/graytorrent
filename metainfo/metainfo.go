@@ -1,3 +1,7 @@
+/*
+Package metainfo provides functionality to extract metainfo about
+torrents from their respective torrent files.
+*/
 package metainfo
 
 import (
@@ -72,7 +76,7 @@ func GetMeta(filename string) (BencodeMeta, error) {
 }
 
 // GetInfoHash generates the infohash of the torrent file
-func GetInfoHash(meta BencodeMeta) ([20]byte, error) {
+func (meta BencodeMeta) GetInfoHash() ([20]byte, error) {
     var serialInfo bytes.Buffer
     err := bencode.Marshal(&serialInfo, meta.Info)
     if err != nil {

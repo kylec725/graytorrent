@@ -37,17 +37,21 @@ func (to *Torrent) Setup() error {
     if err != nil {
         return errors.Wrap(err, "Setup")
     }
+
     // Set info about file length
     to.Progress = 0
     to.PieceLength = meta.Info.PieceLength
     to.TotalPieces = len(meta.Info.Pieces) / 20
+
     // Set the peer ID
     to.setID()
+
     // Get the infohash from the metainfo
-    to.InfoHash, err = metainfo.GetInfoHash(meta)
+    to.InfoHash, err = meta.GetInfoHash()
     if err != nil {
         return errors.Wrap(err, "Setup")
     }
+
     // Create trackers list from metainfo announce or announce-list
     to.Trackers, err = getTrackers(meta)
     if err != nil {
