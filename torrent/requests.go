@@ -50,7 +50,7 @@ func (tr *Tracker) getPeers(infoHash [20]byte, peerID [20]byte, port uint16, lef
     }
 
     if resp.StatusCode != 200 {
-        return nil, errors.Wrapf(ErrBadStatusCode, "getPeers: Got status code %d and reason %s", resp.StatusCode, trResp.Failure)
+        return nil, errors.Wrapf(ErrBadStatusCode, "getPeers: GET status code %d and reason '%s'", resp.StatusCode, trResp.Failure)
     }
 
     // Update tracker information
@@ -88,7 +88,7 @@ func (tr *Tracker) sendStopped(infoHash [20]byte, peerID [20]byte, port uint16, 
     }
 
     if resp.StatusCode != 200 {
-        return errors.Wrapf(ErrBadStatusCode, "sendStopped: Got status code %d and reason %s", resp.StatusCode, trResp.Failure)
+        return errors.Wrapf(ErrBadStatusCode, "sendStopped: GET status code %d and reason '%s'", resp.StatusCode, trResp.Failure)
     }
 
     // Update tracker information
