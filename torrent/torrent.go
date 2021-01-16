@@ -25,7 +25,7 @@ type Torrent struct {
     Trackers []Tracker
     Progress int // total number of pieces we have
     PieceLength int // number of bytes per piece
-    TotalPieces int
+    TotalPieces int // total pieces in the torrent
     InfoHash [20]byte
     PieceHashes [][20]byte
     PeerID [20]byte
