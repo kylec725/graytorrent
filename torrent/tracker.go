@@ -29,14 +29,8 @@ func newTracker(announce string) Tracker {
 }
 
 func getTrackers(meta metainfo.BencodeMeta) ([]Tracker, error) {
-    // Get meta data of torrent file first
-    numAnnounce := 0
-    for _, group := range meta.AnnounceList {
-        numAnnounce += len(group)
-    }
-
-    // If announce-list empty, use announce only
-    if numAnnounce == 0 {
+    // If announce-list is empty, use announce only
+    if len(meta.AnnounceList) == 0 {
         // Check if no announce strings exist
         if meta.Announce == "" {
             return nil, errors.Wrap(ErrNoAnnounce, "getTrackers")
@@ -48,13 +42,13 @@ func getTrackers(meta metainfo.BencodeMeta) ([]Tracker, error) {
     }
     
     // Make list of multiple trackers
-    trackers := make([]Tracker, numAnnounce)
-    // Loop through announce-list
-    i := 0
+    var trackers []Tracker
+    var numAnnounce int
+    // Add each announce in announce-list as a tracker
     for _, group := range meta.AnnounceList {
         for _, announce := range group {
-            trackers[i] = newTracker(announce)
-            i++
+            trackers = append(trackers, newTracker(announce))
+            numAnnounce++
         }
     }
 
