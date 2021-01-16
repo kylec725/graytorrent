@@ -14,6 +14,7 @@ var (
 
 // NewWrite sets up a new torrent file to write to
 func NewWrite(to torrent.Torrent) error {
+    // TODO Change NewWrite to account for multi-file torrents by making a directory
     // Return an error if the file already exists
     if _, err := os.Stat(to.Name); err == nil {
         return errors.Wrap(ErrFileExists, "NewWrite")
