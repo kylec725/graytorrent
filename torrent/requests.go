@@ -41,7 +41,7 @@ func (tr *Tracker) getPeers(infoHash [20]byte, peerID [20]byte, port uint16, lef
         }
     }
 
-    // Unmarshal tracker response to get new interval and list of peers
+    // Unmarshal tracker response to get details and list of peers
     var trResp bencodeTrackerResp
     err = bencode.Unmarshal(resp.Body, &trResp)
     resp.Body.Close()
@@ -79,7 +79,7 @@ func (tr *Tracker) sendStopped(infoHash [20]byte, peerID [20]byte, port uint16, 
         }
     }
 
-    // Unmarshal tracker response
+    // Unmarshal tracker response to get details
     var trResp bencodeTrackerResp
     err = bencode.Unmarshal(resp.Body, &trResp)
     resp.Body.Close()

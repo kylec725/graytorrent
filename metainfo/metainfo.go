@@ -62,14 +62,14 @@ func (meta BencodeMeta) String() string {
 func Meta(filename string) (BencodeMeta, error) {
     file, err := os.Open(filename)
     if err != nil {
-        return BencodeMeta{}, errors.Wrapf(err, "GetMeta %s", filename)
+        return BencodeMeta{}, errors.Wrapf(err, "Meta %s", filename)
     }
     defer file.Close()
 
     var meta BencodeMeta
     err = bencode.Unmarshal(file, &meta)
     if err != nil {
-        return BencodeMeta{}, errors.Wrapf(err, "GetMeta %s", filename)
+        return BencodeMeta{}, errors.Wrapf(err, "Meta %s", filename)
     }
 
     return meta, nil
@@ -89,7 +89,7 @@ func (meta BencodeMeta) InfoHash() ([20]byte, error) {
     var serialInfo bytes.Buffer
     err := bencode.Marshal(&serialInfo, meta.Info)
     if err != nil {
-        return [20]byte{}, errors.Wrap(err, "GetInfoHash")
+        return [20]byte{}, errors.Wrap(err, "InfoHash")
     }
     infoHash := sha1.Sum(serialInfo.Bytes())
 
