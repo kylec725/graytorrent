@@ -20,6 +20,7 @@ import (
 
 // Torrent stores metainfo and current progress on a torrent
 type Torrent struct {
+    Path string
     Name string
     Trackers []Tracker
     Progress int // total number of pieces we have
@@ -33,10 +34,13 @@ type Torrent struct {
 // Setup gets and sets up necessary properties of a new torrent object
 func (to *Torrent) Setup() error {
     // Get metainfo
-    meta, err := metainfo.Meta(to.Name)
+    meta, err := metainfo.Meta(to.Path)
     if err != nil {
         return errors.Wrap(err, "Setup")
     }
+
+    // Set torrent name
+    to.Name = meta.Info.Name
 
     // Set info about file length
     to.Progress = 0

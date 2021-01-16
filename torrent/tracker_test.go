@@ -13,11 +13,9 @@ const debugTracker = false
 func TestGetTrackers(t *testing.T) {
     assert := assert.New(t)
 
-    to := Torrent{Name: "../tmp/change.torrent"}
-    meta, err := metainfo.Meta(to.Name)
-    if assert.Nil(err) {
-        assert.NotNil(meta)
-    }
+    to := Torrent{Path: "../tmp/change.torrent"}
+    meta, err := metainfo.Meta(to.Path)
+    assert.Nil(err, "Error with metainfo.Meta()")
 
     to.Trackers, err = getTrackers(meta)
     if assert.Nil(err) {
@@ -33,9 +31,9 @@ func TestGetTrackers(t *testing.T) {
 func TestBuildURL(t *testing.T) {
     assert := assert.New(t)
 
-    to := Torrent{Name: "../tmp/1056.txt.utf-8.torrent"}
+    to := Torrent{Path: "../tmp/1056.txt.utf-8.torrent"}
     to.Setup()
-    meta, _ := metainfo.Meta(to.Name)
+    meta, _ := metainfo.Meta(to.Path)
 
     for _, tr := range to.Trackers {
         assert.NotNil(tr)
