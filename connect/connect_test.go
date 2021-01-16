@@ -9,7 +9,7 @@ import (
 
 const debugConnect = true
 
-func TestGetOpenPort(t *testing.T) {
+func TestOpenPort(t *testing.T) {
     assert := assert.New(t)
 
     port, err := OpenPort([]int{ 6881, 6889 })

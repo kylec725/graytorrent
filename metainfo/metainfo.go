@@ -9,10 +9,14 @@ import (
     "strconv"
     "bytes"
     "crypto/sha1"
-    // "fmt"
 
     errors "github.com/pkg/errors"
     bencode "github.com/jackpal/bencode-go"
+)
+
+// Errors
+var (
+    ErrPieceHashes = errors.New("Got malformed pieces from metainfo")
 )
 
 // BencodeMeta stores metainfo about a torrent file
@@ -96,4 +100,19 @@ func (meta BencodeMeta) InfoHash() ([20]byte, error) {
     return infoHash, nil
 }
 
-// PieceHashes array of piece hashes of the torrent
+// PieceHashes returns an array of the piece hashes of the torrent
+func (meta BencodeMeta) PieceHashes() ([][20]byte, error) {
+    piecesBytes := []byte(meta.Info.Pieces)
+    if len(piecesBytes) % 20 != 0 {
+        return nil, errors.Wrap(ErrPieceHashes, "Piecehashes")
+    }
+
+    totalPieces := len(piecesBytes) / 20
+    pieceHashes := make([][20]byte, totalPieces)
+
+    for i := 0; i < totalPieces; i++ {
+        copy(pieceHashes[i][:], piecesBytes[ 20*i : 20*(i+1) ])
+    }
+
+    return pieceHashes, nil
+}

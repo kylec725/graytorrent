@@ -52,6 +52,12 @@ func (to *Torrent) Setup() error {
         return errors.Wrap(err, "Setup")
     }
 
+    // Get the piece hashes from the metainfo
+    to.PieceHashes, err = meta.PieceHashes()
+    if err != nil {
+        return errors.Wrap(err, "Setup")
+    }
+
     // Create trackers list from metainfo announce or announce-list
     to.Trackers, err = getTrackers(meta)
     if err != nil {

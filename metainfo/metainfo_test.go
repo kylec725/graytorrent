@@ -78,3 +78,15 @@ func TestInfoHash(t *testing.T) {
         }
     }
 }
+
+func TestPieceHashes(t *testing.T) {
+    assert := assert.New(t)
+
+    meta, err := Meta("../tmp/1056.txt.utf-8.torrent")
+    if assert.Nil(err) {
+        pieceHashes, err := meta.PieceHashes()
+        if assert.Nil(err) {
+            assert.NotNil(pieceHashes)
+        }
+    }
+}
