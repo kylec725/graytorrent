@@ -30,7 +30,7 @@ func TestTrackerReqs(t *testing.T) {
         fmt.Printf("Tracker%+v\n", testTracker)
     }
 
-    peerList, err := testTracker.getPeers(to.InfoHash, to.PeerID, 6881, meta.Length())
+    peerList, err := testTracker.sendStarted(to.InfoHash, to.PeerID, 6881, meta.Length())
     if assert.Nil(err) {
         for _, peer := range peerList {
             if debugRequests {
