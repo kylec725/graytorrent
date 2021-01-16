@@ -13,7 +13,6 @@ const reqRetry = 5 // Number of times to retry sending GET requests if first att
 
 // Errors
 var (
-    ErrReqRetry = errors.Errorf("Sent GET requests %d times with no response", reqRetry)
     ErrBadStatusCode = errors.New("Expected status code 200")
 )
 
