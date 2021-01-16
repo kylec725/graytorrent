@@ -33,7 +33,7 @@ type Torrent struct {
 // Setup gets and sets up necessary properties of a new torrent object
 func (to *Torrent) Setup() error {
     // Get metainfo
-    meta, err := metainfo.GetMeta(to.Name)
+    meta, err := metainfo.Meta(to.Name)
     if err != nil {
         return errors.Wrap(err, "Setup")
     }
@@ -47,7 +47,7 @@ func (to *Torrent) Setup() error {
     to.setID()
 
     // Get the infohash from the metainfo
-    to.InfoHash, err = meta.GetInfoHash()
+    to.InfoHash, err = meta.InfoHash()
     if err != nil {
         return errors.Wrap(err, "Setup")
     }

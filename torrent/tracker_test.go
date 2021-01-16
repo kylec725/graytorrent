@@ -14,7 +14,7 @@ func TestGetTrackers(t *testing.T) {
     assert := assert.New(t)
 
     to := Torrent{Name: "../tmp/change.torrent"}
-    meta, err := metainfo.GetMeta(to.Name)
+    meta, err := metainfo.Meta(to.Name)
     if assert.Nil(err) {
         assert.NotNil(meta)
     }
@@ -35,7 +35,7 @@ func TestBuildURL(t *testing.T) {
 
     to := Torrent{Name: "../tmp/1056.txt.utf-8.torrent"}
     to.Setup()
-    meta, _ := metainfo.GetMeta(to.Name)
+    meta, _ := metainfo.Meta(to.Name)
 
     for _, tr := range to.Trackers {
         assert.NotNil(tr)

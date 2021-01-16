@@ -15,7 +15,7 @@ func TestTrackerReqs(t *testing.T) {
 
     to := Torrent{Name: "../tmp/batonroad.torrent"}
     to.Setup()
-    meta, _ := metainfo.GetMeta(to.Name)
+    meta, _ := metainfo.Meta(to.Name)
 
     var testTracker Tracker
     for _, tr := range to.Trackers {
@@ -30,7 +30,7 @@ func TestTrackerReqs(t *testing.T) {
         fmt.Printf("Tracker%+v\n", testTracker)
     }
 
-    peerList, err := testTracker.getPeers(to.InfoHash, to.PeerID, 6881, meta.GetLength())
+    peerList, err := testTracker.getPeers(to.InfoHash, to.PeerID, 6881, meta.Length())
     if assert.Nil(err) {
         for _, peer := range peerList {
             if debugRequests {
@@ -39,7 +39,7 @@ func TestTrackerReqs(t *testing.T) {
         }
     }
 
-    err = testTracker.sendStopped(to.InfoHash, to.PeerID, 6881, meta.GetLength())
+    err = testTracker.sendStopped(to.InfoHash, to.PeerID, 6881, meta.Length())
     assert.Nil(err)
 
     if debugRequests {

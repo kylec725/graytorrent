@@ -13,7 +13,7 @@ const debugMetainfo = false
 func TestMetaBasic(t *testing.T) {
     assert := assert.New(t)
 
-    meta, err := GetMeta("../tmp/1056.txt.utf-8.torrent")
+    meta, err := Meta("../tmp/1056.txt.utf-8.torrent")
     if assert.Nil(err) {
         if debugMetainfo {
             fmt.Println(meta)
@@ -25,7 +25,7 @@ func TestMetaBasic(t *testing.T) {
 func TestMetaExtra(t *testing.T) {
     assert := assert.New(t)
 
-    meta, err := GetMeta("../tmp/shared.torrent")
+    meta, err := Meta("../tmp/shared.torrent")
     if assert.Nil(err) {
         if debugMetainfo {
             fmt.Println(meta)
@@ -33,7 +33,7 @@ func TestMetaExtra(t *testing.T) {
         assert.NotNil(meta)
     }
 
-    meta, err = GetMeta("../tmp/change.torrent")
+    meta, err = Meta("../tmp/change.torrent")
     if assert.Nil(err) {
         if debugMetainfo {
             fmt.Println(meta)
@@ -45,9 +45,9 @@ func TestMetaExtra(t *testing.T) {
 func TestInfoHash(t *testing.T) {
     assert := assert.New(t)
 
-    meta, err := GetMeta("../tmp/1056.txt.utf-8.torrent")
+    meta, err := Meta("../tmp/1056.txt.utf-8.torrent")
     if assert.Nil(err) {
-        infoHash, err := meta.GetInfoHash()
+        infoHash, err := meta.InfoHash()
         if assert.Nil(err) {
             if debugMetainfo {
                 fmt.Println("infohash:", hex.EncodeToString(infoHash[:]))
@@ -56,9 +56,9 @@ func TestInfoHash(t *testing.T) {
         }
     }
 
-    meta, err = GetMeta("../tmp/change.torrent")
+    meta, err = Meta("../tmp/change.torrent")
     if assert.Nil(err) {
-        infoHash, err := meta.GetInfoHash()
+        infoHash, err := meta.InfoHash()
         if assert.Nil(err) {
             if debugMetainfo {
                 fmt.Println("infohash:", hex.EncodeToString(infoHash[:]))
@@ -67,9 +67,9 @@ func TestInfoHash(t *testing.T) {
         }
     }
 
-    meta, err = GetMeta("../tmp/batonroad.torrent")
+    meta, err = Meta("../tmp/batonroad.torrent")
     if assert.Nil(err) {
-        infoHash, err := meta.GetInfoHash()
+        infoHash, err := meta.InfoHash()
         if assert.Nil(err) {
             if debugMetainfo {
                 fmt.Println("infohash:", hex.EncodeToString(infoHash[:]))
