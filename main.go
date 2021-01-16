@@ -65,7 +65,7 @@ func init() {
         }
     }
 
-    port, err = connect.GetOpenPort(viper.GetIntSlice("network.portrange"))
+    port, err = connect.OpenPort(viper.GetIntSlice("network.portrange"))
     if err != nil {
         log.Fatalln("Open port could not be obtained for the client:", err)
     }

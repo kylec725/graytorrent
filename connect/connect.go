@@ -18,11 +18,11 @@ var (
     ErrNoOpenPort = errors.New("Open port not found")
 )
 
-// GetOpenPort finds a local unused port within a range
-func GetOpenPort(portRange []int) (uint16, error) {
+// OpenPort finds a local unused port within a range
+func OpenPort(portRange []int) (uint16, error) {
     hostname, err := os.Hostname()
     if err != nil {
-        return 0, err
+        return 0, errors.Wrap(err, "GetOpenPort")
     }
     if len(portRange) < 2 {
         return 0, errors.Wrap(ErrBadPortRange, "GetOpenPort")
