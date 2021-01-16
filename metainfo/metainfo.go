@@ -66,14 +66,14 @@ func (meta BencodeMeta) String() string {
 func Meta(filename string) (BencodeMeta, error) {
     file, err := os.Open(filename)
     if err != nil {
-        return BencodeMeta{}, errors.Wrapf(err, "Meta %s", filename)
+        return BencodeMeta{}, errors.Wrap(err, "Meta")
     }
     defer file.Close()
 
     var meta BencodeMeta
     err = bencode.Unmarshal(file, &meta)
     if err != nil {
-        return BencodeMeta{}, errors.Wrapf(err, "Meta %s", filename)
+        return BencodeMeta{}, errors.Wrap(err, "Meta")
     }
 
     return meta, nil
