@@ -25,7 +25,7 @@ type Tracker struct {
 }
 
 func newTracker(announce string) Tracker {
-    return Tracker{announce, false, 180, 0, 0}
+    return Tracker{Announce: announce, Working: false, Interval: 180, Complete: 0, Incomplete: 0}
 }
 
 func getTrackers(meta metainfo.BencodeMeta) ([]Tracker, error) {
