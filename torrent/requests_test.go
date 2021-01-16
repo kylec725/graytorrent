@@ -41,4 +41,8 @@ func TestTrackerReqs(t *testing.T) {
 
     err = testTracker.sendStopped(to.InfoHash, to.PeerID, 6881, meta.GetLength())
     assert.Nil(err)
+
+    if debugRequests {
+        fmt.Printf("Tracker%+v\n", testTracker)
+    }
 }
