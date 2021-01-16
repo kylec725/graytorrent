@@ -22,10 +22,10 @@ var (
 func OpenPort(portRange []int) (uint16, error) {
     hostname, err := os.Hostname()
     if err != nil {
-        return 0, errors.Wrap(err, "GetOpenPort")
+        return 0, errors.Wrap(err, "OpenPort")
     }
     if len(portRange) < 2 {
-        return 0, errors.Wrap(ErrBadPortRange, "GetOpenPort")
+        return 0, errors.Wrap(ErrBadPortRange, "OpenPort")
     }
     for port := portRange[0]; port <= portRange[1]; port++ {
         _, err := net.Dial("tcp", hostname + ":" + strconv.Itoa(port))
@@ -33,5 +33,5 @@ func OpenPort(portRange []int) (uint16, error) {
             return uint16(port), nil
         }
     }
-    return 0, errors.Wrap(ErrNoOpenPort, "GetOpenPort")
+    return 0, errors.Wrap(ErrNoOpenPort, "OpenPort")
 }
