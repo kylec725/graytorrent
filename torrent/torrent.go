@@ -67,6 +67,7 @@ func (to *Torrent) Setup() error {
     if err != nil {
         return errors.Wrap(err, "Setup")
     }
+
     return nil
 }
 
