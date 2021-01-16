@@ -25,19 +25,19 @@ type bencodeTrackerResp struct {
     Incomplete int `bencode:"incomplete"`
 }
 
-func (tr *Tracker) getPeers(infoHash [20]byte, peerID [20]byte, port uint16, left int) ([]peer.Peer, error) {
+func (tr *Tracker) sendStarted(infoHash [20]byte, peerID [20]byte, port uint16, left int) ([]peer.Peer, error) {
     req, err := tr.buildURL(infoHash, peerID, port, left, "started")
     if err != nil {
-        return nil, errors.Wrap(err, "getPeers")
+        return nil, errors.Wrap(err, "sendStarted")
     }
 
     resp, err := http.Get(req)
     // Resend the GET request several times until we receive a response
     for i := 0; err != nil; resp, err = http.Get(req) {
         if err, ok := err.(*url.Error); !ok {
-            return nil, errors.Wrap(err, "getPeers")
+            return nil, errors.Wrap(err, "sendStarted")
         } else if i++; i > reqRetry {
-            return nil, errors.Wrap(ErrReqRetry, "getPeers")
+            return nil, errors.Wrap(ErrReqRetry, "sendStarted")
         }
     }
 
@@ -46,11 +46,11 @@ func (tr *Tracker) getPeers(infoHash [20]byte, peerID [20]byte, port uint16, lef
     err = bencode.Unmarshal(resp.Body, &trResp)
     resp.Body.Close()
     if err != nil {
-        return nil, errors.Wrap(err, "getPeers")
+        return nil, errors.Wrap(err, "sendStarted")
     }
 
     if resp.StatusCode != 200 {
-        return nil, errors.Wrapf(ErrBadStatusCode, "getPeers: GET status code %d and reason '%s'", resp.StatusCode, trResp.Failure)
+        return nil, errors.Wrapf(ErrBadStatusCode, "sendStarted: GET status code %d and reason '%s'", resp.StatusCode, trResp.Failure)
     }
 
     // Update tracker information
