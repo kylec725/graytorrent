@@ -13,6 +13,7 @@ package torrent
 import (
     "time"
     "math/rand"
+    "path/filepath"
 
     "github.com/kylec725/graytorrent/metainfo"
     "github.com/pkg/errors"
@@ -54,6 +55,9 @@ func (to *Torrent) Setup() error {
     to.PieceLength = meta.Info.PieceLength
     to.TotalPieces = len(meta.Info.Pieces) / 20
 
+    // Set torrent's filepaths
+    to.Paths = getPaths(meta)
+
     // Set the peer ID
     to.setID()
 
@@ -91,6 +95,24 @@ func (to *Torrent) setID() {
     for i, c := range id {
         to.PeerID[i] = byte(c)
     }
+}
+
+func getPaths(meta metainfo.BencodeMeta) []Path {
+    // Single file
+    if meta.Info.Length > 0 {
+        paths := make([]Path, 1)
+        paths[0] = Path{ length: meta.Info.Length, path: meta.Info.Name }
+        return paths
+    }
+
+    // Multiple files
+    var paths []Path
+    for _, file := range meta.Info.Files {
+        newPath := filepath.Join(file.Path...)
+        paths = append(paths, Path{ length: file.Length, path: newPath })
+    }
+
+    return paths
 }
 
 // Send request to trackers concurrently to get list of peers
