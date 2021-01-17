@@ -27,17 +27,13 @@ func (tr *Tracker) sendStarted(infoHash [20]byte, peerID [20]byte, port uint16, 
 
     resp, err := tr.httpClient.Get(req)
     if err != nil {
-        // Resend a GET request once
-        resp, err = tr.httpClient.Get(req)
-        if err != nil {
-            return nil, errors.Wrap(err, "sendStarted")
-        }
+        return nil, errors.Wrap(err, "sendStarted")
     }
+    defer resp.Body.Close()
 
     // Unmarshal tracker response to get details and list of peers
     var trResp bencodeTrackerResp
     err = bencode.Unmarshal(resp.Body, &trResp)
-    resp.Body.Close()
     if err != nil {
         return nil, errors.Wrap(err, "sendStarted")
     }
@@ -68,17 +64,13 @@ func (tr *Tracker) sendStopped(infoHash [20]byte, peerID [20]byte, port uint16, 
 
     resp, err := tr.httpClient.Get(req)
     if err != nil {
-        // Resend a GET request once
-        resp, err = tr.httpClient.Get(req)
-        if err != nil {
-            return errors.Wrap(err, "sendStopped")
-        }
+        return errors.Wrap(err, "sendStopped")
     }
+    defer resp.Body.Close()
 
     // Unmarshal tracker response to get details
     var trResp bencodeTrackerResp
     err = bencode.Unmarshal(resp.Body, &trResp)
-    resp.Body.Close()
     if err != nil {
         return errors.Wrap(err, "sendStopped")
     }
