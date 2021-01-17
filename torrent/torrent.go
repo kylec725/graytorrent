@@ -20,8 +20,9 @@ import (
 
 // Torrent stores metainfo and current progress on a torrent
 type Torrent struct {
-    Path string
+    Source string
     Name string
+    Paths []Path
     Trackers []Tracker
     Progress int // total number of pieces we have
     PieceLength int // number of bytes per piece
@@ -31,10 +32,16 @@ type Torrent struct {
     PeerID [20]byte
 }
 
+// Path stores info about each file in a torrent
+type Path struct {
+    length int
+    path string
+}
+
 // Setup gets and sets up necessary properties of a new torrent object
 func (to *Torrent) Setup() error {
     // Get metainfo
-    meta, err := metainfo.Meta(to.Path)
+    meta, err := metainfo.Meta(to.Source)
     if err != nil {
         return errors.Wrap(err, "Setup")
     }

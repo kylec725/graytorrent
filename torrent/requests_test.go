@@ -13,9 +13,9 @@ const debugRequests = false
 func TestTrackerReqs(t *testing.T) {
     assert := assert.New(t)
 
-    to := Torrent{Path: "../tmp/batonroad.torrent"}
+    to := Torrent{Source: "../tmp/batonroad.torrent"}
     to.Setup()
-    meta, _ := metainfo.Meta(to.Path)
+    meta, _ := metainfo.Meta(to.Source)
 
     var testTracker Tracker
     for _, tr := range to.Trackers {

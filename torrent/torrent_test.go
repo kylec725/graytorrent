@@ -12,7 +12,7 @@ const debugTorrent = false
 func TestSetup(t *testing.T) {
     assert := assert.New(t)
 
-    var to Torrent = Torrent{Path: "../tmp/change.torrent"}
+    var to Torrent = Torrent{Source: "../tmp/change.torrent"}
     err := to.Setup()
     if assert.Nil(err) {
         assert.Equal("[Nipponsei] BLEACH OP12 Single - chAngE [miwa].zip", to.Name, "Name is incorrect")
@@ -22,7 +22,7 @@ func TestSetup(t *testing.T) {
 func TestGetID(t *testing.T) {
     assert := assert.New(t)
 
-    var to Torrent = Torrent{Path: "../tmp/change.torrent"}
+    var to Torrent = Torrent{Source: "../tmp/change.torrent"}
     to.setID()
     halfID := string(to.PeerID[0:8])
 
