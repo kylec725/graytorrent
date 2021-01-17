@@ -14,7 +14,7 @@ const debugWrite = false
 func TestNewWrite(t *testing.T) {
     assert := assert.New(t)
 
-    to := torrent.Torrent{Path: "../tmp/change.torrent"}
+    to := torrent.Torrent{Source: "../tmp/change.torrent"}
     err := to.Setup()
     assert.Nil(err, "torrent Setup() error")
 
