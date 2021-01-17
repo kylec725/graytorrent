@@ -5,6 +5,7 @@ import (
     "time"
     "math/rand"
     "net/url"
+    "net/http"
 
     "github.com/kylec725/graytorrent/metainfo"
     "github.com/pkg/errors"
@@ -22,10 +23,18 @@ type Tracker struct {
     Interval int
     Complete int
     Incomplete int
+    httpClient *http.Client
 }
 
 func newTracker(announce string) Tracker {
-    return Tracker{Announce: announce, Working: false, Interval: 180, Complete: 0, Incomplete: 0}
+    return Tracker{
+        Announce: announce,
+        Working: false,
+        Interval: 180,
+        Complete: 0,
+        Incomplete: 0,
+        httpClient: &http.Client{ Timeout: 20 * time.Second },
+    }
 }
 
 func getTrackers(meta metainfo.BencodeMeta) ([]Tracker, error) {

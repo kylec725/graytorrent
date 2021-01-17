@@ -1,15 +1,10 @@
 package torrent
 
 import (
-    "net/http"
-    "net/url"
-
     "github.com/kylec725/graytorrent/peer"
     "github.com/pkg/errors"
     bencode "github.com/jackpal/bencode-go"
 )
-
-const reqRetry = 5 // Number of times to retry sending GET requests if first attempt fails
 
 // Errors
 var (
@@ -30,13 +25,13 @@ func (tr *Tracker) sendStarted(infoHash [20]byte, peerID [20]byte, port uint16, 
         return nil, errors.Wrap(err, "sendStarted")
     }
 
-    resp, err := http.Get(req)
-    // Resend the GET request several times until we receive a response
-    for i := 0; err != nil; resp, err = http.Get(req) {
-        if err, ok := err.(*url.Error); !ok || i > reqRetry {
+    resp, err := tr.httpClient.Get(req)
+    if err != nil {
+        // Resend a GET request once
+        resp, err = tr.httpClient.Get(req)
+        if err != nil {
             return nil, errors.Wrap(err, "sendStarted")
         }
-        i++
     }
 
     // Unmarshal tracker response to get details and list of peers
@@ -57,8 +52,12 @@ func (tr *Tracker) sendStarted(infoHash [20]byte, peerID [20]byte, port uint16, 
     tr.Incomplete = trResp.Incomplete
 
     peersBytes := []byte(trResp.Peers)
+    peersList, err := peer.Unmarshal(peersBytes)
+    if err != nil {
+        return nil, errors.Wrap(err, "sendStarted")
+    }
 
-    return peer.Unmarshal(peersBytes)
+    return peersList, nil
 }
 
 func (tr *Tracker) sendStopped(infoHash [20]byte, peerID [20]byte, port uint16, left int) error {
@@ -67,13 +66,13 @@ func (tr *Tracker) sendStopped(infoHash [20]byte, peerID [20]byte, port uint16, 
         return errors.Wrap(err, "sendStopped")
     }
 
-    resp, err := http.Get(req)
-    // Resend the GET request several times until we receive a response
-    for i := 0; err != nil; resp, err = http.Get(req) {
-        if err, ok := err.(*url.Error); !ok || i > reqRetry {
+    resp, err := tr.httpClient.Get(req)
+    if err != nil {
+        // Resend a GET request once
+        resp, err = tr.httpClient.Get(req)
+        if err != nil {
             return errors.Wrap(err, "sendStopped")
         }
-        i++
     }
 
     // Unmarshal tracker response to get details

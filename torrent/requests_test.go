@@ -8,7 +8,7 @@ import (
     "github.com/stretchr/testify/assert"
 )
 
-const debugRequests = true
+const debugRequests = false
 
 func TestTrackerReqs(t *testing.T) {
     assert := assert.New(t)
@@ -37,12 +37,12 @@ func TestTrackerReqs(t *testing.T) {
                 fmt.Println("Peer:", peer)
             }
         }
+        err = testTracker.sendStopped(to.InfoHash, to.PeerID, 6881, meta.Length())
+        assert.Nil(err)
+
+        if debugRequests {
+            fmt.Printf("Tracker%+v\n", testTracker)
+        }
     }
 
-    err = testTracker.sendStopped(to.InfoHash, to.PeerID, 6881, meta.Length())
-    assert.Nil(err)
-
-    if debugRequests {
-        fmt.Printf("Tracker%+v\n", testTracker)
-    }
 }
