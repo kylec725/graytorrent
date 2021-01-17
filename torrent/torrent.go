@@ -35,8 +35,8 @@ type Torrent struct {
 
 // Path stores info about each file in a torrent
 type Path struct {
-    length int
-    path string
+    Length int
+    Path string
 }
 
 // Setup gets and sets up necessary properties of a new torrent object
@@ -101,7 +101,7 @@ func getPaths(meta metainfo.BencodeMeta) []Path {
     // Single file
     if meta.Info.Length > 0 {
         paths := make([]Path, 1)
-        paths[0] = Path{ length: meta.Info.Length, path: meta.Info.Name }
+        paths[0] = Path{ Length: meta.Info.Length, Path: meta.Info.Name }
         return paths
     }
 
@@ -110,7 +110,7 @@ func getPaths(meta metainfo.BencodeMeta) []Path {
     for _, file := range meta.Info.Files {
         newPath := filepath.Join(file.Path...)
         newPath = filepath.Join(meta.Info.Name, newPath)
-        paths = append(paths, Path{ length: file.Length, path: newPath })
+        paths = append(paths, Path{ Length: file.Length, Path: newPath })
     }
 
     return paths
