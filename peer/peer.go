@@ -34,12 +34,12 @@ func Unmarshal(peersBytes []byte) ([]Peer, error) {
     }
 
     numPeers := len(peersBytes) / 6
-    peerList := make([]Peer, numPeers)
+    peersList := make([]Peer, numPeers)
 
     for i := 0; i < numPeers; i++ {
-        peerList[i].Host = net.IP(peersBytes[ i*6 : i*6+4 ])
-        peerList[i].Port = binary.BigEndian.Uint16(peersBytes[ i*6+4 : (i+1)*6 ])
+        peersList[i].Host = net.IP(peersBytes[ i*6 : i*6+4 ])
+        peersList[i].Port = binary.BigEndian.Uint16(peersBytes[ i*6+4 : (i+1)*6 ])
     }
 
-    return peerList, nil
+    return peersList, nil
 }
