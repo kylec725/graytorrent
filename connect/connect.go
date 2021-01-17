@@ -9,7 +9,7 @@ import (
     "os"
     "strconv"
     
-    errors "github.com/pkg/errors"
+    "github.com/pkg/errors"
 )
 
 // Errors

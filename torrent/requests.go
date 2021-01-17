@@ -5,7 +5,7 @@ import (
     "net/url"
 
     "github.com/kylec725/graytorrent/peer"
-    errors "github.com/pkg/errors"
+    "github.com/pkg/errors"
     bencode "github.com/jackpal/bencode-go"
 )
 

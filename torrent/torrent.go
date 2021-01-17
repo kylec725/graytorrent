@@ -15,7 +15,7 @@ import (
     "math/rand"
 
     "github.com/kylec725/graytorrent/metainfo"
-    errors "github.com/pkg/errors"
+    "github.com/pkg/errors"
 )
 
 // Torrent stores metainfo and current progress on a torrent

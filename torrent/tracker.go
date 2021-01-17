@@ -7,7 +7,7 @@ import (
     "net/url"
 
     "github.com/kylec725/graytorrent/metainfo"
-    errors "github.com/pkg/errors"
+    "github.com/pkg/errors"
 )
 
 // Errors

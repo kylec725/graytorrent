@@ -10,7 +10,7 @@ import (
     "bytes"
     "crypto/sha1"
 
-    errors "github.com/pkg/errors"
+    "github.com/pkg/errors"
     bencode "github.com/jackpal/bencode-go"
 )
 
