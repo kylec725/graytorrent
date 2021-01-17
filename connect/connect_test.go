@@ -7,7 +7,7 @@ import (
     "github.com/stretchr/testify/assert"
 )
 
-const debugConnect = true
+const debugConnect = false
 
 func TestOpenPort(t *testing.T) {
     assert := assert.New(t)
