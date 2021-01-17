@@ -109,6 +109,7 @@ func getPaths(meta metainfo.BencodeMeta) []Path {
     var paths []Path
     for _, file := range meta.Info.Files {
         newPath := filepath.Join(file.Path...)
+        newPath = filepath.Join(meta.Info.Name, newPath)
         paths = append(paths, Path{ length: file.Length, path: newPath })
     }
 
