@@ -31,6 +31,10 @@ func TestTrackerReqs(t *testing.T) {
     }
 
     peersList, err := testTracker.sendStarted(to.InfoHash, to.PeerID, 6881, meta.Length())
+    // Retry a get request since this tracker seems to fail on the first connection attempt
+    if err != nil {
+        peersList, err = testTracker.sendStarted(to.InfoHash, to.PeerID, 6881, meta.Length())
+    }
     if assert.Nil(err) {
         for _, peer := range peersList {
             if debugRequests {
