@@ -30,7 +30,7 @@ func newTracker(announce string) Tracker {
     return Tracker{
         Announce: announce,
         Working: false,
-        Interval: 180,
+        Interval: 60,
         Complete: 0,
         Incomplete: 0,
         httpClient: &http.Client{ Timeout: 20 * time.Second },
