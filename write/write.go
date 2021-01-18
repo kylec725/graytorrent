@@ -38,8 +38,13 @@ func NewWrite(to torrent.Torrent) error {
     return nil
 }
 
-// AddPiece takes a torrent block, and write it to the appropriate file
-func AddPiece(to torrent.Torrent, index, begin int, block []byte) error {
+// AddBlock adds a block to a slice of bytes
+func AddBlock(to torrent.Torrent, index, begin int, block []byte) ([]byte, error) {
+    return nil, nil
+}
+
+// AddPiece takes a torrent piece, and writes it to the appropriate file
+func AddPiece(to torrent.Torrent, index int, piece []byte) error {
     return nil
 }
 
@@ -49,6 +54,6 @@ func GetPiece(to torrent.Torrent, index int) ([]byte, error) {
 }
 
 // VerifyPiece checks that a completed piece has the correct hash
-func VerifyPiece(to torrent.Torrent, index int) bool {
+func VerifyPiece(to torrent.Torrent, index int, piece []byte) bool {
     return false
 }
