@@ -18,7 +18,7 @@ var (
     err error
     // g *gocui.Gui
 
-    filename = flag.StringP("file", "f", "", "Filename of torrent file")
+    filename string
 )
 
 func init() {
@@ -31,6 +31,7 @@ func init() {
     log.SetOutput(logFile)
     log.Println("Graytorrent started")
 
+    flag.StringVarP(&filename, "file", "f", "", "Filename of torrent file")
     flag.Parse()
 }
 
