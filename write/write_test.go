@@ -64,3 +64,33 @@ func TestNewWriteMulti(t *testing.T) {
         assert.NotNil(err)
     }
 }
+
+func TestPieceSize(t *testing.T) {
+    to := torrent.Torrent{Source: "../tmp/change.torrent"}
+    err := to.Setup()
+    assert.Nil(t, err, "torrent Setup() error")
+
+    assert.Equal(t, 193972, pieceSize(&to, 149))
+}
+
+func TestAddBlock(t *testing.T) {
+    assert := assert.New(t)
+
+    to := torrent.Torrent{Source: "../tmp/change.torrent"}
+    err := to.Setup()
+    assert.Nil(err, "torrent Setup() error")
+
+    index := 8
+    begin := 0
+    piece := make([]byte, to.PieceLength)
+    block := []byte("hello")
+
+    if debugWrite {
+        fmt.Println("BlockLength:", len(block))
+        fmt.Println("PieceLength:", len(piece))
+    }
+
+    err = AddBlock(&to, index, begin, block, piece)
+    assert.Nil(err)
+    assert.Equal(block, piece[begin:begin + len(block)])
+}

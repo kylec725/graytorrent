@@ -12,6 +12,7 @@ import (
 var (
     ErrFileExists = errors.New("Torrent's file already exists")
     ErrBadBlockBounds = errors.New("Received invalid bounds for a block")
+    ErrCopyFailed = errors.New("Unexpected number of bytes copied")
 )
 
 // NewWrite sets up a new torrent file to write to
@@ -49,7 +50,17 @@ func pieceSize(to *torrent.Torrent, index int) int {
 // AddBlock adds a block to a piece
 func AddBlock(to *torrent.Torrent, index, begin int, block, piece []byte) error {
     pieceSize := pieceSize(to, index)
-    end := begin + len(block)
+    end := begin + len(block) - 1 // last index in the block
+
+    // Check if bounds are possible or if integer overflow has occurred
+    if begin < 0 || begin > (pieceSize - 1) || end < 0 || end > (pieceSize - 1) {
+        return errors.Wrap(ErrBadBlockBounds, "AddBlock")
+    }
+
+    bytesCopied := copy(piece[begin:end+1], block)
+    if bytesCopied != len(block) {
+        return errors.Wrap(ErrCopyFailed, "AddBlock")
+    }
 
     return nil
 }
