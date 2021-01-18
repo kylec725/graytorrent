@@ -4,10 +4,10 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"flag"
 
     // "github.com/kylec725/graytorrent/gui"
     "github.com/kylec725/graytorrent/connect"
+    flag "github.com/spf13/pflag"
     viper "github.com/spf13/viper"
 	// gocui "github.com/jroimartin/gocui"
 )
@@ -18,7 +18,7 @@ var (
     err error
     // g *gocui.Gui
 
-    filename = flag.String("file", "", "Filename of torrent file")
+    filename = flag.StringP("file", "f", "", "Filename of torrent file")
 )
 
 func init() {
@@ -31,8 +31,6 @@ func init() {
     log.SetOutput(logFile)
     log.Println("Graytorrent started")
 
-    // Get filename argument for single-torrent execution
-    flag.StringVar(filename, "f", "", "Filename of torrent file")
     flag.Parse()
 }
 
