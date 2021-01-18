@@ -16,6 +16,8 @@ func TestSetup(t *testing.T) {
     err := to.Setup()
     if assert.Nil(err) {
         assert.Equal("[Nipponsei] BLEACH OP12 Single - chAngE [miwa].zip", to.Name, "Name is incorrect")
+        assert.Equal(262144, to.PieceLength, "Name is incorrect")
+        assert.Equal(150, to.TotalPieces, "Name is incorrect")
     }
 }
 
