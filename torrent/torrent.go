@@ -16,6 +16,7 @@ import (
     "path/filepath"
 
     "github.com/kylec725/graytorrent/metainfo"
+    "github.com/kylec725/graytorrent/bitfield"
     "github.com/pkg/errors"
 )
 
@@ -25,9 +26,10 @@ type Torrent struct {
     Name string
     Paths []Path
     Trackers []Tracker
-    Progress int // total number of pieces we have
+    Bitfield bitfield.Bitfield // bitfield of current pieces
     PieceLength int // number of bytes per piece
     TotalPieces int // total pieces in the torrent
+    TotalLength int // total length of the torrent
     InfoHash [20]byte
     PieceHashes [][20]byte
     PeerID [20]byte
@@ -51,9 +53,9 @@ func (to *Torrent) Setup() error {
     to.Name = meta.Info.Name
 
     // Set info about file length
-    to.Progress = 0
     to.PieceLength = meta.Info.PieceLength
     to.TotalPieces = len(meta.Info.Pieces) / 20
+    to.TotalLength = meta.Length()
 
     // Set torrent's filepaths
     to.Paths = getPaths(meta)
