@@ -48,14 +48,29 @@ func pieceSize(to *torrent.Torrent, index int) int {
     return to.PieceLength
 }
 
-// pieceFiles returns the indexes of files the piece is a part of
-func pieceFiles(to *torrent.Torrent, index int) []int {
-    byteStart := index * to.PieceLength
-    byteEnd := byteStart + to.PieceLength
-    if byteEnd > to.TotalLength {
-        byteEnd = to.TotalLength
+// filesInPiece returns the indexes of files the piece is a part of
+func filesInPiece(to *torrent.Torrent, index int) []int {
+    var filesInPiece []int
+    start := index * to.PieceLength // start byte index
+    end := start + to.PieceLength // end byte index + 1
+    if end > to.TotalLength {
+        end = to.TotalLength
     }
-    return nil
+
+    // Add all files within the piece's range to its list
+    curr := 0
+    for i, path := range to.Paths {
+        curr += path.Length
+        // Any file after the piece's start is part of the piece
+        if curr > start {
+            filesInPiece = append(filesInPiece, i)
+        }
+        // Exit once we past the last byte in the piece
+        if curr >= end {
+            break
+        }
+    }
+    return filesInPiece
 }
 
 // AddBlock adds a block to a piece
