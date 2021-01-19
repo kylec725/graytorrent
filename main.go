@@ -32,7 +32,7 @@ func init() {
 func init() {
     portRange := viper.GetIntSlice("network.portrange")
     port, err = connect.OpenPort(portRange)
-    if err == nil {
+    if err != nil {
         log.WithField("portrange", portRange).Warn("No open port found in portrange, using random port")
         // TODO get a random port to use for the client
     }
