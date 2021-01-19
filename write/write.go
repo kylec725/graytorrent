@@ -3,6 +3,8 @@ package write
 import (
     "os"
     "path/filepath"
+    // "io/ioutil"
+    "fmt"
 
     "github.com/kylec725/graytorrent/torrent"
     "github.com/pkg/errors"
@@ -78,7 +80,6 @@ func AddBlock(to *torrent.Torrent, index, begin int, block, piece []byte) error 
     if index < 0 || index >= to.TotalPieces {
         return errors.Wrap(ErrInvalidPiece, "AddBlock")
     }
-
     pieceSize := pieceSize(to, index)
     end := begin + len(block) // last index + 1 in the block
 
@@ -99,6 +100,11 @@ func AddBlock(to *torrent.Torrent, index, begin int, block, piece []byte) error 
 func AddPiece(to *torrent.Torrent, index int, piece []byte) error {
     if index < 0 || index >= to.TotalPieces {
         return errors.Wrap(ErrInvalidPiece, "AddPiece")
+    }
+    filesList := filesInPiece(to, index)
+
+    for _, i := range filesList {
+        fmt.Println("file:", to.Paths[i].Path)
     }
 
     return nil

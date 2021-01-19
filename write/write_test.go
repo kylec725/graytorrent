@@ -74,8 +74,6 @@ func TestPieceSize(t *testing.T) {
 }
 
 func TestPieceFiles(t *testing.T) {
-    assert := assert.New(t)
-
     to := torrent.Torrent{
         PieceLength: 5,
         TotalLength: 19,
@@ -95,7 +93,7 @@ func TestPieceFiles(t *testing.T) {
         fmt.Println("expected:", expected)
         fmt.Println("actual:", actual)
     }
-    assert.Equal(expected, actual)
+    assert.Equal(t, expected, actual)
 }
 
 func TestAddBlock(t *testing.T) {
@@ -118,4 +116,18 @@ func TestAddBlock(t *testing.T) {
     err = AddBlock(&to, index, begin, block, piece)
     assert.Nil(err)
     assert.Equal(block, piece[begin:begin + len(block)])
+}
+
+func TestAddPiece(t *testing.T) {
+    assert := assert.New(t)
+
+    to := torrent.Torrent{Source: "../tmp/batonroad.torrent"}
+    err := to.Setup()
+    assert.Nil(err, "torrent Setup() error")
+    fmt.Println("total pieces:", to.TotalPieces)
+
+    index := 500
+    piece := []byte{}
+
+    AddPiece(&to, index, piece)
 }
