@@ -33,7 +33,10 @@ func init() {
     portRange := viper.GetIntSlice("network.portrange")
     port, err = connect.OpenPort(portRange)
     if err != nil {
-        log.WithField("portrange", portRange).Warn("No open port found in portrange, using random port")
+        log.WithFields(log.Fields{
+            "error": err.Error(),
+            "portrange": portRange,
+        }).Warn("No open port found in portrange, using random port")
         // TODO get a random port to use for the client
     }
 }
@@ -50,6 +53,6 @@ func main() {
     // Send torrent stopped messages
     // Save torrent progresses to history file
 
-    log.Info("Graytorrent ended")
+    log.Info("Graytorrent stopped")
 }
 
