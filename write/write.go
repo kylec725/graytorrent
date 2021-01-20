@@ -113,7 +113,7 @@ func AddPiece(to *torrent.Torrent, index int, piece []byte) error {
 // GetPiece returns a piece of a torrent as a byte slice
 func GetPiece(to *torrent.Torrent, index int) ([]byte, error) {
     if index < 0 || index >= to.TotalPieces {
-        return nil, errors.Wrap(ErrInvalidPiece, "GetPiece")
+        return nil, errors.Wrap(ErrPieceIndex, "GetPiece")
     }
 
     return nil, nil
