@@ -49,7 +49,7 @@ func getTrackers(meta metainfo.BencodeMeta) ([]Tracker, error) {
         trackers[0] = newTracker(meta.Announce)
         return trackers, nil
     }
-    
+
     // Make list of multiple trackers
     var trackers []Tracker
     var numAnnounce int
