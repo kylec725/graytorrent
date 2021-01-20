@@ -15,7 +15,7 @@ var (
     ErrFileExists = errors.New("Torrent's file already exists")
     ErrBadBlockBounds = errors.New("Received invalid bounds for a block")
     ErrCopyFailed = errors.New("Unexpected number of bytes copied")
-    ErrInvalidPiece = errors.New("Piece index was out of bounds")
+    ErrPieceIndex = errors.New("Piece index was out of bounds")
 )
 
 // NewWrite sets up the files a torrent needs to write to
@@ -78,7 +78,7 @@ func filesInPiece(to *torrent.Torrent, index int) []int {
 // AddBlock adds a block to a piece
 func AddBlock(to *torrent.Torrent, index, begin int, block, piece []byte) error {
     if index < 0 || index >= to.TotalPieces {
-        return errors.Wrap(ErrInvalidPiece, "AddBlock")
+        return errors.Wrap(ErrPieceIndex, "AddBlock")
     }
     pieceSize := pieceSize(to, index)
     end := begin + len(block) // last index + 1 in the block
@@ -99,7 +99,7 @@ func AddBlock(to *torrent.Torrent, index, begin int, block, piece []byte) error 
 // AddPiece takes a torrent piece, and writes it to the appropriate file
 func AddPiece(to *torrent.Torrent, index int, piece []byte) error {
     if index < 0 || index >= to.TotalPieces {
-        return errors.Wrap(ErrInvalidPiece, "AddPiece")
+        return errors.Wrap(ErrPieceIndex, "AddPiece")
     }
     filesList := filesInPiece(to, index)
 
