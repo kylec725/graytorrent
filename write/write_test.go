@@ -126,7 +126,7 @@ func TestAddPiece(t *testing.T) {
     assert.Nil(err, "torrent Setup() error")
     fmt.Println("total pieces:", to.TotalPieces)
 
-    index := 500
+    index := 439
     piece := []byte{}
 
     AddPiece(&to, index, piece)

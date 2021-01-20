@@ -30,9 +30,9 @@ type bencodeInfo struct {
     Name string `bencode:"name"`
     PieceLength int `bencode:"piece length"`
     Pieces string `bencode:"pieces"`
-    Length int `bencode:"length,omitempty"` // Single file mode
-    Files []bencodeFile `bencode:"files,omitempty"` // Multiple file mode
-    Private int `bencode:"private,omitempty"` // Only use peers from tracker
+    Length int `bencode:"length,omitempty"`  // Single file mode
+    Files []bencodeFile `bencode:"files,omitempty"`  // Multiple file mode
+    Private int `bencode:"private,omitempty"`  // Only use peers from tracker
 }
 
 type bencodeFile struct {

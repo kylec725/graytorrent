@@ -50,11 +50,21 @@ func pieceSize(to *torrent.Torrent, index int) int {
     return to.PieceLength
 }
 
+// pieceBounds returns the start and ending indices of a piece (end is exclusive)
+func pieceBounds(to *torrent.Torrent, index int) (int, int) {
+    start := index * to.PieceLength  // start byte index
+    end := start + to.PieceLength  // end byte index + 1
+    if end > to.TotalLength {
+        end = to.TotalLength
+    }
+    return start, end
+}
+
 // filesInPiece returns the indexes of files the piece is a part of
 func filesInPiece(to *torrent.Torrent, index int) []int {
     var filesInPiece []int
-    start := index * to.PieceLength // start byte index
-    end := start + to.PieceLength // end byte index + 1
+    start := index * to.PieceLength  // start byte index
+    end := start + to.PieceLength  // end byte index + 1
     if end > to.TotalLength {
         end = to.TotalLength
     }
@@ -81,7 +91,7 @@ func AddBlock(to *torrent.Torrent, index, begin int, block, piece []byte) error 
         return errors.Wrap(ErrPieceIndex, "AddBlock")
     }
     pieceSize := pieceSize(to, index)
-    end := begin + len(block) // last index + 1 in the block
+    end := begin + len(block)  // last index + 1 in the block
 
     // Check if bounds are possible or if integer overflow has occurred
     if begin < 0 || begin > (pieceSize - 1) || end - 1 < 0 || end > pieceSize {
@@ -101,10 +111,20 @@ func AddPiece(to *torrent.Torrent, index int, piece []byte) error {
     if index < 0 || index >= to.TotalPieces {
         return errors.Wrap(ErrPieceIndex, "AddPiece")
     }
-    filesList := filesInPiece(to, index)
+    start, end := pieceBounds(to, index)
+    fmt.Println("start:", start)
+    fmt.Println("end:", end)
 
-    for _, i := range filesList {
-        fmt.Println("file:", to.Paths[i].Path)
+    for _, file := range to.Paths {
+        if file.Length < start {
+            start -= file.Length
+            end -= file.Length
+            continue
+        } else if file.Length < end {  // Write to end of file
+
+        } else {  // Write rest of piece to file
+
+        }
     }
 
     return nil

@@ -26,10 +26,10 @@ type Torrent struct {
     Name string
     Paths []Path
     Trackers []Tracker
-    Bitfield bitfield.Bitfield // bitfield of current pieces
-    PieceLength int // number of bytes per piece
-    TotalPieces int // total pieces in the torrent
-    TotalLength int // total length of the torrent
+    Bitfield bitfield.Bitfield  // bitfield of current pieces
+    PieceLength int  // number of bytes per piece
+    TotalPieces int  // total pieces in the torrent
+    TotalLength int  // total length of the torrent
     InfoHash [20]byte
     PieceHashes [][20]byte
     PeerID [20]byte
