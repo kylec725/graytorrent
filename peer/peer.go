@@ -1,6 +1,6 @@
 /*
-Package peer provides the ability to setup connections with peers and
-manage sending and receiving torrent pieces with those peers
+Package peer provides the ability to setup connections with peers as well
+as manage sending and receiving torrent pieces with those peers.
 */
 package peer
 
