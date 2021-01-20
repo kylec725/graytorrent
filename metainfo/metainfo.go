@@ -44,8 +44,10 @@ func (meta BencodeMeta) String() string {
     var result string
     result += "Name: " + meta.Info.Name + "\n"
     result += "Announce: " + meta.Announce + "\n"
-    for _, addr := range meta.AnnounceList {
-        result += "Announce: " + addr[0] + "\n"
+    for _, group := range meta.AnnounceList {
+        for _, addr := range group {
+            result += "Announce: " + addr + "\n"
+        }
     }
     result += "PieceLength: " + strconv.Itoa(meta.Info.PieceLength) + "\n"
 
