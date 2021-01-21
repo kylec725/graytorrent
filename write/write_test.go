@@ -73,28 +73,28 @@ func TestPieceSize(t *testing.T) {
     assert.Equal(t, 193972, pieceSize(&to, 149))
 }
 
-func TestPieceFiles(t *testing.T) {
-    to := torrent.Torrent{
-        PieceLength: 5,
-        TotalLength: 19,
-        Paths: []torrent.Path{
-            torrent.Path{Length: 2},
-            torrent.Path{Length: 2},
-            torrent.Path{Length: 1},
-            torrent.Path{Length: 5},
-            torrent.Path{Length: 9},
-        },
-    }
-
-    expected := []int{4}
-    actual := filesInPiece(&to, 2)
-
-    if debugWrite {
-        fmt.Println("expected:", expected)
-        fmt.Println("actual:", actual)
-    }
-    assert.Equal(t, expected, actual)
-}
+// func TestPieceFiles(t *testing.T) {
+//     to := torrent.Torrent{
+//         PieceLength: 5,
+//         TotalLength: 19,
+//         Paths: []torrent.Path{
+//             torrent.Path{Length: 2},
+//             torrent.Path{Length: 2},
+//             torrent.Path{Length: 1},
+//             torrent.Path{Length: 5},
+//             torrent.Path{Length: 9},
+//         },
+//     }
+//
+//     expected := []int{4}
+//     actual := filesInPiece(&to, 2)
+//
+//     if debugWrite {
+//         fmt.Println("expected:", expected)
+//         fmt.Println("actual:", actual)
+//     }
+//     assert.Equal(t, expected, actual)
+// }
 
 func TestAddBlock(t *testing.T) {
     assert := assert.New(t)
