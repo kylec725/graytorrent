@@ -15,6 +15,7 @@ var (
     ErrFileExists = errors.New("Torrent's file already exists")
     ErrBlockBounds = errors.New("Received invalid bounds for a block")
     ErrCopyFailed = errors.New("Unexpected number of bytes copied")
+    ErrWriteFailed = errors.New("Unexpected number of bytes written")
     ErrPieceIndex = errors.New("Piece index was out of bounds")
 )
 
@@ -142,10 +143,12 @@ func AddPiece(to *torrent.Torrent, index int, piece []byte) error {
             bytesToWrite = min(bytesToWrite, pieceLeft)
             pieceEnd = pieceStart + bytesToWrite
 
-            _, err := writeOffset(file.Path, piece[pieceStart:pieceEnd], offset)
+            bytesWritten, err := writeOffset(file.Path, piece[pieceStart:pieceEnd], offset)
             // fmt.Println("wrote to:", file.Path)
             if err != nil {
                 return errors.Wrap(err, "AddPiece")
+            } else if bytesWritten != pieceEnd - pieceStart {
+                return errors.Wrap(ErrWriteFailed, "AddPiece")
             }
             pieceStart += bytesToWrite
 
