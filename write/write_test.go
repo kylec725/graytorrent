@@ -26,14 +26,14 @@ func TestNewWriteSingle(t *testing.T) {
         }
     }
 
-    err = NewWrite(to)
+    err = NewWrite(&to)
     if assert.Nil(err) {
         if debugWrite {
             fmt.Println("File created:", to.Name)
         }
 
         // Test that creating an identical file throws an error
-        err = NewWrite(to)
+        err = NewWrite(&to)
         assert.NotNil(err)
     }
 }
@@ -53,14 +53,14 @@ func TestNewWriteMulti(t *testing.T) {
         }
     }
 
-    err = NewWrite(to)
+    err = NewWrite(&to)
     if assert.Nil(err) {
         if debugWrite {
             fmt.Println("File created:", to.Name)
         }
 
         // Test that creating an identical file throws an error
-        err = NewWrite(to)
+        err = NewWrite(&to)
         assert.NotNil(err)
     }
 }
@@ -131,16 +131,21 @@ func TestAddPiece(t *testing.T) {
     assert.Nil(err)
 
     to2 := torrent.Torrent{
+        Name: "test",
         PieceLength: 5,
         TotalLength: 19,
+        TotalPieces: 5,
         Paths: []torrent.Path{
-            torrent.Path{Length: 2},
-            torrent.Path{Length: 2},
-            torrent.Path{Length: 1},
-            torrent.Path{Length: 5},
-            torrent.Path{Length: 9},
+            torrent.Path{Length: 2, Path: "test/0.txt"},
+            torrent.Path{Length: 2, Path: "test/1.txt"},
+            torrent.Path{Length: 1, Path: "test/2.txt"},
+            torrent.Path{Length: 5, Path: "test/3.txt"},
+            torrent.Path{Length: 9, Path: "test/4.txt"},
         },
     }
+    err = NewWrite(&to2)
+    assert.Nil(err, "NewWrite error")
+
     index = 2
     piece = make([]byte, pieceSize(&to2, index))
     err = AddPiece(&to2, index, piece)
