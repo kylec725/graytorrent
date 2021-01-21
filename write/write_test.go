@@ -124,10 +124,25 @@ func TestAddPiece(t *testing.T) {
     to := torrent.Torrent{Source: "../tmp/batonroad.torrent"}
     err := to.Setup()
     assert.Nil(err, "torrent Setup() error")
-    fmt.Println("total pieces:", to.TotalPieces)
 
     index := 439
-    piece := []byte{}
+    piece := make([]byte, pieceSize(&to, index))
+    err = AddPiece(&to, index, piece)
+    assert.Nil(err)
 
-    AddPiece(&to, index, piece)
+    to2 := torrent.Torrent{
+        PieceLength: 5,
+        TotalLength: 19,
+        Paths: []torrent.Path{
+            torrent.Path{Length: 2},
+            torrent.Path{Length: 2},
+            torrent.Path{Length: 1},
+            torrent.Path{Length: 5},
+            torrent.Path{Length: 9},
+        },
+    }
+    index = 2
+    piece = make([]byte, pieceSize(&to2, index))
+    err = AddPiece(&to2, index, piece)
+    assert.Nil(err)
 }
