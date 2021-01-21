@@ -19,7 +19,7 @@ var (
 )
 
 // NewWrite sets up the files a torrent needs to write to
-func NewWrite(to torrent.Torrent) error {
+func NewWrite(to *torrent.Torrent) error {
     for _, path := range to.Paths {
         // Return an error if the file already exists
         if _, err := os.Stat(path.Path); err == nil {
