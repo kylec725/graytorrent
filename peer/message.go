@@ -101,5 +101,9 @@ func (peer *Peer) handleRequest(msg *message) error {
 }
 
 func (peer *Peer) handlePiece(msg *message) error {
+    // index := binary.BigEndian.Uint32(msg.payload[0:4])
+    // begin := binary.BigEndian.Uint32(msg.payload[4:8])
+    // block := msg.payload[8:]
+
     return nil
 }

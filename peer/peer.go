@@ -115,6 +115,7 @@ func (peer *Peer) Work(work chan int, quit chan string) {
                 continue
             }
             // Request piece
+            // piece := make([]byte, common.PieceSize(peer.info, index))
         default:
             fmt.Println("check for new message")
         }
