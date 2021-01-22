@@ -13,6 +13,7 @@ import (
 
     "github.com/kylec725/graytorrent/common"
     "github.com/kylec725/graytorrent/bitfield"
+    "github.com/kylec725/graytorrent/write"
     "github.com/pkg/errors"
     log "github.com/sirupsen/logrus"
 )
@@ -87,6 +88,11 @@ func Unmarshal(peersBytes []byte, info *common.TorrentInfo) ([]Peer, error) {
     return peersList, nil
 }
 
+// Requests a piece in blocks from a peer
+func (peer *Peer) requestPiece(index int) ([]byte, error) {
+    return nil, nil
+}
+
 // Work makes a peer wait for pieces to download
 func (peer *Peer) Work(work chan int, quit chan string) {
     // Connect peer if necessary
@@ -96,11 +102,15 @@ func (peer *Peer) Work(work chan int, quit chan string) {
                 "peer": peer.String(),
                 "error": err.Error(),
             }).Debug("Peer handshake failed")
+            quit <- peer.String()
+            return
         } else if err = peer.rcvHandshake(); err != nil {
             log.WithFields(log.Fields{
                 "peer": peer.String(),
                 "error": err.Error(),
             }).Debug("Peer handshake failed")
+            quit <- peer.String()
+            return
         }
     }
 
@@ -115,6 +125,25 @@ func (peer *Peer) Work(work chan int, quit chan string) {
                 continue
             }
             // Request piece
+            piece, err := peer.requestPiece(index)
+            if err != nil {
+                log.WithFields(log.Fields{
+                    "peer": peer.String(),
+                    "piece index": index,
+                    "error": err.Error(),
+                }).Debug("Requesting piece from peer failed")
+                quit <- peer.String()
+                return
+            }
+            if err = write.AddPiece(peer.info, index, piece); err != nil {
+                log.WithFields(log.Fields{
+                    "peer": peer.String(),
+                    "piece index": index,
+                    "error": err.Error(),
+                }).Debug("Writing piece from peer failed")
+                quit <- peer.String()
+                return
+            }
             // piece := make([]byte, common.PieceSize(peer.info, index))
         default:
             fmt.Println("check for new message")
