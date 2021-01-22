@@ -10,7 +10,6 @@ import (
     "strconv"
     "time"
 
-    "github.com/kylec725/graytorrent/torrent"
     "github.com/pkg/errors"
 )
 
@@ -23,18 +22,17 @@ var (
 
 // Peer stores info about connecting to peers as well as their state
 type Peer struct {
-    torrent *torrent.Torrent
     Host net.IP
     Port uint16
     conn net.Conn
 }
 
 func (peer Peer) String() string {
-    return net.JoinHostPort(p.Host.String(), strconv.Itoa(int(p.Port)))
+    return net.JoinHostPort(peer.Host.String(), strconv.Itoa(int(peer.Port)))
 }
 
 // Unmarshal creates a list of Peers from a serialized list of peers
-func Unmarshal(torrent *torrent.Torrent, peersBytes []byte) ([]Peer, error) {
+func Unmarshal(peersBytes []byte) ([]Peer, error) {
     if len(peersBytes) % 6 != 0 {
         return nil, errors.Wrap(ErrBadPeers, "Unmarshal")
     }
@@ -43,7 +41,6 @@ func Unmarshal(torrent *torrent.Torrent, peersBytes []byte) ([]Peer, error) {
     peersList := make([]Peer, numPeers)
 
     for i := 0; i < numPeers; i++ {
-        peersList[i].torrent = to
         peersList[i].Host = net.IP(peersBytes[ i*6 : i*6+4 ])
         peersList[i].Port = binary.BigEndian.Uint16(peersBytes[ i*6+4 : (i+1)*6 ])
     }
