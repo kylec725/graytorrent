@@ -129,3 +129,7 @@ func getPaths(meta metainfo.BencodeMeta) []Path {
 //         }
 //     }
 // }
+
+// connect to all peers asynchronously
+// aynschronously add peers to an active peer list
+// then use this peer list start requesting/getting pieces
