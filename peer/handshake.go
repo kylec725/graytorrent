@@ -3,6 +3,7 @@ package peer
 import (
     "net"
     "time"
+    "bytes"
     "fmt"
 
     "github.com/pkg/errors"
@@ -10,30 +11,38 @@ import (
 
 const protocol = "BitTorrent protocol"
 
-// NewHandshake creates a serialized handshake message
-func (peer *Peer) NewHandshake(infoHash [20]byte, peerID [20]byte) []byte {
+// Errors
+var (
+    ErrPstr = errors.New("Got bad pstr length or value")
+    ErrInfoHash = errors.New("Received incorrect info hash")
+    // ErrPeerID = errors.New("Received peer ID was incorrect")
+)
+
+func (peer *Peer) newHandshake() []byte {
     pstr := protocol
     pstrLen := uint8(len(pstr))
     handshake := make([]byte, 49 + pstrLen)
     handshake[0] = pstrLen
     curr := 1
     curr += copy(handshake[curr:], pstr)
-    curr += copy(handshake[curr:], infoHash[:])
-    curr += copy(handshake[curr:], peerID[:])
+    curr += copy(handshake[curr:], peer.infoHash[:])
+    curr += copy(handshake[curr:], peer.selfID[:])
     return handshake
 }
 
-// SendHandshake sends a handshake message to a peer
-func (peer *Peer) SendHandshake(handshake []byte) error {
-    // Start the TCP connection
-    conn, err := net.Dial("tcp", peer.String())
-    if err != nil {
-        return errors.Wrap(err, "sendHandshake")
+func (peer *Peer) sendHandshake() error {
+    if peer.Conn == nil {
+        // Start the TCP connection
+        conn, err := net.Dial("tcp", peer.String())
+        if err != nil {
+            return errors.Wrap(err, "sendHandshake")
+        }
+        conn.SetDeadline(time.Now().Add(connTimeout))
     }
-    conn.SetDeadline(time.Now().Add(connTimeout))
 
     // Send the handshake
-    bytesSent, err := conn.Write(handshake)
+    handshake := peer.newHandshake()
+    bytesSent, err := peer.Conn.Write(handshake)
     if err != nil {
         return errors.Wrap(err, "sendHandshake")
     } else if bytesSent != len(handshake) {  // TODO probably will change, not sure if all bytes are guaranteed to be sent
@@ -41,6 +50,37 @@ func (peer *Peer) SendHandshake(handshake []byte) error {
         return errors.New("Unexpected number of bytes sent")
     }
 
-    peer.conn = conn
+    return nil
+}
+
+func (peer *Peer) rcvHandshake() error {
+    buf := make([]byte, 1)
+    if _, err := peer.Conn.Read(buf); err != nil {
+        return errors.Wrap(err, "RcvHandshake")
+    }
+
+    pstrLen := buf[0]
+    if pstrLen == 0 {
+        return errors.Wrap(ErrPstr, "RcvHandshake")
+    }
+
+    buf = make([]byte, 48 + pstrLen)
+    if _, err := peer.Conn.Read(buf); err != nil {
+        return errors.Wrap(err, "RcvHandshake")
+    }
+
+    pstr := string(buf[:pstrLen])
+    if pstr != protocol {
+        return errors.Wrap(ErrPstr, "RcvHandshake")
+    }
+
+    var infoHash [20]byte
+    // var infoHash, peerID [20]byte
+    copy(infoHash[:], buf[ pstrLen+8 : pstrLen+28 ])
+    // copy(peerID[:], buf[ pstrLen+28 : pstrLen+48 ])  // TODO need to check for the corrent peer ID
+    if !bytes.Equal(peer.infoHash[:], infoHash[:]) {
+        return errors.Wrap(ErrInfoHash, "RcvHandshake")
+    }
+
     return nil
 }
