@@ -146,8 +146,23 @@ func TestAddPiece(t *testing.T) {
     err = NewWrite(&to2)
     assert.Nil(err, "NewWrite error")
 
+    index = 0
+    piece = []byte("00112")
+    err = AddPiece(&to2, index, piece)
+    assert.Nil(err)
+
+    index = 1
+    piece = []byte("33333")
+    err = AddPiece(&to2, index, piece)
+    assert.Nil(err)
+
     index = 2
-    piece = make([]byte, pieceSize(&to2, index))
+    piece = []byte("44444")
+    err = AddPiece(&to2, index, piece)
+    assert.Nil(err)
+
+    index = 3
+    piece = []byte("4444")
     err = AddPiece(&to2, index, piece)
     assert.Nil(err)
 }
