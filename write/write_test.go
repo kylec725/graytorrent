@@ -156,19 +156,25 @@ func TestAddPiece(t *testing.T) {
     piece = []byte("33333")
     err = AddPiece(&to, index, piece)
     assert.Nil(err)
-    fmt.Printf("wrote piece %d: %s\n", index, string(piece))
+    if debugWrite {
+        fmt.Printf("wrote piece %d: %s\n", index, string(piece))
+    }
 
     index = 2
     piece = []byte("44444")
     err = AddPiece(&to, index, piece)
     assert.Nil(err)
-    fmt.Printf("wrote piece %d: %s\n", index, string(piece))
+    if debugWrite {
+        fmt.Printf("wrote piece %d: %s\n", index, string(piece))
+    }
 
     index = 3
     piece = []byte("4444")
     err = AddPiece(&to, index, piece)
     assert.Nil(err)
-    fmt.Printf("wrote piece %d: %s\n", index, string(piece))
+    if debugWrite {
+        fmt.Printf("wrote piece %d: %s\n", index, string(piece))
+    }
 }
 
 // Needs TestAddPiece to work first
