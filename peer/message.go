@@ -96,10 +96,10 @@ func (peer *Peer) handleMsg(msg *message) error {
     return nil
 }
 
-func (peer *Peer) handleRequest(payload []byte) error {
+func (peer *Peer) handleRequest(msg *message) error {
     return nil
 }
 
-func (peer *Peer) handlePiece(payload []byte) error {
+func (peer *Peer) handlePiece(msg *message) error {
     return nil
 }
