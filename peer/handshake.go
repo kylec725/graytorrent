@@ -84,3 +84,14 @@ func (peer *Peer) rcvHandshake() error {
 
     return nil
 }
+
+// AcceptPeer attempt to handshake with an incoming peer
+func (peer *Peer) AcceptPeer() error {
+    if err := peer.rcvHandshake(); err != nil {
+        return errors.Wrap(err, "AcceptPeer")
+    }
+    if err := peer.sendHandshake(); err != nil {
+        return errors.Wrap(err, "AcceptPeer")
+    }
+    return nil
+}
