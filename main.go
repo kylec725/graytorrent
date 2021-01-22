@@ -34,8 +34,8 @@ func init() {
     port, err = connect.OpenPort(portRange)
     if err != nil {
         log.WithFields(log.Fields{
-            "error": err.Error(),
             "portrange": portRange,
+            "error": err.Error(),
         }).Warn("No open port found in portrange, using random port")
         // TODO get a random port to use for the client
     }
