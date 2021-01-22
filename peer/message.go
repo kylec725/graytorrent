@@ -47,19 +47,34 @@ func (msg *message) serialize() []byte {
 }
 
 func (peer *Peer) rcvMsg() (message, error) {
-    return message{}, nil
+    buf := make([]byte, 1)
+    if _, err := peer.Conn.Read(buf); err != nil {
+        return message{}, errors.Wrap(err, "rcvMsg")
+    }
+    msgLen := buf[0]
+
+    buf = make([]byte, msgLen)
+    if _, err := peer.Conn.Read(buf); err != nil {
+        return message{}, errors.Wrap(err, "rcvMsg")
+    }
+
+    msg := message{id: messageID(buf[0]), payload: buf[1:]}
+    return msg, nil
 }
 
-func (peer *Peer) handleMsg(msg message) error {
+func (peer *Peer) handleMsg(msg *message) error {
+    if msg == nil {
+        // reset keep-alive
+    }
     switch msg.id {
     case msgChoke:
-        peer.PeerChoking = true
+        peer.peerChoking = true
     case msgUnchoke:
-        peer.PeerChoking = false
+        peer.peerChoking = false
     case msgInterested:
-        peer.PeerInterested = true
+        peer.peerInterested = true
     case msgNotInterested:
-        peer.PeerInterested = false
+        peer.peerInterested = false
     case msgHave:
         index := binary.BigEndian.Uint32(msg.payload)
         peer.Bitfield.Set(int(index))
@@ -78,5 +93,13 @@ func (peer *Peer) handleMsg(msg message) error {
     case msgPort:
         fmt.Println("msgPort not yet implemented")
     }
+    return nil
+}
+
+func (peer *Peer) handleRequest(payload []byte) error {
+    return nil
+}
+
+func (peer *Peer) handlePiece(payload []byte) error {
     return nil
 }
