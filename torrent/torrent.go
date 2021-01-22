@@ -13,6 +13,7 @@ package torrent
 import (
     "github.com/kylec725/graytorrent/common"
     "github.com/kylec725/graytorrent/metainfo"
+    "github.com/kylec725/graytorrent/peer"
     "github.com/pkg/errors"
 )
 
@@ -21,6 +22,8 @@ type Torrent struct {
     Path string
     Info common.TorrentInfo
     Trackers []Tracker
+    Peers []peer.Peer
+    // TODO figure out how to remove a peer from the list if it has disconnected
 }
 
 // Setup gets and sets up necessary properties of a new torrent object
