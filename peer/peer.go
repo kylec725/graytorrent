@@ -19,7 +19,7 @@ import (
 )
 
 const connTimeout = 20 * time.Second
-const maxReqs = 5  // slow approach: hard limit on requests per peer
+const startRate = 3  // slow approach: hard limit on requests per peer
 
 // Errors
 var (
@@ -34,12 +34,13 @@ type Peer struct {
     Port uint16
     Conn net.Conn  // nil if not connected
     Bitfield bitfield.Bitfield
+
     amChoking bool
     amInterested bool
     peerChoking bool
     peerInterested bool
-
     info *common.TorrentInfo
+    rate int
 }
 
 func (peer Peer) String() string {
@@ -52,8 +53,9 @@ func New(host net.IP, port uint16, conn net.Conn, info *common.TorrentInfo) Peer
         Host: host,
         Port: port,
         Conn: conn,
-        info: info,
         Bitfield: make([]byte, info.TotalPieces),
+        info: info,
+        rate: startRate,
     }
 }
 
