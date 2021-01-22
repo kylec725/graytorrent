@@ -16,6 +16,7 @@ var (
     ErrBlockBounds = errors.New("Received invalid bounds for a block")
     ErrCopyFailed = errors.New("Unexpected number of bytes copied")
     ErrWriteFailed = errors.New("Unexpected number of bytes written")
+    ErrReadFailed = errors.New("Unexpected number of bytes read")
     ErrPieceIndex = errors.New("Piece index was out of bounds")
 )
 
@@ -61,25 +62,45 @@ func pieceBounds(to *torrent.Torrent, index int) (int, int) {
     return start, end
 }
 
-// writeOffset writes to a file starting at an index offset
-func writeOffset(filename string, data []byte, offset int) (int, error) {
-    file, err := os.OpenFile(filename, os.O_WRONLY, 0755)
-    if err != nil {
-        return 0, errors.Wrap(err, "writeOffset")
-    }
-    defer file.Close()
-    bytesWritten, err := file.WriteAt(data, int64(offset))
-    if err != nil {
-        return 0, errors.Wrap(err, "writeOffset")
-    }
-    return bytesWritten, nil
-}
-
 func min(x, y int) int {
     if x < y {
         return x
     }
     return y
+}
+
+// writeOffset writes to a file starting at an index offset
+func writeOffset(filename string, data []byte, offset int) error {
+    file, err := os.OpenFile(filename, os.O_WRONLY, 0755)
+    if err != nil {
+        return errors.Wrap(err, "writeOffset")
+    }
+    defer file.Close()
+    bytesWritten, err := file.WriteAt(data, int64(offset))
+    if err != nil {
+        return errors.Wrap(err, "writeOffset")
+    } else if bytesWritten != len(data) {
+        return errors.Wrap(ErrWriteFailed, "writeOffset")
+    }
+    return nil
+}
+
+// readOffset reads from a file starting at an index offset
+func readOffset(filename string, size int, offset int) ([]byte, error) {
+    file, err := os.Open(filename)
+    if err != nil {
+        return nil, errors.Wrap(err, "readOffset")
+    }
+    defer file.Close()
+
+    data := make([]byte, size)
+    bytesRead, err := file.ReadAt(data, int64(offset))
+    if err != nil {
+        return nil, errors.Wrap(err, "readOffset")
+    } else if bytesRead != size {
+        return nil, errors.Wrap(ErrReadFailed, "readOffset")
+    }
+    return data, nil
 }
 
 // // filesInPiece returns the indexes of files the piece is a part of
@@ -143,12 +164,10 @@ func AddPiece(to *torrent.Torrent, index int, piece []byte) error {
             bytesToWrite = min(bytesToWrite, pieceLeft)
             pieceEnd = pieceStart + bytesToWrite
 
-            bytesWritten, err := writeOffset(file.Path, piece[pieceStart:pieceEnd], offset)
+            err := writeOffset(file.Path, piece[pieceStart:pieceEnd], offset)
             // fmt.Println("wrote to:", file.Path)
             if err != nil {
                 return errors.Wrap(err, "AddPiece")
-            } else if bytesWritten != pieceEnd - pieceStart {
-                return errors.Wrap(ErrWriteFailed, "AddPiece")
             }
             pieceStart += bytesToWrite
 
