@@ -13,9 +13,9 @@ const debugRequests = false
 func TestTrackerReqs(t *testing.T) {
     assert := assert.New(t)
 
-    to := Torrent{Source: "../tmp/batonroad.torrent"}
+    to := Torrent{Path: "../tmp/batonroad.torrent"}
     to.Setup()
-    meta, _ := metainfo.Meta(to.Source)
+    meta, _ := metainfo.Meta(to.Path)
 
     var testTracker Tracker
     for _, tr := range to.Trackers {
@@ -30,10 +30,10 @@ func TestTrackerReqs(t *testing.T) {
         fmt.Printf("Tracker%+v\n", testTracker)
     }
 
-    peersList, err := testTracker.sendStarted(to.InfoHash, to.PeerID, 6881, meta.Length())
+    peersList, err := testTracker.sendStarted(&to.Info, 6881, meta.Length())
     // Retry a get request since this tracker seems to fail on the first connection attempt
     if err != nil {
-        peersList, err = testTracker.sendStarted(to.InfoHash, to.PeerID, 6881, meta.Length())
+        peersList, err = testTracker.sendStarted(&to.Info, 6881, meta.Length())
     }
     if assert.Nil(err) {
         for _, peer := range peersList {
@@ -41,7 +41,7 @@ func TestTrackerReqs(t *testing.T) {
                 fmt.Println("Peer:", peer)
             }
         }
-        err = testTracker.sendStopped(to.InfoHash, to.PeerID, 6881, meta.Length())
+        err = testTracker.sendStopped(&to.Info, 6881, meta.Length())
         assert.Nil(err)
 
         if debugRequests {

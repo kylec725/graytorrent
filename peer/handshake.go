@@ -25,8 +25,8 @@ func (peer *Peer) newHandshake() []byte {
     handshake[0] = pstrLen
     curr := 1
     curr += copy(handshake[curr:], pstr)
-    curr += copy(handshake[curr:], peer.infoHash[:])
-    curr += copy(handshake[curr:], peer.selfID[:])
+    curr += copy(handshake[curr:], peer.info.InfoHash[:])
+    curr += copy(handshake[curr:], peer.info.PeerID[:])
     return handshake
 }
 
@@ -78,7 +78,7 @@ func (peer *Peer) rcvHandshake() error {
     // var infoHash, peerID [20]byte
     copy(infoHash[:], buf[ pstrLen+8 : pstrLen+28 ])
     // copy(peerID[:], buf[ pstrLen+28 : pstrLen+48 ])  // TODO need to check for the corrent peer ID
-    if !bytes.Equal(peer.infoHash[:], infoHash[:]) {
+    if !bytes.Equal(peer.info.InfoHash[:], infoHash[:]) {
         return errors.Wrap(ErrInfoHash, "RcvHandshake")
     }
 
