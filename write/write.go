@@ -45,13 +45,6 @@ func NewWrite(info *common.TorrentInfo) error {
     return nil
 }
 
-func pieceSize(info *common.TorrentInfo, index int) int {
-    if index == info.TotalPieces - 1 {
-        return info.TotalLength - (info.TotalPieces - 1) * info.PieceLength
-    }
-    return info.PieceLength
-}
-
 // pieceBounds returns the start and ending indices of a piece (end is exclusive)
 func pieceBounds(info *common.TorrentInfo, index int) (int, int) {
     start := index * info.PieceLength  // start byte index
@@ -109,7 +102,7 @@ func AddBlock(info *common.TorrentInfo, index, begin int, block, piece []byte) e
     if index < 0 || index >= info.TotalPieces {
         return errors.Wrap(ErrPieceIndex, "AddBlock")
     }
-    pieceSize := pieceSize(info, index)
+    pieceSize := common.PieceSize(info, index)
     end := begin + len(block)  // last index + 1 in the block
 
     // Check if bounds are possible or if integer overflow has occurred
@@ -132,7 +125,7 @@ func AddPiece(info *common.TorrentInfo, index int, piece []byte) error {
     }
     var pieceStart, pieceEnd int
     offset, _ := pieceBounds(info, index)  // Offset starts at the start bound of the piece
-    pieceLeft := pieceSize(info, index)  // Keep track of how much more of the piece we have info write
+    pieceLeft := common.PieceSize(info, index)  // Keep track of how much more of the piece we have info write
 
     for _, file := range info.Paths {
         if offset < file.Length {  // Piece is part of the file
@@ -169,7 +162,7 @@ func GetPiece(info *common.TorrentInfo, index int) ([]byte, error) {
 
     var pieceStart, pieceEnd int
     offset, _ := pieceBounds(info, index)  // Offset starts at the start bound of the piece
-    pieceLeft := pieceSize(info, index)  // Keep track of how much more of the piece we have info write
+    pieceLeft := common.PieceSize(info, index)  // Keep track of how much more of the piece we have info write
     piece := make([]byte, pieceLeft)
 
     for _, file := range info.Paths {

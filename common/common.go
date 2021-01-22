@@ -103,3 +103,11 @@ func getPaths(meta metainfo.BencodeMeta) []Path {
 
     return paths
 }
+
+// PieceSize returns the size of a piece at a specified index
+func PieceSize(info *TorrentInfo, index int) int {
+    if index == info.TotalPieces - 1 {
+        return info.TotalLength - (info.TotalPieces - 1) * info.PieceLength
+    }
+    return info.PieceLength
+}

@@ -71,7 +71,7 @@ func TestPieceSize(t *testing.T) {
     err := to.Setup()
     assert.Nil(t, err, "torrent Setup() error")
 
-    assert.Equal(t, 193972, pieceSize(&to.Info, 149))
+    assert.Equal(t, 193972, common.PieceSize(&to.Info, 149))
 }
 
 // func TestPieceFiles(t *testing.T) {
