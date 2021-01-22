@@ -32,10 +32,10 @@ type Peer struct {
     Port uint16
     Conn net.Conn  // nil if not connected
     Bitfield bitfield.Bitfield
-    AmChoking bool
-    AmInterested bool
-    PeerChoking bool
-    PeerInterested bool
+    amChoking bool
+    amInterested bool
+    peerChoking bool
+    peerInterested bool
 
     info *common.TorrentInfo
 }
@@ -53,6 +53,20 @@ func New(host net.IP, port uint16, conn net.Conn, info *common.TorrentInfo) Peer
         info: info,
         Bitfield: make([]byte, info.TotalPieces),
     }
+}
+
+// Choke changes a peer's state of amChoking to true
+func (peer *Peer) Choke() error {
+    // Send choking message
+    peer.amChoking = true
+    return nil
+}
+
+// Unchoke changes a peer's state of amChoking to false
+func (peer *Peer) Unchoke() error {
+    // Send unchoking message
+    peer.amChoking = false
+    return nil
 }
 
 // Unmarshal creates a list of Peers from a serialized list of peers
