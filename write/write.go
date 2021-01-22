@@ -76,6 +76,7 @@ func writeOffset(filename string, data []byte, offset int) error {
         return errors.Wrap(err, "writeOffset")
     }
     defer file.Close()
+
     bytesWritten, err := file.WriteAt(data, int64(offset))
     if err != nil {
         return errors.Wrap(err, "writeOffset")
@@ -102,31 +103,6 @@ func readOffset(filename string, size int, offset int) ([]byte, error) {
     }
     return data, nil
 }
-
-// // filesInPiece returns the indexes of files the piece is a part of
-// func filesInPiece(to *torrent.Torrent, index int) []int {
-//     var filesInPiece []int
-//     start := index * to.PieceLength  // start byte index
-//     end := start + to.PieceLength  // end byte index + 1
-//     if end > to.TotalLength {
-//         end = to.TotalLength
-//     }
-//
-//     // Add all files within the piece's range to its list
-//     curr := 0
-//     for i, path := range to.Paths {
-//         curr += path.Length
-//         // Any file after the piece's start is part of the piece
-//         if curr > start {
-//             filesInPiece = append(filesInPiece, i)
-//         }
-//         // Exit once we past the last byte in the piece
-//         if curr >= end {
-//             break
-//         }
-//     }
-//     return filesInPiece
-// }
 
 // AddBlock adds a block to a piece
 func AddBlock(to *torrent.Torrent, index, begin int, block, piece []byte) error {
@@ -169,12 +145,12 @@ func AddPiece(to *torrent.Torrent, index int, piece []byte) error {
             if err != nil {
                 return errors.Wrap(err, "AddPiece")
             }
-            pieceStart += bytesToWrite
 
             // Exit if the rest of the piece has been written to file
             if bytesToWrite == pieceLeft {
                 break
             }
+            pieceStart += bytesToWrite
             pieceLeft -= bytesToWrite
         }
         offset -= file.Length  // Decrement the offset so we know where to start writing in the file
@@ -191,7 +167,41 @@ func GetPiece(to *torrent.Torrent, index int) ([]byte, error) {
         return nil, errors.Wrap(ErrPieceIndex, "GetPiece")
     }
 
-    return nil, nil
+    var pieceStart, pieceEnd int
+    offset, _ := pieceBounds(to, index)  // Offset starts at the start bound of the piece
+    pieceLeft := pieceSize(to, index)  // Keep track of how much more of the piece we have to write
+    piece := make([]byte, pieceLeft)
+
+    for _, file := range to.Paths {
+        if offset < file.Length {  // Piece is part of the file
+            bytesToRead := file.Length - offset  // Figure out how much of the piece to write to file
+            bytesToRead = min(bytesToRead, pieceLeft)
+            pieceEnd = pieceStart + bytesToRead
+
+            data, err := readOffset(file.Path, bytesToRead, offset)
+            if err != nil {
+                return nil, errors.Wrap(err, "GetPiece")
+            }
+
+            // Copy data to the return piece
+            bytesCopied := copy(piece[pieceStart:pieceEnd], data)
+            if bytesCopied != bytesToRead {
+                return nil, errors.Wrap(ErrCopyFailed, "GetPiece")
+            }
+
+            // Exit if the rest of the piece has been written to file
+            if bytesToRead == pieceLeft {
+                break
+            }
+            pieceStart += bytesToRead
+            pieceLeft -= bytesToRead
+        }
+        offset -= file.Length  // Decrement the offset so we know where to start writing in the file
+        if offset < 0 {  // Only happens if piece was written to the end of the file
+            offset = 0
+        }
+    }
+    return piece, nil
 }
 
 // VerifyPiece checks that a completed piece has the correct hash
