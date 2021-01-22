@@ -19,6 +19,7 @@ import (
 )
 
 const connTimeout = 20 * time.Second
+const maxReqs = 5  // slow approach: hard limit on requests per peer
 
 // Errors
 var (
