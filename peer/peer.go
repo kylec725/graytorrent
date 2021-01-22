@@ -29,8 +29,8 @@ type Peer struct {
     Host net.IP
     Port uint16
     Conn net.Conn
-    Bitfield bitfield.Bitfield
     info *common.TorrentInfo
+    Bitfield bitfield.Bitfield
     // peerID [20]byte
 }
 
@@ -52,6 +52,7 @@ func Unmarshal(peersBytes []byte, torrentInfo *common.TorrentInfo) ([]Peer, erro
         peersList[i].Port = binary.BigEndian.Uint16(peersBytes[ i*6+4 : (i+1)*6 ])
         peersList[i].Conn = nil
         peersList[i].info = torrentInfo
+        peersList[i].Bitfield = make([]byte, torrentInfo.TotalPieces)
     }
 
     return peersList, nil
