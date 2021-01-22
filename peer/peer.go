@@ -31,9 +31,13 @@ type Peer struct {
     Host net.IP
     Port uint16
     Conn net.Conn  // nil if not connected
-    info *common.TorrentInfo
     Bitfield bitfield.Bitfield
-    // peerID [20]byte
+    AmChoking bool
+    AmInterested bool
+    PeerChoking bool
+    PeerInterested bool
+
+    info *common.TorrentInfo
 }
 
 func (peer Peer) String() string {
@@ -70,7 +74,7 @@ func Unmarshal(peersBytes []byte, info *common.TorrentInfo) ([]Peer, error) {
 }
 
 // Work makes a peer wait for pieces to download
-func (peer *Peer) Work(work chan int) {
+func (peer *Peer) Work(work chan int, quit chan string) {
     // Connect peer if necessary
     if peer.Conn == nil {
         if err := peer.sendHandshake(); err != nil {
@@ -91,6 +95,15 @@ func (peer *Peer) Work(work chan int) {
         select {
         case index := <-work:
             fmt.Println("work index received:", index)
+            if !peer.Bitfield.Has(index) {
+                work <- index
+                fmt.Println("piece returned:", index)
+                continue
+            }
+            // Request piece
+        default:
+            fmt.Println("check for new message")
         }
     }
+    // If peer disconnects, send its address to the quit channel
 }
