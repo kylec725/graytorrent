@@ -156,10 +156,10 @@ func AddPiece(info *common.TorrentInfo, index int, piece []byte) error {
     return nil
 }
 
-// GetPiece returns a piece of a torrent as a byte slice
-func GetPiece(info *common.TorrentInfo, index int) ([]byte, error) {
+// ReadPiece returns a piece of a torrent from file as a byte slice
+func ReadPiece(info *common.TorrentInfo, index int) ([]byte, error) {
     if index < 0 || index >= info.TotalPieces {
-        return nil, errors.Wrap(ErrPieceIndex, "GetPiece")
+        return nil, errors.Wrap(ErrPieceIndex, "ReadPiece")
     }
 
     var pieceStart, pieceEnd int
@@ -175,13 +175,13 @@ func GetPiece(info *common.TorrentInfo, index int) ([]byte, error) {
 
             data, err := readOffset(file.Path, bytesToRead, offset)
             if err != nil {
-                return nil, errors.Wrap(err, "GetPiece")
+                return nil, errors.Wrap(err, "ReadPiece")
             }
 
             // Copy data info the return piece
             bytesCopied := copy(piece[pieceStart:pieceEnd], data)
             if bytesCopied != bytesToRead {
-                return nil, errors.Wrap(ErrCopyFailed, "GetPiece")
+                return nil, errors.Wrap(ErrCopyFailed, "ReadPiece")
             }
 
             // Exit if the rest of the piece has been written info file

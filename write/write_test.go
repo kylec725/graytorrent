@@ -179,7 +179,7 @@ func TestAddPiece(t *testing.T) {
 }
 
 // Needs TestAddPiece to work first
-func TestGetPiece(t *testing.T) {
+func TestReadPiece(t *testing.T) {
     assert := assert.New(t)
 
     to := torrent.Torrent{ Info: common.TorrentInfo{
@@ -197,7 +197,7 @@ func TestGetPiece(t *testing.T) {
     }
 
     for index := 0; index < to.Info.TotalPieces; index++ {
-        piece, err := GetPiece(&to.Info, index)
+        piece, err := ReadPiece(&to.Info, index)
         assert.Nil(err)
         if debugWrite {
             fmt.Printf("read piece %d: %s\n", index, string(piece))
