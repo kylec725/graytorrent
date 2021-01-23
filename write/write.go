@@ -93,7 +93,7 @@ func readOffset(filename string, size int, offset int) ([]byte, error) {
 }
 
 // AddBlock adds a block info a piece
-func AddBlock(info *common.TorrentInfo, index, begin uint32, block, piece []byte) error {
+func AddBlock(info *common.TorrentInfo, index, begin int, block, piece []byte) error {
     if index < 0 || index >= info.TotalPieces {
         return errors.Wrap(ErrPieceIndex, "AddBlock")
     }
