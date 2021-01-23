@@ -97,6 +97,6 @@ func (peer *Peer) verifyHandshake() error {
     }
     // Send bitfield to the peer
     msg := message.Bitfield(peer.info.Bitfield)
-    err := peers.Write(msg.Encode())
+    err := peer.Conn.Write(msg.Encode())
     return errors.Wrap(err, "verifyHandshake")
 }
