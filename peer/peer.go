@@ -36,11 +36,11 @@ type Peer struct {
     Conn *connect.Conn  // nil if not connected
     Bitfield bitfield.Bitfield
 
+    info *common.TorrentInfo
     amChoking bool
     amInterested bool
     peerChoking bool
     peerInterested bool
-    info *common.TorrentInfo
     rate int  // number of outgoing requests
     stop bool
 }
@@ -56,7 +56,12 @@ func New(host net.IP, port uint16, conn net.Conn, info *common.TorrentInfo) Peer
         Port: port,
         Conn: &connect.Conn{Conn: conn, Timeout: handshakeTimeout},  // Use a pointer so we can have a nil value
         Bitfield: make([]byte, info.TotalPieces),
+
         info: info,
+        amChoking: true,
+        amInterested: false,
+        peerChoking: true,
+        peerInterested: false,
         rate: startRate,
         stop: false,
     }
@@ -129,6 +134,8 @@ func (peer *Peer) requestPiece(index int) ([]byte, error) {
 }
 
 func (peer *Peer) downloadPiece(index int) ([]byte, error) {
+    // TODO Send interested and receive unchoke
+
     // Request piece
     piece, err := peer.requestPiece(index)
     if err != nil {
