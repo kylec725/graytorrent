@@ -31,9 +31,9 @@ type Peer struct {
     Host net.IP
     Port uint16
     Conn *connect.Conn  // nil if not connected
-    Bitfield bitfield.Bitfield
 
     info *common.TorrentInfo
+    bitfield bitfield.Bitfield
     amChoking bool
     amInterested bool
     peerChoking bool
@@ -53,9 +53,9 @@ func New(host net.IP, port uint16, conn net.Conn, info *common.TorrentInfo) Peer
         Host: host,
         Port: port,
         Conn: &connect.Conn{Conn: conn, Timeout: handshakeTimeout},  // Use a pointer so we can have a nil value
-        Bitfield: nil,
 
         info: info,
+        bitfield: nil,
         amChoking: true,
         amInterested: false,
         peerChoking: true,
@@ -140,7 +140,7 @@ func (peer *Peer) StartWork(work chan int, remove chan string) {
         // Grab work from the channel
         case index := <-work:
             // Send the work back if the peer does not have the piece
-            if !peer.Bitfield.Has(index) {
+            if !peer.bitfield.Has(index) {
                 work <- index
                 continue
             }

@@ -53,13 +53,13 @@ func (peer *Peer) handleMessage(msg *message.Message, currentWork []byte) ([]byt
         peer.peerInterested = false
     case message.MsgHave:
         index := binary.BigEndian.Uint32(msg.Payload)
-        peer.Bitfield.Set(int(index))
+        peer.bitfield.Set(int(index))
     case message.MsgBitfield:
         expected := int(math.Ceil(float64(peer.info.TotalPieces) / 8))
         if expected != len(msg.Payload) {
             return currentWork, errors.Wrap(ErrBitfield, "handleMessage")
         }
-        peer.Bitfield = msg.Payload
+        peer.bitfield = msg.Payload
     case message.MsgRequest:
         err := peer.handleRequest(msg)
         return currentWork, errors.Wrap(err, "handleMessage")
