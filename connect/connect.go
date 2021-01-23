@@ -6,32 +6,50 @@ package connect
 
 import (
     "net"
-    "os"
-    "strconv"
+    "time"
     
     "github.com/pkg/errors"
 )
 
 // Errors
 var (
-    ErrBadPortRange = errors.New("Bad port range")
-    ErrNoOpenPort = errors.New("Open port not found")
+    ErrTimeout = errors.New("Connection operation timed out")
+    ErrSend = errors.New("Unexpected number of bytes sent")
+    ErrRcv = errors.New("Unexpected number of bytes received")
 )
 
-// OpenPort finds a local unused port within a range
-func OpenPort(portRange []int) (uint16, error) {
-    hostname, err := os.Hostname()
+// Conn is a wrapper around net with variable timeout from read/write calls
+type Conn struct {
+    Conn net.Conn
+    Timeout  time.Duration
+}
+
+// Write sends data over a connection, returns an error if not all of the data is sent
+func (conn *Conn) Write(data []byte) error {
+    err := conn.Conn.SetDeadline(time.Now().Add(conn.Timeout))
     if err != nil {
-        return 0, errors.Wrap(err, "OpenPort")
+        return errors.Wrap(err, "Write")
     }
-    if len(portRange) < 2 {
-        return 0, errors.Wrap(ErrBadPortRange, "OpenPort")
+    bytesSent, err := conn.Conn.Write(data)
+    if err != nil {
+        return errors.Wrap(err, "Write")
+    } else if bytesSent != len(data) {
+        return errors.Wrap(ErrSend, "Write")
     }
-    for port := portRange[0]; port <= portRange[1]; port++ {
-        _, err := net.Dial("tcp", hostname + ":" + strconv.Itoa(port))
-        if err != nil {
-            return uint16(port), nil
-        }
+    return nil
+}
+
+// Read reads in data from a connection, returns an error if the buffer is not filled
+func (conn *Conn) Read(data []byte) error {
+    err := conn.Conn.SetDeadline(time.Now().Add(conn.Timeout))
+    if err != nil {
+        return errors.Wrap(err, "Read")
     }
-    return 0, errors.Wrap(ErrNoOpenPort, "OpenPort")
+    bytesRead, err := conn.Conn.Write(data)
+    if err != nil {
+        return errors.Wrap(err, "Read")
+    } else if bytesRead != len(data) {
+        return errors.Wrap(ErrRcv, "Read")
+    }
+    return nil
 }
