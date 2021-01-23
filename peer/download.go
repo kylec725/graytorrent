@@ -125,7 +125,7 @@ func (peer *Peer) getPiece(index int) ([]byte, error) {
         if err != nil {
             return nil, errors.Wrap(err, "getPiece")
         }
-        if _, err = peer.handleMessage(msg, currentWork); err != nil {  // Handle message
+        if currentWork, err = peer.handleMessage(msg, currentWork); err != nil {  // Handle message
             return nil, errors.Wrap(err, "getPiece")
         }
     }
