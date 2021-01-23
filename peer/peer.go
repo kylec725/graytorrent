@@ -26,6 +26,7 @@ const reqSize = 16384
 // Errors
 var (
     ErrBadPeers = errors.New("Received malformed peers list")
+    ErrPieceHash = errors.New("Received piece with bad hash")
 )
 
 // Peer stores info about connecting to peers as well as their state
@@ -41,6 +42,7 @@ type Peer struct {
     peerInterested bool
     info *common.TorrentInfo
     rate int  // number of outgoing requests
+    stop bool
 }
 
 func (peer Peer) String() string {
@@ -56,7 +58,13 @@ func New(host net.IP, port uint16, conn net.Conn, info *common.TorrentInfo) Peer
         Bitfield: make([]byte, info.TotalPieces),
         info: info,
         rate: startRate,
+        stop: false,
     }
+}
+
+// Stop signals a peer to stop working and kill its goroutine
+func (peer *Peer) Stop() {
+    peer.stop = true
 }
 
 // Choke changes a peer's state of amChoking to true
@@ -120,6 +128,28 @@ func (peer *Peer) requestPiece(index int) ([]byte, error) {
     return nil, nil
 }
 
+func (peer *Peer) downloadPiece(index int) ([]byte, error) {
+    // Request piece
+    piece, err := peer.requestPiece(index)
+    if err != nil {
+        log.WithFields(log.Fields{
+            "peer": peer.String(),
+            "piece index": index,
+            "error": err.Error(),
+        }).Debug("Requesting piece from peer failed")
+        return nil, errors.Wrap(err, "downloadPiece")
+    }
+    // Verify the piece's hash
+    if !write.VerifyPiece(peer.info, index, piece) {
+        log.WithFields(log.Fields{
+            "peer": peer.String(),
+            "piece index": index,
+        }).Debug("Received a piece with an invalid hash")
+        return nil, errors.Wrap(ErrPieceHash, "downloadPiece")
+    }
+    return piece, nil
+}
+
 // Work makes a peer wait for pieces to download
 // TODO
 func (peer *Peer) Work(work chan int, remove chan string) {
@@ -129,54 +159,66 @@ func (peer *Peer) Work(work chan int, remove chan string) {
             "peer": peer.String(),
             "error": err.Error(),
         }).Debug("Peer handshake failed")
-        remove <- peer.String()
+        remove <- peer.String()  // Notify main to remove this peer
         return
     }
 
+    // Change connection timeout to poll setting
+    peer.Conn.Timeout = pollTimeout
+
     // Grab work from the channel
     for {
-        // Change connection timeout to poll setting
-        peer.Conn.Timeout = pollTimeout
+        // Check if peer should shut down
+        if peer.stop {
+            return
+        }
 
         select {
         case index := <-work:
             fmt.Println("work index received:", index)
+            // Send the work back if the peer does not have the piece
             if !peer.Bitfield.Has(index) {
                 work <- index
                 fmt.Println("piece returned:", index)
                 continue
             }
-            // Request piece
-            piece, err := peer.requestPiece(index)
+
+            piece, err := peer.downloadPiece(index)
             if err != nil {
-                log.WithFields(log.Fields{
-                    "peer": peer.String(),
-                    "piece index": index,
-                    "error": err.Error(),
-                }).Debug("Requesting piece from peer failed")
-                remove <- peer.String()
+                work <- index  // Put piece back onto work channel
+                remove <- peer.String()  // Notify main to remove this peer
                 return
             }
-            // Verify the piece's hash
-            if !write.VerifyPiece(peer.info, index, piece) {
-                log.WithFields(log.Fields{
-                    "peer": peer.String(),
-                    "piece index": index,
-                }).Debug("Received a piece with an invalid hash")
-                return  // TODO maybe retry requesting the piece until the hash matches?
-            }
-            // Add the piece to file
+            // Write piece to file
             if err = write.AddPiece(peer.info, index, piece); err != nil {
                 log.WithFields(log.Fields{
                     "peer": peer.String(),
                     "piece index": index,
-                    "error": err.Error(),
-                }).Debug("Writing piece from peer failed")
-                remove <- peer.String()
-                return
+                }).Debug("Failed to write piece to file")
+                work <- index
+                continue
             }
         default:
             fmt.Println("check for new message")
+            // Receive message
+            msg, err := peer.rcvMessage()
+            if err != nil {
+                log.WithFields(log.Fields{
+                    "peer": peer.String(),
+                    "error": err.Error(),
+                }).Debug("Message receive error")
+                continue
+            }
+            if msg == nil {
+                // keep-alive
+                continue
+            } else if err = peer.handleMessage(msg); err != nil {  // Handle message
+                log.WithFields(log.Fields{
+                    "peer": peer.String(),
+                    "error": err.Error(),
+                }).Debug("Handle message error")
+                continue
+            }
         }
     }
     // If peer disconnects, send its address to the remove channel
