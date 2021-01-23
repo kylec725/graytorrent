@@ -18,7 +18,7 @@ var (
     ErrRcv = errors.New("Unexpected number of bytes received")
 )
 
-// Conn is a wrapper around net.Conn with variable timeout from read/write calls
+// Conn is a wrapper around net.Conn with variable timeout for read/write calls
 type Conn struct {
     Conn net.Conn
     Timeout  time.Duration
@@ -32,6 +32,9 @@ func (conn *Conn) Write(data []byte) error {
     }
     bytesSent, err := conn.Conn.Write(data)
     if err != nil {
+        if netErr, ok := err.(net.Error); ok && netErr.Timeout() {
+            return errors.Wrap(ErrTimeout, "Write")
+        }
         return errors.Wrap(err, "Write")
     } else if bytesSent != len(data) {
         return errors.Wrap(ErrSend, "Write")
@@ -47,6 +50,9 @@ func (conn *Conn) Read(data []byte) error {
     }
     bytesRead, err := conn.Conn.Write(data)
     if err != nil {
+        if netErr, ok := err.(net.Error); ok && netErr.Timeout() {
+            return errors.Wrap(ErrTimeout, "Read")
+        }
         return errors.Wrap(err, "Read")
     } else if bytesRead != len(data) {
         return errors.Wrap(ErrRcv, "Read")
