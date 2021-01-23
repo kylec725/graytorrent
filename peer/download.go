@@ -97,7 +97,7 @@ func (peer *Peer) handlePiece(msg *message.Message, currentWork []byte) ([]byte,
     begin := binary.BigEndian.Uint32(msg.Payload[4:8])
     block := msg.Payload[8:]
 
-    err := write.AddBlock(peer.info, index, begin, block, currentWork)
+    err := write.AddBlock(peer.info, int(index), int(begin), block, currentWork)
     return currentWork, errors.Wrap(err, "handlePiece")
 }
 
@@ -106,13 +106,13 @@ func (peer *Peer) getPiece(index int) ([]byte, error) {
     // Initialize peer's work
     pieceSize := common.PieceSize(peer.info, index)
     workLeft := pieceSize
-    currentWork = make([]byte, pieceSize)
+    currentWork := make([]byte, pieceSize)
 
     // start of elapsed time
-    for ;workLeft > 0; {
+    for begin := 0; workLeft > 0; {
         // Send max number of requests to peer
         for ; peer.reqsOut < peer.rate; {
-            reqSize := min(workLeft, maxReqSize)
+            reqSize := common.Min(workLeft, maxReqSize)
             err := peer.sendRequest(index, begin, reqSize)
             if err != nil {
                 return nil, errors.Wrap(err, "getPiece")
@@ -144,7 +144,7 @@ func (peer *Peer) downloadPiece(index int) ([]byte, error) {
         return nil, errors.Wrap(err, "downloadPiece")
     }
 
-    piece, err := getPiece(index)
+    piece, err := peer.getPiece(index)
     if err != nil {
         return nil, errors.Wrap(err, "downloadPiece")
     }
