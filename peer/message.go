@@ -26,6 +26,7 @@ const (
 // Errors
 var (
     ErrBitfield = errors.New("Malformed bitfield received")
+    ErrMessage = errors.New("Malformed message received")
 )
 
 // message stores the message type id and payload
@@ -46,20 +47,31 @@ func (msg *message) encode() []byte {
     return serial
 }
 
-func (peer *Peer) rcvMsg() (message, error) {
-    buf := make([]byte, 1)
+func decode(data []byte) message {
+    id := messageID(data[0])
+    payload := data[1:]
+    return message{id, payload}
+}
+
+// TODO replace with generic reading from connection
+// CURRENTLY UNUSED (REMOVE?)
+func (peer *Peer) rcvMessage() (*message, error) {
+    buf := make([]byte, 4)
     if err := peer.Conn.Read(buf); err != nil {
-        return message{}, errors.Wrap(err, "rcvMsg")
+        return nil, errors.Wrap(err, "rcvMessage")
     }
-    msgLen := buf[0]
+    msgLen := binary.BigEndian.Uint32(buf)
+    if msgLen == 0 {  // Keep-alive message
+        return nil, nil
+    }
 
     buf = make([]byte, msgLen)
     if err := peer.Conn.Read(buf); err != nil {
-        return message{}, errors.Wrap(err, "rcvMsg")
+        return nil, errors.Wrap(err, "rcvMessage")
     }
 
-    msg := message{id: messageID(buf[0]), payload: buf[1:]}
-    return msg, nil
+    msg := decode(buf)
+    return &msg, nil
 }
 
 func (peer *Peer) sendRequest(index, begin, length int) error {
@@ -70,13 +82,10 @@ func (peer *Peer) sendRequest(index, begin, length int) error {
     msg := message{id: msgRequest, payload: payload}
 
     err := peer.Conn.Write(msg.encode())
-    if err != nil {
-        return errors.Wrap(err, "sendRequest")
-    }
-    return nil
+    return errors.Wrap(err, "sendRequest")
 }
 
-func (peer *Peer) handleMsg(msg *message) error {
+func (peer *Peer) handleMessage(msg *message) error {
     if msg == nil {
         // reset keep-alive
     }
@@ -95,12 +104,16 @@ func (peer *Peer) handleMsg(msg *message) error {
     case msgBitfield:
         expected := int(math.Ceil(float64(peer.info.TotalPieces) / 8))
         if expected != len(msg.payload) {
-            return errors.Wrap(ErrBitfield, "handleMsg")
+            return errors.Wrap(ErrBitfield, "handleMessage")
         }
         peer.Bitfield = msg.payload
     case msgRequest:
+        if !peer.amChoking {
+
+        }
         return errors.New("Not yet implemented")
     case msgPiece:
+        // discard because we did not explicitly request it
         return errors.New("Not yet implemented")
     case msgCancel:
         fmt.Println("msgPort not yet implemented")
