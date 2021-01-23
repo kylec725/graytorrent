@@ -177,7 +177,8 @@ func (peer *Peer) StartWork(work chan int, remove chan string) {
             msg, err := peer.getMessage()
             if _, err = peer.handleMessage(msg, nil); err != nil {  // Handle message
                 if errors.Unwrap(err) == connect.ErrTimeout {
-                    // handle peer connection time out
+                    // Timeout on polling is fine
+                    continue
                 }
                 log.WithFields(log.Fields{
                     "peer": peer.String(),
