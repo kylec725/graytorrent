@@ -42,7 +42,7 @@ type Peer struct {
     peerInterested bool
     reqsOut int  // number of outgoing requests
     rate int  // max number of outgoing requests
-    // shutdown bool
+    shutdown bool
 }
 
 func (peer Peer) String() string {
