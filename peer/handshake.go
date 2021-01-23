@@ -37,7 +37,7 @@ func (peer *Peer) sendHandshake() error {
         if err != nil {
             return errors.Wrap(err, "sendHandshake")
         }
-        conn.SetDeadline(time.Now().Add(connTimeout))
+        conn.SetDeadline(time.Now().Add(handshakeTimeout))
     }
 
     // Send the handshake
@@ -82,6 +82,18 @@ func (peer *Peer) rcvHandshake() error {
         return errors.Wrap(ErrInfoHash, "RcvHandshake")
     }
 
+    return nil
+}
+
+// Attempts to connect to a peer if necessary
+func (peer *Peer) connect() error {
+    if peer.Conn == nil {
+        if err := peer.sendHandshake(); err != nil {
+            return errors.Wrap(err, "connect")
+        } else if err = peer.rcvHandshake(); err != nil {
+            return errors.Wrap(err, "connect")
+        }
+    }
     return nil
 }
 
