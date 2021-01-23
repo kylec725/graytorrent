@@ -87,17 +87,26 @@ func (to *Torrent) removePeer(name string) error {
 // Download starts a routine to download a torrent from peers
 // TODO
 func (to *Torrent) Download() {
-    // Should already have peers in the peer list
+    // Start tracker goroutines
 
-    // push all piece indices into the work channel
-    // work := make(chan int)
-    // quit := make(chan string)
-    // for {
-    //     select {
-    //     case deadPeer := <-quit:
-    //         to.removePeer(deadPeer)
-    //     }
-    // }
+    peers := make(chan peer.Peer)
+    work := make(chan int)
+    quit := make(chan string)
+
+    // Populate work queue
+    for i := 0; i < to.Info.TotalPieces; i++ {
+        work <- i
+    }
+
+    for {
+        select {
+        case newPeer := <-peers:
+            to.Peers = append(to.Peers, newPeer)
+        case deadPeer := <-quit:
+            // TODO close deadPeer
+            to.removePeer(deadPeer)
+        }
+    }
 }
 
 // connect to all peers asynchronously
