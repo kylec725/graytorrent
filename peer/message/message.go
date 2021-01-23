@@ -42,10 +42,13 @@ func (msg *Message) Encode() []byte {
 }
 
 // Decode decodes a byte slice into a message
-func decode(data []byte) Message {
+func Decode(data []byte) *Message {
+    if data == nil {
+        return nil
+    }
     id := messageID(data[0])
     payload := data[1:]
-    return Message{id, payload}
+    return &Message{ID: id, Payload: payload}
 }
 
 // Choke returns a choke message
