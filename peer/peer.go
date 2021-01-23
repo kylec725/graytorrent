@@ -152,7 +152,11 @@ func (peer *Peer) StartWork(work chan int, remove chan string) {
                     "error": err.Error(),
                 }).Debug("Download piece failed")
                 work <- index  // Put piece back onto work channel
-                peer.Shutdown()
+
+                // Kill peer if issue was not the piece hash
+                if errors.Unwrap(err) != ErrPieceHash {
+                    peer.Shutdown()
+                }
                 continue
             }
 
