@@ -11,17 +11,18 @@ import (
 
 type messageID uint8
 
+// Message types
 const (
-    msgChoke         messageID = 0
-    msgUnchoke       messageID = 1
-    msgInterested    messageID = 2
-    msgNotInterested messageID = 3
-    msgHave          messageID = 4
-    msgBitfield      messageID = 5
-    msgRequest       messageID = 6
-    msgPiece         messageID = 7
-    msgCancel        messageID = 8
-    msgPort          messageID = 9
+    MsgChoke         messageID = 0
+    MsgUnchoke       messageID = 1
+    MsgInterested    messageID = 2
+    MsgNotInterested messageID = 3
+    MsgHave          messageID = 4
+    MsgBitfield      messageID = 5
+    MsgRequest       messageID = 6
+    MsgPiece         messageID = 7
+    MsgCancel        messageID = 8
+    MsgPort          messageID = 9
 )
 
 // Errors
@@ -56,22 +57,22 @@ func decode(data []byte) Message {
 
 // Choke returns a choke message
 func Choke() Message {
-    return Message{ID: msgChoke}
+    return Message{ID: MsgChoke}
 }
 
 // Unchoke returns an unchoke message
 func Unchoke() Message {
-    return Message{ID: msgUnchoke}
+    return Message{ID: MsgUnchoke}
 }
 
 // Interested returns an interested message
 func Interested() Message {
-    return Message{ID: msgInterested}
+    return Message{ID: MsgInterested}
 }
 
 // NotInterested returns a not interested message
 func NotInterested() Message {
-    return Message{ID: msgNotInterested}
+    return Message{ID: MsgNotInterested}
 }
 
 // Have returns a have message
@@ -79,7 +80,7 @@ func NotInterested() Message {
 func Have(index int) Message {
     payload := make([]byte, 4)
     binary.BigEndian.PutUint32(payload, uint32(index))
-    return Message{ID: msgNotInterested, Payload: payload}
+    return Message{ID: MsgNotInterested, Payload: payload}
 }
 
 // Bitfield returns a bitfield message
@@ -125,7 +126,7 @@ func (peer *Peer) sendRequest(index, begin, length int) error {
     binary.BigEndian.PutUint32(payload[0:4], uint32(index))
     binary.BigEndian.PutUint32(payload[4:8], uint32(begin))
     binary.BigEndian.PutUint32(payload[8:12], uint32(length))
-    msg := Message{ID: msgRequest, Payload: payload}
+    msg := Message{ID: MsgRequest, Payload: payload}
 
     err := peer.Conn.Write(msg.encode())
     return errors.Wrap(err, "sendRequest")
@@ -136,35 +137,35 @@ func (peer *Peer) handleMessage(msg *Message) error {
         // reset keep-alive
     }
     switch msg.ID {
-    case msgChoke:
+    case MsgChoke:
         peer.peerChoking = true
-    case msgUnchoke:
+    case MsgUnchoke:
         peer.peerChoking = false
-    case msgInterested:
+    case MsgInterested:
         peer.peerInterested = true
-    case msgNotInterested:
+    case MsgNotInterested:
         peer.peerInterested = false
-    case msgHave:
+    case MsgHave:
         index := binary.BigEndian.Uint32(msg.Payload)
         peer.Bitfield.Set(int(index))
-    case msgBitfield:
+    case MsgBitfield:
         expected := int(math.Ceil(float64(peer.info.TotalPieces) / 8))
         if expected != len(msg.Payload) {
             return errors.Wrap(ErrBitfield, "handleMessage")
         }
         peer.Bitfield = msg.Payload
-    case msgRequest:
+    case MsgRequest:
         if !peer.amChoking {
 
         }
         return errors.New("Not yet implemented")
-    case msgPiece:
+    case MsgPiece:
         // discard because we did not explicitly request it
         return errors.New("Not yet implemented")
-    case msgCancel:
-        fmt.Println("msgPort not yet implemented")
-    case msgPort:
-        fmt.Println("msgPort not yet implemented")
+    case MsgCancel:
+        fmt.Println("MsgPort not yet implemented")
+    case MsgPort:
+        fmt.Println("MsgPort not yet implemented")
     }
     return nil
 }
