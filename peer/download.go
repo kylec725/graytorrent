@@ -142,7 +142,6 @@ func (peer *Peer) downloadPiece(index int) ([]byte, error) {
     if err := peer.Conn.Write(msg.Encode()); err != nil {
         return nil, errors.Wrap(err, "downloadPiece")
     }
-    // TODO wait for unchoke
 
     piece, err := peer.getPiece(index)
     if err != nil {
