@@ -6,11 +6,11 @@ BitTorrent client implemented in golang
 - UDP Tracker support
 - Tracker scraping
 
-### Potential Goals
+## Potential Goals
 - Efficient rarest first requesting algorithm
 - Use Google Protocol Buffers for network interactions
 
-### Dependencies
+## Dependencies
 - [bencode-go](github.com/jackpal/bencode-go)
 - [pkg/errors](github.com/pkg/errors)
 - [logrus](github.com/sirupsen/logrus)
