@@ -34,7 +34,7 @@ func (peer *Peer) newHandshake() []byte {
 func (peer *Peer) sendHandshake() error {
     if peer.Conn == nil {
         // Start the TCP connection
-        conn, err := net.Dial("tcp", peer.String())
+        conn, err := net.DialTimeout("tcp", peer.String(), 3 * time.Second)
         if err != nil {
             return errors.Wrap(err, "sendHandshake")
         }
@@ -44,10 +44,7 @@ func (peer *Peer) sendHandshake() error {
     // Send the handshake
     handshake := peer.newHandshake()
     err := peer.Conn.Write(handshake)
-    if err != nil {
-        return errors.Wrap(err, "sendHandshake")
-    }
-    return nil
+    return errors.Wrap(err, "sendHandshake")
 }
 
 func (peer *Peer) rcvHandshake() error {
@@ -83,7 +80,7 @@ func (peer *Peer) rcvHandshake() error {
 }
 
 // Initiates a handshake with the peer if necessary
-func (peer *Peer) initHandshake() error {
+func (peer *Peer) initHandshake() error {  // TODO send interested message
     if peer.Conn == nil {
         if err := peer.sendHandshake(); err != nil {
             return errors.Wrap(err, "connect")
