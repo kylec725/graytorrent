@@ -105,15 +105,6 @@ func Unmarshal(peersBytes []byte, info *common.TorrentInfo) ([]Peer, error) {
     return peersList, nil
 }
 
-func (peer *Peer) adjustRate(actualRate uint16) {
-    // Use aggressive algorithm from rtorrent
-    if actualRate < 20 {
-        peer.rate = actualRate + 2
-    } else {
-        peer.rate = actualRate / 5 + 18
-    }
-}
-
 // StartWork makes a peer wait for pieces to download
 func (peer *Peer) StartWork(work chan int, remove chan string) {
     err := peer.verifyHandshake()

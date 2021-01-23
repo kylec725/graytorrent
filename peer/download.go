@@ -156,3 +156,12 @@ func (peer *Peer) downloadPiece(index int) ([]byte, error) {
     }
     return piece, nil
 }
+
+func (peer *Peer) adjustRate(actualRate uint16) {
+    // Use aggressive algorithm from rtorrent
+    if actualRate < 20 {
+        peer.rate = actualRate + 2
+    } else {
+        peer.rate = actualRate / 5 + 18
+    }
+}
