@@ -21,7 +21,6 @@ import (
 
 const pollTimeout = time.Second
 const startRate = 3  // slow approach: hard limit on requests per peer
-const reqSize = 16384
 
 // Errors
 var (
@@ -193,6 +192,7 @@ func (peer *Peer) Work(work chan int, remove chan string) {
                 continue
             }
 
+            // TODO run downloadPiece as a goroutine
             piece, err := peer.downloadPiece(index)
             if err != nil {
                 work <- index  // Put piece back onto work channel
