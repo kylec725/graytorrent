@@ -110,14 +110,16 @@ func (peer *Peer) getPiece(index int) ([]byte, error) {
 
     // start of elapsed time
     for begin := 0; workLeft > 0; {
-        // Send max number of requests to peer
-        for ; peer.reqsOut < peer.rate; {
-            reqSize := common.Min(workLeft, maxReqSize)
-            err := peer.sendRequest(index, begin, reqSize)
-            if err != nil {
-                return nil, errors.Wrap(err, "getPiece")
+        if !peer.peerChoking {
+            // Send max number of requests to peer
+            for ; peer.reqsOut < peer.rate; {
+                reqSize := common.Min(workLeft, maxReqSize)
+                err := peer.sendRequest(index, begin, reqSize)
+                if err != nil {
+                    return nil, errors.Wrap(err, "getPiece")
+                }
+                begin += reqSize
             }
-            begin += reqSize
         }
 
         // Receive data from the peer
