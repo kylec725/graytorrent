@@ -15,7 +15,8 @@ const handshakeTimeout = 20 * time.Second
 
 // Errors
 var (
-    ErrPstr = errors.New("Got bad pstr length or value")
+    ErrPstrLen = errors.New("Got bad pstr length")
+    ErrPstr = errors.New("Got incorrect pstr")
     ErrInfoHash = errors.New("Received incorrect info hash")
     // ErrPeerID = errors.New("Received peer ID was incorrect")
 )
@@ -56,7 +57,7 @@ func (peer *Peer) rcvHandshake() error {
 
     pstrLen := buf[0]
     if pstrLen == 0 {
-        return errors.Wrap(ErrPstr, "RcvHandshake")
+        return errors.Wrap(ErrPstrLen, "RcvHandshake")
     }
 
     buf = make([]byte, 48 + pstrLen)
