@@ -18,7 +18,7 @@ import (
     log "github.com/sirupsen/logrus"
 )
 
-const pollTimeout = time.Second
+const pollTimeout = 2 * time.Second
 const startRate uint16 = 3  // slow approach: hard limit on requests per peer
 
 // Errors
@@ -124,6 +124,13 @@ func (peer *Peer) StartWork(work chan int, remove chan string) {
     for {
         // Check if peer should shut down
         if peer.shutdown {
+            if err := peer.Conn.Close(); err != nil {
+                log.WithFields(log.Fields{
+                    "peer": peer.String(),
+                    "error": err.Error(),
+                }).Debug("Error disconnecting with peer")
+            }
+            remove <- peer.String()  // Notify main to remove this peer from its list
             return
         }
 
@@ -145,8 +152,8 @@ func (peer *Peer) StartWork(work chan int, remove chan string) {
                     "error": err.Error(),
                 }).Debug("Download piece failed")
                 work <- index  // Put piece back onto work channel
-                remove <- peer.String()  // Notify main to remove this peer from its list
-                return
+                peer.Shutdown()
+                continue
             }
 
             // Write piece to file
@@ -165,13 +172,15 @@ func (peer *Peer) StartWork(work chan int, remove chan string) {
             // Receive a message from the peer
             msg, err := peer.getMessage()
             if _, err = peer.handleMessage(msg, nil); err != nil {  // Handle message
-
+                if errors.Unwrap(err) == connect.ErrTimeout {
+                    // handle peer connection time out
+                }
                 log.WithFields(log.Fields{
                     "peer": peer.String(),
                     "error": err.Error(),
                 }).Debug("Received bad message")
-                remove <- peer.String()  // Notify main to remove this peer from its list
-                return
+                peer.Shutdown()
+                continue
             }
         }
     }
