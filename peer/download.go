@@ -136,19 +136,21 @@ func (peer *Peer) getPiece(index int) ([]byte, error) {
 
 // downloadPiece starts a routine to download a piece from a peer
 func (peer *Peer) downloadPiece(index int) ([]byte, error) {
-    // TODO Send interested and receive unchoke
     msg := message.Interested()
-    err := peer.Conn.Write(msg.Encode())
-    if err != nil {
+    if err := peer.Conn.Write(msg.Encode()); err != nil {
         return nil, errors.Wrap(err, "downloadPiece")
     }
+    // TODO wait for unchoke
 
     piece, err := peer.getPiece(index)
     if err != nil {
         return nil, errors.Wrap(err, "downloadPiece")
     }
 
-    // TODO Send not interested
+    msg = message.NotInterested()
+    if err := peer.Conn.Write(msg.Encode()); err != nil {
+        return nil, errors.Wrap(err, "downloadPiece")
+    }
 
     // Verify the piece's hash
     if !write.VerifyPiece(peer.info, index, piece) {
