@@ -146,6 +146,9 @@ func (peer *Peer) downloadPiece(index int) ([]byte, error) {
         }).Debug("Requesting piece from peer failed")
         return nil, errors.Wrap(err, "downloadPiece")
     }
+
+    // TODO Send not interested
+
     // Verify the piece's hash
     if !write.VerifyPiece(peer.info, index, piece) {
         log.WithFields(log.Fields{
@@ -203,6 +206,9 @@ func (peer *Peer) Work(work chan int, remove chan string) {
                     "piece index": index,
                 }).Debug("Failed to write piece to file")
                 work <- index
+                continue
+            } else {  // Write was successful
+                peer.info.Bitfield.Set(index)
                 continue
             }
         default:
