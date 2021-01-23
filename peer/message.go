@@ -26,6 +26,8 @@ const (
 // Errors
 var (
     ErrBitfield = errors.New("Malformed bitfield received")
+    ErrSend = errors.New("Unexpected number of bytes sent")
+    // ErrRcv = errors.New("Unexpected number of bytes received")
 )
 
 // message stores the message type id and payload
@@ -60,6 +62,22 @@ func (peer *Peer) rcvMsg() (message, error) {
 
     msg := message{id: messageID(buf[0]), payload: buf[1:]}
     return msg, nil
+}
+
+func (peer *Peer) sendRequest(index, begin, length int) error {
+    payload := make([]byte, 12)
+    binary.BigEndian.PutUint32(payload[0:4], uint32(index))
+    binary.BigEndian.PutUint32(payload[4:8], uint32(begin))
+    binary.BigEndian.PutUint32(payload[8:12], uint32(length))
+    msg := message{id: msgRequest, payload: payload}
+
+    bytesSent, err := peer.Conn.Write(msg.serialize())
+    if err != nil {
+        return errors.Wrap(err, "sendRequest")
+    } else if bytesSent != 13 {
+        return errors.Wrap(ErrSend, "sendRequest")
+    }
+    return nil
 }
 
 func (peer *Peer) handleMsg(msg *message) error {

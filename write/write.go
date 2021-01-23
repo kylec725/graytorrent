@@ -10,6 +10,8 @@ import (
     "github.com/pkg/errors"
 )
 
+// TODO use index only for range functions to avoid copying
+
 // Errors
 var (
     ErrFileExists = errors.New("Torrent's file already exists")
