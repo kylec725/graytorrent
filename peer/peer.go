@@ -107,7 +107,7 @@ func Unmarshal(peersBytes []byte, info *common.TorrentInfo) ([]Peer, error) {
     return peersList, nil
 }
 
-func (peer *Peer) adjustRate(actualRate int) {
+func (peer *Peer) adjustRate(actualRate uint16) {
     // Use aggressive algorithm from rtorrent
     if actualRate < 20 {
         peer.rate = actualRate + 2
