@@ -21,7 +21,7 @@ import (
 )
 
 const pollTimeout = time.Second
-const startRate = 3  // slow approach: hard limit on requests per peer
+const startRate uint16 = 3  // slow approach: hard limit on requests per peer
 
 // Errors
 var (
