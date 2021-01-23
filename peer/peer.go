@@ -40,8 +40,8 @@ type Peer struct {
     amInterested bool
     peerChoking bool
     peerInterested bool
-    reqsOut int  // number of outgoing requests
-    rate int  // max number of outgoing requests
+    reqsOut uint16  // number of outgoing requests
+    rate uint16  // max number of outgoing requests
     shutdown bool
 }
 
