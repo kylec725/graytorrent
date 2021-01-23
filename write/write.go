@@ -57,13 +57,6 @@ func pieceBounds(info *common.TorrentInfo, index int) (int, int) {
     return start, end
 }
 
-func min(x, y int) int {
-    if x < y {
-        return x
-    }
-    return y
-}
-
 // writeOffset writes info a file starting at an index offset
 func writeOffset(filename string, data []byte, offset int) error {
     file, err := os.OpenFile(filename, os.O_WRONLY, 0755)
@@ -100,7 +93,7 @@ func readOffset(filename string, size int, offset int) ([]byte, error) {
 }
 
 // AddBlock adds a block info a piece
-func AddBlock(info *common.TorrentInfo, index, begin int, block, piece []byte) error {
+func AddBlock(info *common.TorrentInfo, index, begin uint32, block, piece []byte) error {
     if index < 0 || index >= info.TotalPieces {
         return errors.Wrap(ErrPieceIndex, "AddBlock")
     }
@@ -132,7 +125,7 @@ func AddPiece(info *common.TorrentInfo, index int, piece []byte) error {
     for _, file := range info.Paths {
         if offset < file.Length {  // Piece is part of the file
             bytesToWrite := file.Length - offset  // Figure out how much of the piece info write info file
-            bytesToWrite = min(bytesToWrite, pieceLeft)
+            bytesToWrite = common.Min(bytesToWrite, pieceLeft)
             pieceEnd = pieceStart + bytesToWrite
 
             err := writeOffset(file.Path, piece[pieceStart:pieceEnd], offset)
@@ -170,7 +163,7 @@ func ReadPiece(info *common.TorrentInfo, index int) ([]byte, error) {
     for _, file := range info.Paths {
         if offset < file.Length {  // Piece is part of the file
             bytesToRead := file.Length - offset  // Figure out how much of the piece info write info file
-            bytesToRead = min(bytesToRead, pieceLeft)
+            bytesToRead = common.Min(bytesToRead, pieceLeft)
             pieceEnd = pieceStart + bytesToRead
 
             data, err := readOffset(file.Path, bytesToRead, offset)
