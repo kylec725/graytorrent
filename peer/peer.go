@@ -9,10 +9,8 @@ import (
     "encoding/binary"
     "strconv"
     "time"
-    "fmt"
 
     "github.com/kylec725/graytorrent/common"
-    "github.com/kylec725/graytorrent/peer/message"
     "github.com/kylec725/graytorrent/bitfield"
     "github.com/kylec725/graytorrent/write"
     "github.com/kylec725/graytorrent/connect"
@@ -141,11 +139,9 @@ func (peer *Peer) StartWork(work chan int, remove chan string) {
         select {
         // Grab work from the channel
         case index := <-work:
-            fmt.Println("work index received:", index)
             // Send the work back if the peer does not have the piece
             if !peer.Bitfield.Has(index) {
                 work <- index
-                fmt.Println("piece returned:", index)
                 continue
             }
 
@@ -156,7 +152,7 @@ func (peer *Peer) StartWork(work chan int, remove chan string) {
                     "peer": peer.String(),
                     "piece index": index,
                     "error": err.Error(),
-                }).Debug("Download from peer failed")
+                }).Debug("Download piece failed")
                 work <- index  // Put piece back onto work channel
                 remove <- peer.String()  // Notify main to remove this peer from its list
                 return
@@ -167,7 +163,7 @@ func (peer *Peer) StartWork(work chan int, remove chan string) {
                 log.WithFields(log.Fields{
                     "peer": peer.String(),
                     "piece index": index,
-                }).Debug("Failed to write piece to file")
+                }).Debug("Writing piece to file failed")
                 work <- index
                 continue
             } else {  // Write was successful
@@ -175,23 +171,14 @@ func (peer *Peer) StartWork(work chan int, remove chan string) {
                 continue
             }
         default:
-            fmt.Println("check for new message")
-            // Receive data from the peer
-            data, err := peer.rcvData()
-            if err != nil {
-                log.WithFields(log.Fields{
-                    "peer": peer.String(),
-                    "error": err.Error(),
-                }).Debug("Receiving from peer error")
-                remove <- peer.String()  // Notify main to remove this peer from its list
-                return
-            }
-            msg := message.Decode(data)
+            // Receive a message from the peer
+            msg, err := peer.getMessage()
             if _, err = peer.handleMessage(msg, nil); err != nil {  // Handle message
+
                 log.WithFields(log.Fields{
                     "peer": peer.String(),
                     "error": err.Error(),
-                }).Debug("Handle message error")
+                }).Debug("Received bad message")
                 remove <- peer.String()  // Notify main to remove this peer from its list
                 return
             }
