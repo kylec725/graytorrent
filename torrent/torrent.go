@@ -91,7 +91,7 @@ func (to *Torrent) Download() {
 
     peers := make(chan peer.Peer)
     work := make(chan int)
-    quit := make(chan string)
+    remove := make(chan string)  // Channel for peer to notify it should be removed
 
     // Populate work queue
     for i := 0; i < to.Info.TotalPieces; i++ {
@@ -102,7 +102,7 @@ func (to *Torrent) Download() {
         select {
         case newPeer := <-peers:
             to.Peers = append(to.Peers, newPeer)
-        case deadPeer := <-quit:
+        case deadPeer := <-remove:
             // TODO close deadPeer
             to.removePeer(deadPeer)
         }
