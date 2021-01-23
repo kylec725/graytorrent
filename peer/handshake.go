@@ -4,12 +4,13 @@ import (
     "net"
     "time"
     "bytes"
-    "fmt"
 
+    "github.com/kylec725/graytorrent/connect"
     "github.com/pkg/errors"
 )
 
 const protocol = "BitTorrent protocol"
+const handshakeTimeout = 20 * time.Second
 
 // Errors
 var (
@@ -37,25 +38,21 @@ func (peer *Peer) sendHandshake() error {
         if err != nil {
             return errors.Wrap(err, "sendHandshake")
         }
-        conn.SetDeadline(time.Now().Add(handshakeTimeout))
+        peer.Conn = &connect.Conn{Conn: conn, Timeout: handshakeTimeout}
     }
 
     // Send the handshake
     handshake := peer.newHandshake()
-    bytesSent, err := peer.Conn.Write(handshake)
+    err := peer.Conn.Write(handshake)
     if err != nil {
         return errors.Wrap(err, "sendHandshake")
-    } else if bytesSent != len(handshake) {  // TODO probably will change, not sure if all bytes are guaranteed to be sent
-        fmt.Println("Fix sendHandshake")
-        return errors.New("Unexpected number of bytes sent")
     }
-
     return nil
 }
 
 func (peer *Peer) rcvHandshake() error {
     buf := make([]byte, 1)
-    if _, err := peer.Conn.Read(buf); err != nil {
+    if err := peer.Conn.Read(buf); err != nil {
         return errors.Wrap(err, "RcvHandshake")
     }
 
@@ -65,7 +62,7 @@ func (peer *Peer) rcvHandshake() error {
     }
 
     buf = make([]byte, 48 + pstrLen)
-    if _, err := peer.Conn.Read(buf); err != nil {
+    if err := peer.Conn.Read(buf); err != nil {
         return errors.Wrap(err, "RcvHandshake")
     }
 
@@ -85,8 +82,8 @@ func (peer *Peer) rcvHandshake() error {
     return nil
 }
 
-// Attempts to connect to a peer if necessary
-func (peer *Peer) connect() error {
+// Initiates a handshake with the peer if necessary
+func (peer *Peer) initHandshake() error {
     if peer.Conn == nil {
         if err := peer.sendHandshake(); err != nil {
             return errors.Wrap(err, "connect")

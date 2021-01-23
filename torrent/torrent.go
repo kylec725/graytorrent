@@ -17,6 +17,11 @@ import (
     "github.com/pkg/errors"
 )
 
+// Errors
+var (
+    ErrPeerNotFound = errors.New("Peer not found")
+)
+
 // Torrent stores metainfo and current progress on a torrent
 type Torrent struct {
     Path string
@@ -48,6 +53,25 @@ func (to *Torrent) Setup() error {
     return nil
 }
 
+func (to *Torrent) removePeer(name string) error {
+    removeIndex := -1
+    for i := range to.Peers {
+        if name == to.Peers[i].String() {
+            removeIndex = i
+        }
+    }
+    if removeIndex == -1 {
+        return errors.Wrap(ErrPeerNotFound, "removePeer")
+    }
+    // Close the connection before returning
+    if err := to.Peers[removeIndex].Conn.Close(); err != nil {
+        return errors.Wrap(err, "removePeer")
+    }
+    to.Peers[removeIndex] = to.Peers[len(to.Peers) - 1]
+    to.Peers = to.Peers[:len(to.Peers) - 1]
+    return nil
+}
+
 // Send request to trackers concurrently to get list of peers
 // func (to *Torrent) createStarted() {
 //     for _, tr := range to.Trackers {
@@ -59,6 +83,22 @@ func (to *Torrent) Setup() error {
 //         }
 //     }
 // }
+
+// Download starts a routine to download a torrent from peers
+// TODO
+func (to *Torrent) Download() {
+    // Should already have peers in the peer list
+
+    // push all piece indices into the work channel
+    // work := make(chan int)
+    // quit := make(chan string)
+    // for {
+    //     select {
+    //     case deadPeer := <-quit:
+    //         to.removePeer(deadPeer)
+    //     }
+    // }
+}
 
 // connect to all peers asynchronously
 // aynschronously add peers to an active peer list

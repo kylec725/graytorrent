@@ -18,7 +18,7 @@ var (
     ErrRcv = errors.New("Unexpected number of bytes received")
 )
 
-// Conn is a wrapper around net with variable timeout from read/write calls
+// Conn is a wrapper around net.Conn with variable timeout from read/write calls
 type Conn struct {
     Conn net.Conn
     Timeout  time.Duration
@@ -52,4 +52,9 @@ func (conn *Conn) Read(data []byte) error {
         return errors.Wrap(ErrRcv, "Read")
     }
     return nil
+}
+
+// Close closes a connection
+func (conn *Conn) Close() error {
+    return conn.Conn.Close()
 }

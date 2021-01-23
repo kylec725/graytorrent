@@ -26,8 +26,6 @@ const (
 // Errors
 var (
     ErrBitfield = errors.New("Malformed bitfield received")
-    ErrSend = errors.New("Unexpected number of bytes sent")
-    // ErrRcv = errors.New("Unexpected number of bytes received")
 )
 
 // message stores the message type id and payload
@@ -36,7 +34,7 @@ type message struct {
     payload []byte
 }
 
-func (msg *message) serialize() []byte {
+func (msg *message) encode() []byte {
     if msg == nil {  // nil is a keep-alive message
         return make([]byte, 4)
     }
@@ -50,13 +48,13 @@ func (msg *message) serialize() []byte {
 
 func (peer *Peer) rcvMsg() (message, error) {
     buf := make([]byte, 1)
-    if _, err := peer.Conn.Read(buf); err != nil {
+    if err := peer.Conn.Read(buf); err != nil {
         return message{}, errors.Wrap(err, "rcvMsg")
     }
     msgLen := buf[0]
 
     buf = make([]byte, msgLen)
-    if _, err := peer.Conn.Read(buf); err != nil {
+    if err := peer.Conn.Read(buf); err != nil {
         return message{}, errors.Wrap(err, "rcvMsg")
     }
 
@@ -71,11 +69,9 @@ func (peer *Peer) sendRequest(index, begin, length int) error {
     binary.BigEndian.PutUint32(payload[8:12], uint32(length))
     msg := message{id: msgRequest, payload: payload}
 
-    bytesSent, err := peer.Conn.Write(msg.serialize())
+    err := peer.Conn.Write(msg.encode())
     if err != nil {
         return errors.Wrap(err, "sendRequest")
-    } else if bytesSent != 13 {
-        return errors.Wrap(ErrSend, "sendRequest")
     }
     return nil
 }
@@ -114,10 +110,12 @@ func (peer *Peer) handleMsg(msg *message) error {
     return nil
 }
 
+// TODO
 func (peer *Peer) handleRequest(msg *message) error {
     return nil
 }
 
+// TODO
 func (peer *Peer) handlePiece(msg *message) error {
     // index := binary.BigEndian.Uint32(msg.payload[0:4])
     // begin := binary.BigEndian.Uint32(msg.payload[4:8])
