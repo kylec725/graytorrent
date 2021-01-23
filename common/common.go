@@ -36,6 +36,14 @@ type Path struct {
     Path string
 }
 
+// Min returns the minimum of two integers
+func Min(x, y int) int {
+    if x < y {
+        return x
+    }
+    return y
+}
+
 // GetInfo uses metainfo to retrieve information about a torrent
 func GetInfo(meta metainfo.BencodeMeta) (TorrentInfo, error) {
     var info TorrentInfo
