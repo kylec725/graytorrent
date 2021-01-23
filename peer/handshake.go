@@ -6,6 +6,7 @@ import (
     "bytes"
 
     "github.com/kylec725/graytorrent/connect"
+    "github.com/kylec725/graytorrent/peer/message"
     "github.com/pkg/errors"
 )
 
@@ -79,25 +80,23 @@ func (peer *Peer) rcvHandshake() error {
     return nil
 }
 
-// Initiates a handshake with the peer if necessary
-func (peer *Peer) initHandshake() error {  // TODO send interested message
-    if peer.Conn == nil {
+// Verifies a peer has sent a handshake if necessary
+func (peer *Peer) verifyHandshake() error {
+    if peer.Conn == nil {  // Initiate handshake
         if err := peer.sendHandshake(); err != nil {
-            return errors.Wrap(err, "connect")
+            return errors.Wrap(err, "verifyHandshake")
         } else if err = peer.rcvHandshake(); err != nil {
-            return errors.Wrap(err, "connect")
+            return errors.Wrap(err, "verifyHandshake")
+        }
+    } else {  // Receive handshake
+        if err := peer.rcvHandshake(); err != nil {
+            return errors.Wrap(err, "verifyHandshake")
+        } else if err := peer.sendHandshake(); err != nil {
+            return errors.Wrap(err, "verifyHandshake")
         }
     }
-    return nil
-}
-
-// AcceptPeer attempt to handshake with an incoming peer
-func (peer *Peer) AcceptPeer() error {
-    if err := peer.rcvHandshake(); err != nil {
-        return errors.Wrap(err, "AcceptPeer")
-    }
-    if err := peer.sendHandshake(); err != nil {
-        return errors.Wrap(err, "AcceptPeer")
-    }
-    return nil
+    // Send bitfield to the peer
+    msg := message.Bitfield(peer.info.Bitfield)
+    err := peers.Write(msg.Encode())
+    return errors.Wrap(err, "verifyHandshake")
 }
