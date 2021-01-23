@@ -1,6 +1,6 @@
 /*
 Package connect provides functions to form connections or to
-check for available network resources
+check for available network resources.
 */
 package connect
 
