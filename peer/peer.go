@@ -20,7 +20,7 @@ import (
 )
 
 const peerTimeout = 120 * time.Second
-const startRate int = 1  // slow approach: hard limit on requests per peer
+const startRate int = 2  // slow approach: hard limit on requests per peer
 const maxPeerQueue = 5  // Max number of pieces a peer can queue
 
 // Errors
@@ -130,25 +130,25 @@ func (peer *Peer) StartWork(work chan int, done chan bool) {
     for {
         // Check main told peer to shutdown
         if peer.shutdown {
-            break
+            goto exit
         }
         select {
         case data, ok := <-connection:
             if !ok {
-                break
+                goto exit
             }
             msg := message.Decode(data)
             if err = peer.handleMessage(msg, work); err != nil {
                 // if errors.Cause(err) != connect.ErrTimeout {
                 // Shutdown even if error is timeout
                 log.WithFields(log.Fields{"peer": peer.String(), "error": err.Error()}).Debug("Received bad message")
-                break
+                goto exit
                 // remove <- peer.String()  // Notify main to remove this peer from its list
                 // }
             }
         case _, ok := <-done:
             if !ok {
-                break
+                goto exit
             }
         }
 
@@ -176,13 +176,14 @@ func (peer *Peer) StartWork(work chan int, done chan bool) {
 
                     // Kill peer if issue was not the piece hash
                     if errors.Cause(err) != ErrPieceHash {
-                        break
+                        goto exit
                     }
                     continue
                 }
             }
         }
     }
+    exit:
     for i := range peer.workQueue {
         work <- peer.workQueue[i].index
     }
