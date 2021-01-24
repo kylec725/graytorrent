@@ -102,6 +102,7 @@ func (to *Torrent) Download() {
         select {
         case newPeer := <-peers:
             to.Peers = append(to.Peers, newPeer)
+            go newPeer.StartWork(work, remove)
         case deadPeer := <-remove:
             // TODO close deadPeer
             to.removePeer(deadPeer)
