@@ -137,6 +137,7 @@ func (peer *Peer) handlePiece(msg *message.Message, work chan int) error {
             }
 
             // Piece is done
+            peer.adjustRate(peer.workQueue[i])
             if !write.VerifyPiece(peer.info, int(index), peer.workQueue[i].piece) {  // Return to work pool if hash is incorrect
                 work <- peer.workQueue[i].index
                 peer.removeWorkPiece(int(index))
@@ -195,13 +196,4 @@ func (peer *Peer) downloadPiece(index int) error {
     peer.addWorkPiece(index)
     err := peer.nextBlock(index)
     return errors.Wrap(err, "downloadPiece")
-}
-
-func (peer *Peer) adjustRate(actualRate int) {
-    // Use aggressive algorithm from rtorrent
-    if actualRate < 20 {
-        peer.rate = actualRate + 2
-    } else {
-        peer.rate = actualRate / 5 + 18
-    }
 }
