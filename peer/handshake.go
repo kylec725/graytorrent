@@ -87,18 +87,14 @@ func (peer *Peer) rcvHandshake() error {
 func (peer *Peer) verifyHandshake() error {
     if peer.Conn == nil {  // Initiate handshake
         if err := peer.sendHandshake(); err != nil {
-            peer.Conn.Close()
             return errors.Wrap(err, "verifyHandshake")
         } else if err = peer.rcvHandshake(); err != nil {
-            peer.Conn.Close()
             return errors.Wrap(err, "verifyHandshake")
         }
     } else {  // Receive handshake
         if err := peer.rcvHandshake(); err != nil {
-            peer.Conn.Close()
             return errors.Wrap(err, "verifyHandshake")
         } else if err := peer.sendHandshake(); err != nil {
-            peer.Conn.Close()
             return errors.Wrap(err, "verifyHandshake")
         }
     }
