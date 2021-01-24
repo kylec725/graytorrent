@@ -137,11 +137,6 @@ func (peer *Peer) StartWork(work chan int, results, done chan bool) {
                     work <- index
                     continue
                 }
-                // If workQueue is full, send it back
-                if len(peer.workQueue) >= peer.rate {
-                    work <- index
-                    continue
-                }
 
                 // Download piece from the peer
                 err := peer.downloadPiece(index)
