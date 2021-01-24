@@ -27,7 +27,7 @@ func NewWrite(info *common.TorrentInfo) error {
     for _, path := range info.Paths {
         // Return an error if the file already exists
         if _, err := os.Stat(path.Path); err == nil {
-            return errors.Wrapf(ErrFileExists, "NewWrite %s", path.Path)
+            return errors.Wrap(ErrFileExists, "NewWrite")
         }
 
         // Create directories recursively if necessary
