@@ -213,9 +213,12 @@ func (peer *Peer) getPiece(index int) ([]byte, error) {
 
 // downloadPiece starts a routine to download a piece from a peer
 func (peer *Peer) downloadPiece(index int) error {
-    msg := message.Interested()
-    if err := peer.Conn.Write(msg.Encode()); err != nil {
-        return errors.Wrap(err, "downloadPiece")
+    if !peer.amInterested {
+        msg := message.Interested()
+        if err := peer.Conn.Write(msg.Encode()); err != nil {
+            return errors.Wrap(err, "downloadPiece")
+        }
+        peer.amInterested = true
     }
 
     // piece, err := peer.getPiece(index)
@@ -224,7 +227,7 @@ func (peer *Peer) downloadPiece(index int) error {
     // }
     peer.addWorkPiece(index)
 
-    msg = message.NotInterested()
+    msg := message.NotInterested()
     if err := peer.Conn.Write(msg.Encode()); err != nil {
         return errors.Wrap(err, "downloadPiece")
     }
