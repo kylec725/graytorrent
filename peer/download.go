@@ -21,6 +21,12 @@ var (
     ErrUnexpectedPiece = errors.New("Received piece when not expecting it")
 )
 
+type workPiece struct {
+    index int
+    piece []byte
+    left int  // bytes remaining in piece
+}
+
 // getMessage reads in a message from the peer
 func (peer *Peer) getMessage() (*message.Message, error) {
     buf := make([]byte, 4)
