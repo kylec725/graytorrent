@@ -2,8 +2,10 @@ package main
 
 import (
 	"os"
+    "fmt"
 
     "github.com/kylec725/graytorrent/connect"
+    "github.com/kylec725/graytorrent/torrent"
     flag "github.com/spf13/pflag"
     log "github.com/sirupsen/logrus"
     viper "github.com/spf13/viper"
@@ -49,6 +51,18 @@ func init() {
 func main() {
     defer logFile.Close()
     // defer g.Close()
+
+    // Handle single torrent download for now
+    if filename != "" {
+        fmt.Println("Filename:", filename)
+        to := torrent.Torrent{Path: filename}
+        if err := to.Setup(); err != nil {
+            fmt.Println("Torrent setup failed:", err)
+        }
+        fmt.Println("Start download")
+        // to.Download()
+        fmt.Println("Download finished")
+    }
 
     // Send torrent stopped messages
     // Save torrent progresses to history file
