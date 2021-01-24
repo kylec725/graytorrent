@@ -161,6 +161,7 @@ func (peer *Peer) handlePiece(msg *message.Message, work chan int, results chan 
     return nil
 }
 
+// nextBlock requests the next block in a piece
 func (peer *Peer) nextBlock(index int) error {
     for i := range peer.workQueue {
         if index == peer.workQueue[i].index {
