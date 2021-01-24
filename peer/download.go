@@ -24,22 +24,6 @@ var (
     ErrUnexpectedPiece = errors.New("Received piece when not expecting it")
 )
 
-// getMessage reads in a message from the peer
-func (peer *Peer) getMessage() (*message.Message, error) {
-    buf := make([]byte, 4)
-    if err := peer.Conn.Read(buf); err != nil {
-        return nil, errors.Wrap(err, "getMessage")
-    }
-    msgLen := binary.BigEndian.Uint32(buf)
-    if msgLen == 0 {  // Keep-alive message
-        return nil, nil
-    }
-
-    buf = make([]byte, msgLen)
-    err := peer.Conn.ReadFull(buf)
-    return message.Decode(buf), errors.Wrap(err, "getMessage")
-}
-
 func (peer *Peer) handleMessage(msg *message.Message, work chan int) error {
     if msg == nil {
         // reset keep-alive
