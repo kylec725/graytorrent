@@ -107,7 +107,7 @@ func (tr Tracker) buildURL(infoHash [20]byte, peerID [20]byte, port uint16, left
 // Run starts a tracker and gets peers for a torrent
 func (tr *Tracker) Run(peers chan peer.Peer, done chan bool) {
     tr.shutdown = false
-    peerList, err := tr.sendStarted(tr.info, 6881, tr.info.TotalLength)  // hardcoded number of bytes left
+    peerList, err := tr.sendStarted(tr.info, 6881, tr.info.Left)  // hardcoded number of bytes left
     if err != nil {
         tr.Working = false
         log.WithFields(log.Fields{"tracker": tr.Announce, "error": err.Error()}).Debug("Failed sending start message")
