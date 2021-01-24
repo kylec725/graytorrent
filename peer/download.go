@@ -179,7 +179,7 @@ func (peer *Peer) handlePiece(msg *message.Message, work chan int) error {
     begin := binary.BigEndian.Uint32(msg.Payload[4:8])
     block := msg.Payload[8:]
 
-    for i := range peer.workQueue {
+    for i := range peer.workQueue {  // We want to operate directly on the workQueue pieces
         if index == uint32(peer.workQueue[i].index) {
             peer.workQueue[i].left -= len(block)
             err := write.AddBlock(peer.info, int(index), int(begin), block, peer.workQueue[i].piece)
@@ -191,21 +191,21 @@ func (peer *Peer) handlePiece(msg *message.Message, work chan int) error {
                 err := peer.nextRequest(int(index))
                 return errors.Wrap(err, "handlePiece")
             }
-            // If hash is wrong, return piece to work pool
-            if !write.VerifyPiece(peer.info, int(index), peer.workQueue[i].piece) {
+
+            // Piece is done
+            if !write.VerifyPiece(peer.info, int(index), peer.workQueue[i].piece) {  // Return to work pool if hash is incorrect
                 work <- peer.workQueue[i].index
                 peer.removeWorkPiece(int(index))
-                break
+                return errors.Wrap(ErrPieceHash, "handlePiece")
             }
-
-            // Write piece to file if done
-            if err = write.AddPiece(peer.info, int(index), peer.workQueue[i].piece); err != nil {
+            if err = write.AddPiece(peer.info, int(index), peer.workQueue[i].piece); err != nil {  // Write piece to file
                 log.WithFields(log.Fields{"peer": peer.String(), "piece index": index, "error": err.Error()}).Debug("Writing piece to file failed")
                 work <- int(index)
                 peer.removeWorkPiece(int(index))
                 return errors.Wrap(err, "handlePiece")
             }
             // Write was successful
+            peer.info.Left -= peer.workQueue[i].curr
             peer.removeWorkPiece(int(index))
             peer.info.Bitfield.Set(int(index))
 
