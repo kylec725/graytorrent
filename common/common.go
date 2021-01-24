@@ -8,6 +8,7 @@ import (
     "math/rand"
     "time"
     "path/filepath"
+    "math"
 
     "github.com/kylec725/graytorrent/bitfield"
     "github.com/kylec725/graytorrent/metainfo"
@@ -55,6 +56,10 @@ func GetInfo(meta metainfo.BencodeMeta) (TorrentInfo, error) {
     info.PieceLength = meta.Info.PieceLength
     info.TotalPieces = len(meta.Info.Pieces) / 20
     info.TotalLength = meta.Length()
+
+    // Initialize the bitfield
+    bitfieldSize := int(math.Ceil(float64(info.TotalPieces) / 8))
+    info.Bitfield = make([]byte, bitfieldSize)
 
     // Set torrent's filepaths
     info.Paths = getPaths(meta)
