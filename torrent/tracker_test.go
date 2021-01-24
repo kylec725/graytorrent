@@ -4,20 +4,25 @@ import (
     "testing"
     "fmt"
 
+    "github.com/kylec725/graytorrent/common"
     "github.com/kylec725/graytorrent/metainfo"
     "github.com/stretchr/testify/assert"
+    "github.com/stretchr/testify/require"
 )
 
 const debugTracker = false
 
 func TestGetTrackers(t *testing.T) {
     assert := assert.New(t)
+    require := require.New(t)
 
     to := Torrent{Path: "../tmp/change.torrent"}
     meta, err := metainfo.Meta(to.Path)
-    assert.Nil(err, "Error with metainfo.Meta()")
+    require.Nil(err, "Error with metainfo.Meta()")
+    info, err := common.GetInfo(meta)
+    require.Nil(err, "GetInfo() error")
 
-    to.Trackers, err = getTrackers(meta)
+    to.Trackers, err = getTrackers(meta, &info)
     if assert.Nil(err) {
         for _, tr := range to.Trackers {
             assert.NotNil(tr)
