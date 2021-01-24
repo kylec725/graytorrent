@@ -77,8 +77,12 @@ func (conn *Conn) ReadFull(buf []byte) error {
 
 // Close closes a connection
 func (conn *Conn) Close() error {
-    conn.shutdown = true
     return conn.Conn.Close()
+}
+
+// Quit signals a connection goroutine to exit
+func (conn *Conn) Quit() {
+    conn.shutdown = true
 }
 
 // Await polls a connection for data and returns it over a channel
@@ -106,5 +110,6 @@ func (conn *Conn) Await(output chan []byte) {
         output <- buf
     }
     close(output)
+    conn.Conn.Close()
     return
 }
