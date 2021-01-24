@@ -113,22 +113,28 @@ func (tr *Tracker) Run(peers chan peer.Peer, quit chan int) {
             "tracker": tr.Announce,
             "error": err.Error(),
         }).Debug("Failed sending start message")
-        return  // TODO have the tracker run in background
     } else {
+        tr.Working = true
         log.WithFields(log.Fields{
             "tracker": tr.Announce,
         }).Debug("Received list of peers")
     }
-    for i := range peerList {
-        peers <- peerList[i]
-    }
 
+    // Send peers through channel
+    for _, newPeer := range peerList {
+        peers <- newPeer
+    }
 
     for {
         select {
         case _, ok := <-quit:
             if !ok {
                 return
+            }
+        default:
+            // TODO try to connect to tracker again after interval
+            if !tr.Working {
+
             }
         }
     }
