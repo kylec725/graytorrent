@@ -97,6 +97,7 @@ func (peer *Peer) handlePiece(msg *message.Message, currentWork []byte) ([]byte,
     begin := binary.BigEndian.Uint32(msg.Payload[4:8])
     block := msg.Payload[8:]
 
+    peer.reqsOut--
     err := write.AddBlock(peer.info, int(index), int(begin), block, currentWork)
     return currentWork, errors.Wrap(err, "handlePiece")
 }
@@ -118,6 +119,7 @@ func (peer *Peer) getPiece(index int) ([]byte, error) {
                 if err != nil {
                     return nil, errors.Wrap(err, "getPiece")
                 }
+                peer.reqsOut++
                 begin += reqSize
             }
         }
