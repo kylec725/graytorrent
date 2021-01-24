@@ -24,51 +24,43 @@ var (
     ErrUnexpectedPiece = errors.New("Received piece when not expecting it")
 )
 
-func (peer *Peer) handleMessage(msg *message.Message, work chan int) error {
+func (peer *Peer) handleMessage(msg *message.Message, work chan int, results chan bool) error {
     if msg == nil {
         // reset keep-alive
         return nil
     }
     switch msg.ID {
     case message.MsgChoke:
-        // fmt.Println("MsgChoke")
         peer.peerChoking = true
     case message.MsgUnchoke:
-        // fmt.Println("MsgUnchoke")
         peer.peerChoking = false
     case message.MsgInterested:
-        // fmt.Println("MsgInterested")
         peer.peerInterested = true
     case message.MsgNotInterested:
-        // fmt.Println("MsgNotInterested")
         peer.peerInterested = false
     case message.MsgHave:
-        // fmt.Println("MsgHave")
         if len(msg.Payload) != 4 {
             return errors.Wrap(ErrMessage, "handleMessage")
         }
         index := binary.BigEndian.Uint32(msg.Payload)
         peer.bitfield.Set(int(index))
     case message.MsgBitfield:
-        // fmt.Println("MsgBitfield")
         expected := int(math.Ceil(float64(peer.info.TotalPieces) / 8))
         if len(msg.Payload) != expected {
             return errors.Wrap(ErrBitfield, "handleMessage")
         }
         peer.bitfield = msg.Payload
     case message.MsgRequest:
-        // fmt.Println("MsgRequest")
         if len(msg.Payload) != 12 {
             return errors.Wrap(ErrMessage, "handleMessage")
         }
         err := peer.handleRequest(msg)
         return errors.Wrap(err, "handleMessage")
     case message.MsgPiece:
-        // fmt.Println("MsgPiece")
         if len(msg.Payload) < 9 {
             return errors.Wrap(ErrMessage, "handleMessage")
         }
-        err := peer.handlePiece(msg, work)
+        err := peer.handlePiece(msg, work, results)
         return errors.Wrap(err, "handleMessage")
     case message.MsgCancel:
         if len(msg.Payload) != 12 {
@@ -117,7 +109,7 @@ func (peer *Peer) handleRequest(msg *message.Message) error {
 }
 
 // handlePiece adds a MsgPiece to the current work slice
-func (peer *Peer) handlePiece(msg *message.Message, work chan int) error {
+func (peer *Peer) handlePiece(msg *message.Message, work chan int, results chan bool) error {
     index := binary.BigEndian.Uint32(msg.Payload[0:4])
     begin := binary.BigEndian.Uint32(msg.Payload[4:8])
     block := msg.Payload[8:]
@@ -153,6 +145,7 @@ func (peer *Peer) handlePiece(msg *message.Message, work chan int) error {
             peer.info.Left -= peer.workQueue[i].curr
             peer.removeWorkPiece(int(index))
             peer.info.Bitfield.Set(int(index))
+            results <- true  // Notify main that a piece is done
 
             // Send not interested if necessary
             if len(peer.workQueue) == 0 {

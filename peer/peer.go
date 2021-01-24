@@ -111,7 +111,7 @@ func Unmarshal(peersBytes []byte, info *common.TorrentInfo) ([]Peer, error) {
 
 // StartWork makes a peer wait for pieces to download
 // func (peer *Peer) StartWork(work chan int, remove chan string, quit chan int) {
-func (peer *Peer) StartWork(work chan int, done chan bool) {
+func (peer *Peer) StartWork(work chan int, results, done chan bool) {
     peer.shutdown = false
     err := peer.verifyHandshake()
     if err != nil {
@@ -133,13 +133,15 @@ func (peer *Peer) StartWork(work chan int, done chan bool) {
             goto exit
         }
 
+        // TODO what happens if no data is received, but we need to get more work? i.e. this is the only peer with
+        // the needed piece, but we block because we don't receive data
         select {
         case data, ok := <-connection:
             if !ok {
                 goto exit
             }
             msg := message.Decode(data)
-            if err = peer.handleMessage(msg, work); err != nil {
+            if err = peer.handleMessage(msg, work, results); err != nil {
                 // if errors.Cause(err) != connect.ErrTimeout {
                 // Shutdown even if error is timeout
                 log.WithFields(log.Fields{"peer": peer.String(), "error": err.Error()}).Debug("Received bad message")
