@@ -10,7 +10,6 @@ import (
     "strconv"
     "time"
     "math"
-    "fmt"
 
     "github.com/kylec725/graytorrent/common"
     "github.com/kylec725/graytorrent/bitfield"
@@ -160,13 +159,11 @@ func (peer *Peer) StartWork(work chan int, done chan bool) {
             case index := <-work:
                 // Send the work back if the peer does not have the piece
                 if !peer.bitfield.Has(index) {
-                    fmt.Println("send back piece")
                     work <- index
                     continue
                 }
                 // If workQueue is full, send it back
                 if len(peer.workQueue) >= peer.rate {
-                    fmt.Println("send back piece")
                     work <- index
                     continue
                 }
@@ -183,7 +180,6 @@ func (peer *Peer) StartWork(work chan int, done chan bool) {
                     }
                     continue
                 }
-                fmt.Println("Got piece:", index)
             }
         }
     }
