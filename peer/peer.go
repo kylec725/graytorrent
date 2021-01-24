@@ -144,7 +144,7 @@ func (peer *Peer) StartWork(work chan int, done chan bool) {
             }
             // If workQueue is full, send it back
             if len(peer.workQueue) >= peer.rate {
-                work<- index
+                work <- index
                 continue
             }
 

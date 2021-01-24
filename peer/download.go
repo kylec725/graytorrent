@@ -26,29 +26,7 @@ type workPiece struct {
     index int
     piece []byte
     left int  // bytes remaining in piece
-}
-
-func (peer *Peer) addWorkPiece(index int) {
-    pieceSize := common.PieceSize(peer.info, index)
-    piece := make([]byte, pieceSize)
-    newWork := workPiece{index, piece, pieceSize}
-    peer.workQueue = append(peer.workQueue, newWork)
-
-    // TODO send out work requests, can maybe be a goroutine
-    // peer.reqsOut++
-}
-
-func (peer *Peer) removeWorkPiece(index int) {
-    removeIndex := -1
-    for i, workPiece := range peer.workQueue {
-        if index == workPiece.index {
-            removeIndex = i
-        }
-    }
-    if removeIndex != -1 {
-        peer.workQueue[removeIndex] = peer.workQueue[len(peer.workQueue) - 1]
-        peer.workQueue = peer.workQueue[:len(peer.workQueue) - 1]
-    }
+    curr int  // current byte position in slice
 }
 
 // getMessage reads in a message from the peer
@@ -160,6 +138,41 @@ func (peer *Peer) handleRequest(msg *message.Message) error {
     return errors.Wrap(err, "handleRequest")
 }
 
+func (peer *Peer) addWorkPiece(index int) {
+    pieceSize := common.PieceSize(peer.info, index)
+    piece := make([]byte, pieceSize)
+    newWork := workPiece{index, piece, pieceSize, 0}
+    peer.workQueue = append(peer.workQueue, newWork)
+}
+
+func (peer *Peer) removeWorkPiece(index int) {
+    removeIndex := -1
+    for i, workPiece := range peer.workQueue {
+        if index == workPiece.index {
+            removeIndex = i
+        }
+    }
+    if removeIndex != -1 {
+        peer.workQueue[removeIndex] = peer.workQueue[len(peer.workQueue) - 1]
+        peer.workQueue = peer.workQueue[:len(peer.workQueue) - 1]
+    }
+}
+
+func (peer *Peer) nextRequest(index int) error {
+    for i := range peer.workQueue {
+        if index == peer.workQueue[i].index {
+            reqSize := common.Min(peer.workQueue[i].left, maxReqSize)
+            err := peer.sendRequest(index, peer.workQueue[i].curr, reqSize)
+            peer.workQueue[i].curr += reqSize
+            if err != nil {
+                return errors.Wrap(err, "nextRequest")
+            }
+            break
+        }
+    }
+    return nil
+}
+
 // handlePiece adds a MsgPiece to the current work slice
 func (peer *Peer) handlePiece(msg *message.Message, work chan int) error {
     index := binary.BigEndian.Uint32(msg.Payload[0:4])
@@ -175,7 +188,8 @@ func (peer *Peer) handlePiece(msg *message.Message, work chan int) error {
             }
             // If piece is not done, exit early
             if peer.workQueue[i].left > 0 {
-                break
+                err := peer.nextRequest(int(index))
+                return errors.Wrap(err, "handlePiece")
             }
             // If hash is wrong, return piece to work pool
             if !write.VerifyPiece(peer.info, int(index), peer.workQueue[i].piece) {
@@ -210,33 +224,6 @@ func (peer *Peer) handlePiece(msg *message.Message, work chan int) error {
     return nil
 }
 
-// TODO deprecate
-func (peer *Peer) getPiece(index int) ([]byte, error) {
-    // Initialize peer's work
-    pieceSize := common.PieceSize(peer.info, index)
-    currentWork := make([]byte, pieceSize)
-
-    // TODO start of elapsed time
-    // TODO fix getting last piece (because of irregular size?)
-    // for begin := 0; peer.workLeft > 0; {
-    //     if !peer.peerChoking {
-    //         // Send max number of requests to peer
-    //         for ; peer.reqsOut < peer.rate && begin < pieceSize; {
-    //             reqSize := common.Min(peer.workLeft, maxReqSize)
-    //             err := peer.sendRequest(index, begin, reqSize)
-    //             if err != nil {
-    //                 return nil, errors.Wrap(err, "getPiece")
-    //             }
-    //             peer.reqsOut++
-    //             begin += reqSize
-    //         }
-    //     }
-    // }
-
-    // TODO end of elapsed time
-    return currentWork, nil
-}
-
 // downloadPiece starts a routine to download a piece from a peer
 func (peer *Peer) downloadPiece(index int) error {
     if !peer.amInterested {
@@ -246,9 +233,9 @@ func (peer *Peer) downloadPiece(index int) error {
         }
         peer.amInterested = true
     }
-
     peer.addWorkPiece(index)
-    return nil
+    err := peer.nextRequest(index)
+    return errors.Wrap(err, "downloadPiece")
 }
 
 func (peer *Peer) adjustRate(actualRate int) {
