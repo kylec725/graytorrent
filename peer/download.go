@@ -33,7 +33,7 @@ func (peer *Peer) getMessage() (*message.Message, error) {
     }
 
     buf = make([]byte, msgLen)
-    err := peer.Conn.Read(buf)
+    err := peer.Conn.ReadFull(buf)
     return message.Decode(buf), errors.Wrap(err, "getMessage")
 }
 
