@@ -140,6 +140,9 @@ func (peer *Peer) StartWork(work chan int, quit chan int) {
                     "error": err.Error(),
                 }).Debug("Error disconnecting with peer")
             }
+            log.WithFields(log.Fields{
+                "peer": peer.String(),
+            }).Debug("Peer shutdown")
             // remove <- peer.String()  // Notify main to remove this peer from its list
             return
         }
