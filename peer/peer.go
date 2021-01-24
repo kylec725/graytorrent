@@ -21,7 +21,7 @@ import (
     log "github.com/sirupsen/logrus"
 )
 
-const pollTimeout = 2 * time.Second
+const peerTimeout = 120 * time.Second
 const startRate uint16 = 3  // slow approach: hard limit on requests per peer
 const maxPeerQueue = 5  // Max number of pieces a peer can queue
 
@@ -44,7 +44,7 @@ type Peer struct {
     peerInterested bool
     reqsOut uint16  // number of outgoing requests
     rate uint16  // max number of outgoing requests
-    workLeft int  // amount of bytes left to download from a piece
+    workQueue []workPiece
     shutdown bool
     // TODO make a work queue so a peer can request multiple pieces
 }
@@ -125,9 +125,10 @@ func (peer *Peer) StartWork(work chan int, quit chan int) {
     }
     log.WithFields(log.Fields{"peer": peer.String()}).Debug("Handshake successful")
 
-    // Change connection timeout to poll setting
-    defer peer.Conn.Close()
-    peer.Conn.Timeout = pollTimeout
+    // Setup peer connection
+    connection := make(chan []byte)
+    go peer.Conn.Await(connection)
+    peer.Conn.Timeout = peerTimeout
 
     // Work loop
     for {
@@ -135,23 +136,8 @@ func (peer *Peer) StartWork(work chan int, quit chan int) {
         if peer.shutdown {
             log.WithFields(log.Fields{"peer": peer.String()}).Debug("Peer shutdown")
             // remove <- peer.String()  // Notify main to remove this peer from its list
+            peer.Conn.Quit()
             return
-        }
-
-        // Receive a message from the peer
-        msg, err := peer.getMessage()
-        if err != nil {
-            log.WithFields(log.Fields{"peer": peer.String(), "error": err.Error()}).Debug("Error while receiving message")
-            peer.Shutdown()
-            continue
-        }
-        if _, err = peer.handleMessage(msg, nil); err != nil {
-            if errors.Cause(err) != connect.ErrTimeout {
-                // Only shutdown if the error was not a time out
-                log.WithFields(log.Fields{"peer": peer.String(), "error": err.Error()}).Debug("Received bad message")
-                peer.Shutdown()
-                continue
-            }
         }
 
         select {
@@ -195,6 +181,20 @@ func (peer *Peer) StartWork(work chan int, quit chan int) {
                 peer.info.Bitfield.Set(index)
                 fmt.Println("Wrote piece:", index)
                 continue
+            }
+        case data, ok := <-connection:
+            if !ok {
+                peer.Shutdown()
+                continue
+            }
+            msg := message.Decode(data)
+            if _, err = peer.handleMessage(msg, nil); err != nil {
+                // if errors.Cause(err) != connect.ErrTimeout {
+                // Shutdown even if error is timeout
+                log.WithFields(log.Fields{"peer": peer.String(), "error": err.Error()}).Debug("Received bad message")
+                peer.Shutdown()
+                continue
+                // }
             }
         case _, ok := <-quit:
             if !ok {
