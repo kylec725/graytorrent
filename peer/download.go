@@ -217,7 +217,7 @@ func (peer *Peer) handlePiece(msg *message.Message, work chan int) error {
                 }
                 peer.amInterested = false
             }
-            fmt.Println("Wrote piece:", index)
+            fmt.Println("Wrote piece", index, "from", peer.String())
             break  // Exit loop early on successful write
         }
     }
