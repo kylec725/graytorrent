@@ -15,7 +15,6 @@ import (
     "github.com/kylec725/graytorrent/common"
     "github.com/kylec725/graytorrent/bitfield"
     "github.com/kylec725/graytorrent/peer/message"
-    "github.com/kylec725/graytorrent/write"
     "github.com/kylec725/graytorrent/connect"
     "github.com/pkg/errors"
     log "github.com/sirupsen/logrus"
@@ -150,14 +149,13 @@ func (peer *Peer) StartWork(work chan int, quit chan int) {
             }
 
             // Download piece from the peer
-            peer.reqsOut = 0
-            piece, err := peer.downloadPiece(index)
+            err := peer.downloadPiece(index)
             if err != nil {
                 log.WithFields(log.Fields{
                     "peer": peer.String(),
                     "piece index": index,
                     "error": err.Error(),
-                }).Debug("Download piece failed")
+                }).Debug("Starting piece download failed")
                 work <- index  // Put piece back onto work channel
 
                 // Kill peer if issue was not the piece hash
@@ -168,27 +166,13 @@ func (peer *Peer) StartWork(work chan int, quit chan int) {
             }
             fmt.Println("Got piece:", index)
 
-            // Write piece to file
-            if err = write.AddPiece(peer.info, index, piece); err != nil {
-                log.WithFields(log.Fields{
-                    "peer": peer.String(),
-                    "piece index": index,
-                    "error": err.Error(),
-                }).Debug("Writing piece to file failed")
-                work <- index
-                continue
-            } else {  // Write was successful
-                peer.info.Bitfield.Set(index)
-                fmt.Println("Wrote piece:", index)
-                continue
-            }
         case data, ok := <-connection:
             if !ok {
                 peer.Shutdown()
                 continue
             }
             msg := message.Decode(data)
-            if _, err = peer.handleMessage(msg, nil); err != nil {
+            if err = peer.handleMessage(msg, work); err != nil {
                 // if errors.Cause(err) != connect.ErrTimeout {
                 // Shutdown even if error is timeout
                 log.WithFields(log.Fields{"peer": peer.String(), "error": err.Error()}).Debug("Received bad message")

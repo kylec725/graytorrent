@@ -9,6 +9,7 @@ import (
     "github.com/kylec725/graytorrent/peer/message"
     "github.com/kylec725/graytorrent/write"
     "github.com/pkg/errors"
+    log "github.com/sirupsen/logrus"
 )
 
 const maxReqSize = 16384
@@ -34,6 +35,7 @@ func (peer *Peer) addWorkPiece(index int) {
     peer.workQueue = append(peer.workQueue, newWork)
 
     // TODO send out work requests, can maybe be a goroutine
+    // peer.reqsOut++
 }
 
 // getMessage reads in a message from the peer
@@ -52,10 +54,10 @@ func (peer *Peer) getMessage() (*message.Message, error) {
     return message.Decode(buf), errors.Wrap(err, "getMessage")
 }
 
-func (peer *Peer) handleMessage(msg *message.Message, currentWork []byte) ([]byte, error) {
+func (peer *Peer) handleMessage(msg *message.Message, work chan int) error {
     if msg == nil {
         // reset keep-alive
-        return currentWork, nil
+        return nil
     }
     switch msg.ID {
     case message.MsgChoke:
@@ -73,7 +75,7 @@ func (peer *Peer) handleMessage(msg *message.Message, currentWork []byte) ([]byt
     case message.MsgHave:
         // fmt.Println("MsgHave")
         if len(msg.Payload) != 4 {
-            return currentWork, errors.Wrap(ErrMessage, "handleMessage")
+            return errors.Wrap(ErrMessage, "handleMessage")
         }
         index := binary.BigEndian.Uint32(msg.Payload)
         peer.bitfield.Set(int(index))
@@ -81,38 +83,36 @@ func (peer *Peer) handleMessage(msg *message.Message, currentWork []byte) ([]byt
         // fmt.Println("MsgBitfield")
         expected := int(math.Ceil(float64(peer.info.TotalPieces) / 8))
         if len(msg.Payload) != expected {
-            return currentWork, errors.Wrap(ErrBitfield, "handleMessage")
+            return errors.Wrap(ErrBitfield, "handleMessage")
         }
         peer.bitfield = msg.Payload
     case message.MsgRequest:
         // fmt.Println("MsgRequest")
         if len(msg.Payload) != 12 {
-            return currentWork, errors.Wrap(ErrMessage, "handleMessage")
+            return errors.Wrap(ErrMessage, "handleMessage")
         }
         err := peer.handleRequest(msg)
-        return currentWork, errors.Wrap(err, "handleMessage")
+        return errors.Wrap(err, "handleMessage")
     case message.MsgPiece:
         // fmt.Println("MsgPiece")
         if len(msg.Payload) < 9 {
-            return currentWork, errors.Wrap(ErrMessage, "handleMessage")
+            return errors.Wrap(ErrMessage, "handleMessage")
         }
-        if currentWork == nil {  // Discard pieces if we are not trying to download a piece
-            return nil, nil
-        }
-        currentWork, err := peer.handlePiece(msg, currentWork)
-        return currentWork, errors.Wrap(err, "handleMessage")
+        // TODO discard piece if it's not in our queue
+        err := peer.handlePiece(msg, work)
+        return errors.Wrap(err, "handleMessage")
     case message.MsgCancel:
         if len(msg.Payload) != 12 {
-            return currentWork, errors.Wrap(ErrMessage, "handleMessage")
+            return errors.Wrap(ErrMessage, "handleMessage")
         }
         fmt.Println("MsgCancel not yet implemented")
     case message.MsgPort:
         if len(msg.Payload) != 2 {
-            return currentWork, errors.Wrap(ErrMessage, "handleMessage")
+            return errors.Wrap(ErrMessage, "handleMessage")
         }
         fmt.Println("MsgPort not yet implemented")
     }
-    return currentWork, nil
+    return nil
 }
 
 // sendRequest sends a piece request message to a peer
@@ -148,7 +148,7 @@ func (peer *Peer) handleRequest(msg *message.Message) error {
 }
 
 // handlePiece adds a MsgPiece to the current work slice
-func (peer *Peer) handlePiece(msg *message.Message, currentWork []byte) ([]byte, error) {
+func (peer *Peer) handlePiece(msg *message.Message, work chan int) error {
     index := binary.BigEndian.Uint32(msg.Payload[0:4])
     begin := binary.BigEndian.Uint32(msg.Payload[4:8])
     block := msg.Payload[8:]
@@ -157,10 +157,31 @@ func (peer *Peer) handlePiece(msg *message.Message, currentWork []byte) ([]byte,
     for i := range peer.workQueue {
         if index == uint32(peer.workQueue[i].index) {
             peer.workQueue[i].left -= len(block)
+            err := write.AddBlock(peer.info, int(index), int(begin), block, peer.workQueue[i].piece)
+            if err != nil {
+                errors.Wrap(err, "handlePiece")
+            }
+            // TODO check if piece is done
+            // if not done, exit early with break
+            // TODO verify piece if done
+
+            // Write piece to file if done
+            if err = write.AddPiece(peer.info, int(index), peer.workQueue[i].piece); err != nil {
+                log.WithFields(log.Fields{
+                    "peer": peer.String(),
+                    "piece index": index,
+                    "error": err.Error(),
+                }).Debug("Writing piece to file failed")
+                work <- int(index)
+                return errors.Wrap(err, "handlePiece")
+            }
+            // Write was successful
+            peer.info.Bitfield.Set(int(index))
+            fmt.Println("Wrote piece:", index)
+            break  // Exit loop early on successful write
         }
     }
-    err := write.AddBlock(peer.info, int(index), int(begin), block, currentWork)
-    return currentWork, errors.Wrap(err, "handlePiece")
+    return nil
 }
 
 // TODO deprecate
@@ -191,27 +212,29 @@ func (peer *Peer) getPiece(index int) ([]byte, error) {
 }
 
 // downloadPiece starts a routine to download a piece from a peer
-func (peer *Peer) downloadPiece(index int) ([]byte, error) {
+func (peer *Peer) downloadPiece(index int) error {
     msg := message.Interested()
     if err := peer.Conn.Write(msg.Encode()); err != nil {
-        return nil, errors.Wrap(err, "downloadPiece")
+        return errors.Wrap(err, "downloadPiece")
     }
 
-    piece, err := peer.getPiece(index)
-    if err != nil {
-        return nil, errors.Wrap(err, "downloadPiece")
-    }
+    // piece, err := peer.getPiece(index)
+    // if err != nil {
+    //     return nil, errors.Wrap(err, "downloadPiece")
+    // }
+    peer.addWorkPiece(index)
 
     msg = message.NotInterested()
     if err := peer.Conn.Write(msg.Encode()); err != nil {
-        return nil, errors.Wrap(err, "downloadPiece")
+        return errors.Wrap(err, "downloadPiece")
     }
 
+    // TODO handle verifying piece in handlePiece
     // Verify the piece's hash
-    if !write.VerifyPiece(peer.info, index, piece) {
-        return nil, errors.Wrap(ErrPieceHash, "downloadPiece")
-    }
-    return piece, nil
+    // if !write.VerifyPiece(peer.info, index, piece) {
+    //     return nil, errors.Wrap(ErrPieceHash, "downloadPiece")
+    // }
+    return nil
 }
 
 func (peer *Peer) adjustRate(actualRate uint16) {
