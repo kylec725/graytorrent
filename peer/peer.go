@@ -126,6 +126,7 @@ func (peer *Peer) StartWork(work chan int, results, done chan bool) {
             if !ok {
                 goto exit
             }
+        default:  // TODO check if cpu usage is okay if we loop quickly with default
         }
 
         // Only try to find new work piece if queue is open
@@ -144,11 +145,6 @@ func (peer *Peer) StartWork(work chan int, results, done chan bool) {
                 if err != nil {
                     log.WithFields(log.Fields{"peer": peer.String(), "piece index": index, "error": err.Error()}).Debug("Starting piece download failed")
                     work <- index  // Put piece back onto work channel
-
-                    // Kill peer if issue was not the piece hash
-                    if errors.Cause(err) != ErrPieceHash {
-                        goto exit
-                    }
                     continue
                 }
             default:  // Don't block if we can't find work
