@@ -109,15 +109,10 @@ func (tr *Tracker) Run(peers chan peer.Peer, quit chan int) {
     peerList, err := tr.sendStarted(tr.info, 6881, tr.info.TotalLength)  // hardcoded number of bytes left
     if err != nil {
         tr.Working = false
-        log.WithFields(log.Fields{
-            "tracker": tr.Announce,
-            "error": err.Error(),
-        }).Debug("Failed sending start message")
+        log.WithFields(log.Fields{"tracker": tr.Announce, "error": err.Error()}).Debug("Failed sending start message")
     } else {
         tr.Working = true
-        log.WithFields(log.Fields{
-            "tracker": tr.Announce,
-        }).Debug("Received list of peers")
+        log.WithFields(log.Fields{"tracker": tr.Announce}).Debug("Received list of peers")
     }
 
     // Send peers through channel

@@ -57,11 +57,8 @@ func main() {
     if filename != "" {
         to := torrent.Torrent{Path: filename}
         if err := to.Setup(); err != nil {
-            log.WithFields(log.Fields{
-                "file": filename,
-                "error": err.Error(),
-            }).Info("Torrent setup failed")
-            fmt.Println("Torrent setup failed:", err)
+            log.WithFields(log.Fields{"file": filename, "error": err.Error()}).Info("Torrent setup failed")
+            return
         }
         fmt.Println("Start download")
         to.Download()

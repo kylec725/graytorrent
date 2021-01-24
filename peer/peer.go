@@ -116,16 +116,11 @@ func (peer *Peer) StartWork(work chan int, quit chan int) {
     peer.shutdown = false
     err := peer.verifyHandshake()
     if err != nil {
-        log.WithFields(log.Fields{
-            "peer": peer.String(),
-            "error": err.Error(),
-        }).Debug("Peer handshake failed")
+        log.WithFields(log.Fields{"peer": peer.String(), "error": err.Error()}).Debug("Peer handshake failed")
         // remove <- peer.String()  // Notify main to remove this peer from its list
         return
     }
-    log.WithFields(log.Fields{
-        "peer": peer.String(),
-    }).Debug("Peer handshake successful")
+    log.WithFields(log.Fields{"peer": peer.String()}).Debug("Peer handshake successful")
 
     // Change connection timeout to poll setting
     peer.Conn.Timeout = pollTimeout
@@ -135,14 +130,9 @@ func (peer *Peer) StartWork(work chan int, quit chan int) {
         // Check if peer should shut down
         if peer.shutdown {
             if err := peer.Conn.Close(); err != nil {
-                log.WithFields(log.Fields{
-                    "peer": peer.String(),
-                    "error": err.Error(),
-                }).Debug("Error disconnecting with peer")
+                log.WithFields(log.Fields{"peer": peer.String(), "error": err.Error()}).Debug("Error disconnecting with peer")
             }
-            log.WithFields(log.Fields{
-                "peer": peer.String(),
-            }).Debug("Peer shutdown")
+            log.WithFields(log.Fields{"peer": peer.String()}).Debug("Peer shutdown")
             // remove <- peer.String()  // Notify main to remove this peer from its list
             return
         }
@@ -150,20 +140,14 @@ func (peer *Peer) StartWork(work chan int, quit chan int) {
         // Receive a message from the peer
         msg, err := peer.getMessage()
         if err != nil {
-            log.WithFields(log.Fields{
-                "peer": peer.String(),
-                "error": err.Error(),
-            }).Debug("Error while receiving message")
+            log.WithFields(log.Fields{"peer": peer.String(), "error": err.Error()}).Debug("Error while receiving message")
             peer.Shutdown()
             continue
         }
         if _, err = peer.handleMessage(msg, nil); err != nil {
             if errors.Cause(err) != connect.ErrTimeout {
                 // Only shutdown if the error was not a time out
-                log.WithFields(log.Fields{
-                    "peer": peer.String(),
-                    "error": err.Error(),
-                }).Debug("Received bad message")
+                log.WithFields(log.Fields{"peer": peer.String(), "error": err.Error()}).Debug("Received bad message")
                 peer.Shutdown()
                 continue
             }
