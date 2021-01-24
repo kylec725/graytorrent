@@ -123,6 +123,7 @@ func (to *Torrent) Download() {
         // case deadPeer := <-remove:
             // TODO close deadPeer
             // to.removePeer(deadPeer)
+        default:
         }
     }
 }
