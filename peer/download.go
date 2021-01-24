@@ -166,7 +166,6 @@ func (peer *Peer) handlePiece(msg *message.Message, work chan int) error {
     begin := binary.BigEndian.Uint32(msg.Payload[4:8])
     block := msg.Payload[8:]
 
-    peer.reqsOut--
     for i := range peer.workQueue {
         if index == uint32(peer.workQueue[i].index) {
             peer.workQueue[i].left -= len(block)
@@ -174,9 +173,16 @@ func (peer *Peer) handlePiece(msg *message.Message, work chan int) error {
             if err != nil {
                 errors.Wrap(err, "handlePiece")
             }
-            // TODO check if piece is done
-            // if not done, exit early with break
-            // TODO verify piece if done
+            // If piece is not done, exit early
+            if peer.workQueue[i].left > 0 {
+                break
+            }
+            // If hash is wrong, return piece to work pool
+            if !write.VerifyPiece(peer.info, int(index), peer.workQueue[i].piece) {
+                work <- peer.workQueue[i].index
+                peer.removeWorkPiece(int(index))
+                break
+            }
 
             // Write piece to file if done
             if err = write.AddPiece(peer.info, int(index), peer.workQueue[i].piece); err != nil {
@@ -186,10 +192,21 @@ func (peer *Peer) handlePiece(msg *message.Message, work chan int) error {
                     "error": err.Error(),
                 }).Debug("Writing piece to file failed")
                 work <- int(index)
+                peer.removeWorkPiece(int(index))
                 return errors.Wrap(err, "handlePiece")
             }
             // Write was successful
+            peer.removeWorkPiece(int(index))
             peer.info.Bitfield.Set(int(index))
+
+            // Send not interested if necessary
+            if len(peer.workQueue) == 0 {
+                msg := message.NotInterested()
+                if err := peer.Conn.Write(msg.Encode()); err != nil {
+                    return errors.Wrap(err, "downloadPiece")
+                }
+                peer.amInterested = false
+            }
             fmt.Println("Wrote piece:", index)
             break  // Exit loop early on successful write
         }
@@ -240,10 +257,6 @@ func (peer *Peer) downloadPiece(index int) error {
     // }
     peer.addWorkPiece(index)
 
-    msg := message.NotInterested()
-    if err := peer.Conn.Write(msg.Encode()); err != nil {
-        return errors.Wrap(err, "downloadPiece")
-    }
 
     // TODO handle verifying piece in handlePiece
     // Verify the piece's hash
@@ -253,7 +266,7 @@ func (peer *Peer) downloadPiece(index int) error {
     return nil
 }
 
-func (peer *Peer) adjustRate(actualRate uint16) {
+func (peer *Peer) adjustRate(actualRate int) {
     // Use aggressive algorithm from rtorrent
     if actualRate < 20 {
         peer.rate = actualRate + 2

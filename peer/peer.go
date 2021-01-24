@@ -21,7 +21,7 @@ import (
 )
 
 const peerTimeout = 120 * time.Second
-const startRate uint16 = 3  // slow approach: hard limit on requests per peer
+const startRate int = 1  // slow approach: hard limit on requests per peer
 const maxPeerQueue = 5  // Max number of pieces a peer can queue
 
 // Errors
@@ -41,8 +41,7 @@ type Peer struct {
     amInterested bool
     peerChoking bool
     peerInterested bool
-    reqsOut uint16  // number of outgoing requests
-    rate uint16  // max number of outgoing requests
+    rate int  // max number of outgoing requests
     workQueue []workPiece
     shutdown bool
     // TODO make a work queue so a peer can request multiple pieces
@@ -66,7 +65,6 @@ func New(host net.IP, port uint16, conn *connect.Conn, info *common.TorrentInfo)
         amInterested: false,
         peerChoking: true,
         peerInterested: false,
-        reqsOut: 0,
         rate: startRate,
         workQueue: []workPiece{},
         shutdown: false,
@@ -142,6 +140,11 @@ func (peer *Peer) StartWork(work chan int, done chan bool) {
             // Send the work back if the peer does not have the piece
             if !peer.bitfield.Has(index) {
                 work <- index
+                continue
+            }
+            // If workQueue is full, send it back
+            if len(peer.workQueue) >= peer.rate {
+                work<- index
                 continue
             }
 
