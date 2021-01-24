@@ -12,7 +12,6 @@ import (
 
     "github.com/kylec725/graytorrent/bitfield"
     "github.com/kylec725/graytorrent/metainfo"
-
     "github.com/pkg/errors"
 )
 
