@@ -127,7 +127,7 @@ func (peer *Peer) StartWork(work chan int, quit chan int) {
 
     // Setup peer connection
     connection := make(chan []byte)
-    go peer.Conn.Await(connection, 4)  // Messages have a length prefix of 4
+    go peer.Conn.Await(connection)
     peer.Conn.Timeout = peerTimeout
 
     // Work loop
