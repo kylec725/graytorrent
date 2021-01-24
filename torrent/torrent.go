@@ -14,7 +14,10 @@ import (
     "github.com/kylec725/graytorrent/common"
     "github.com/kylec725/graytorrent/metainfo"
     "github.com/kylec725/graytorrent/peer"
+    "github.com/kylec725/graytorrent/write"
     "github.com/pkg/errors"
+
+    log "github.com/sirupsen/logrus"
 )
 
 // Errors
@@ -85,6 +88,15 @@ func (to *Torrent) Download() {
     work := make(chan int)        // Piece indices we need
     remove := make(chan string)   // For peers to notify they should be removed from our list
     quit := make(chan int)        // Notify goroutines to quit
+
+    // Initialize files for writing
+    if err := write.NewWrite(&to.Info); err != nil {
+        log.WithFields(log.Fields{
+            "path": to.Path,
+            "name": to.Info.Name,
+        }).Info("Failed to setup files")
+        return
+    }
 
     // Start tracker goroutines
     for i := range to.Trackers {
