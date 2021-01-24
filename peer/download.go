@@ -21,7 +21,6 @@ var (
     ErrBitfield = errors.New("Malformed bitfield received")
     ErrMessage = errors.New("Malformed message received")
     ErrPieceHash = errors.New("Received piece with bad hash")
-    ErrUnexpectedPiece = errors.New("Received piece when not expecting it")
 )
 
 func (peer *Peer) handleMessage(msg *message.Message, work chan int, results chan bool) error {
