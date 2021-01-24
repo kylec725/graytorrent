@@ -34,7 +34,7 @@ func (peer *Peer) removeWorkPiece(index int) {
     }
 }
 
-// find the work rate of reqSize per second
+// adjustRate changes rate according to the work rate of reqSize per second
 func (peer *Peer) adjustRate(wp workPiece) {
     duration := time.Since(wp.startTime)
     numBlocks := wp.curr / reqSize  // truncate number of blocks to be conservative
