@@ -181,6 +181,7 @@ func (peer *Peer) StartWork(work chan int, done chan bool) {
                     }
                     continue
                 }
+            default:  // Don't block if we can't find work
             }
         }
     }
