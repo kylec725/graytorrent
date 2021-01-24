@@ -6,6 +6,7 @@ import (
     "bytes"
 
     "github.com/kylec725/graytorrent/peer/message"
+    "github.com/kylec725/graytorrent/connect"
     "github.com/pkg/errors"
 )
 
@@ -35,11 +36,11 @@ func (peer *Peer) newHandshake() []byte {
 func (peer *Peer) sendHandshake() error {
     if peer.Conn == nil {
         // Start the TCP connection
-        conn, err := net.DialTimeout("tcp", peer.String(), 3 * time.Second)
+        conn, err := net.DialTimeout("tcp", peer.String(), 3 * time.Second)  // TODO fix dial issues with certain peers
         if err != nil {
             return errors.Wrap(err, "sendHandshake")
         }
-        peer.Conn.Conn = conn
+        peer.Conn = &connect.Conn{Conn: conn, Timeout: handshakeTimeout}
     }
 
     // Send the handshake

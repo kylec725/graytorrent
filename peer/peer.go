@@ -50,11 +50,11 @@ func (peer Peer) String() string {
 }
 
 // New returns a new instantiated peer
-func New(host net.IP, port uint16, conn net.Conn, info *common.TorrentInfo) Peer {
+func New(host net.IP, port uint16, conn *connect.Conn, info *common.TorrentInfo) Peer {
     return Peer{
         Host: host,
         Port: port,
-        Conn: &connect.Conn{Conn: conn, Timeout: handshakeTimeout},  // Use a pointer so we can have a nil value
+        Conn: conn,  // Use a pointer so we can have a nil value
 
         info: info,
         bitfield: nil,
