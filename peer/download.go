@@ -27,6 +27,15 @@ type workPiece struct {
     left int  // bytes remaining in piece
 }
 
+func (peer *Peer) addWorkPiece(index int) {
+    pieceSize := common.PieceSize(peer.info, index)
+    piece := make([]byte, pieceSize)
+    newWork := workPiece{index, piece, pieceSize}
+    peer.workQueue = append(peer.workQueue, newWork)
+
+    // TODO send out work requests, can maybe be a goroutine
+}
+
 // getMessage reads in a message from the peer
 func (peer *Peer) getMessage() (*message.Message, error) {
     buf := make([]byte, 4)
@@ -145,43 +154,37 @@ func (peer *Peer) handlePiece(msg *message.Message, currentWork []byte) ([]byte,
     block := msg.Payload[8:]
 
     peer.reqsOut--
-    peer.workLeft -= len(block)
+    for i := range peer.workQueue {
+        if index == uint32(peer.workQueue[i].index) {
+            peer.workQueue[i].left -= len(block)
+        }
+    }
     err := write.AddBlock(peer.info, int(index), int(begin), block, currentWork)
     return currentWork, errors.Wrap(err, "handlePiece")
 }
 
-// getPiece sends requests and receives the piece messages
+// TODO deprecate
 func (peer *Peer) getPiece(index int) ([]byte, error) {
     // Initialize peer's work
     pieceSize := common.PieceSize(peer.info, index)
-    peer.workLeft = pieceSize
     currentWork := make([]byte, pieceSize)
 
     // TODO start of elapsed time
     // TODO fix getting last piece (because of irregular size?)
-    for begin := 0; peer.workLeft > 0; {
-        if !peer.peerChoking {
-            // Send max number of requests to peer
-            for ; peer.reqsOut < peer.rate && begin < pieceSize; {
-                reqSize := common.Min(peer.workLeft, maxReqSize)
-                err := peer.sendRequest(index, begin, reqSize)
-                if err != nil {
-                    return nil, errors.Wrap(err, "getPiece")
-                }
-                peer.reqsOut++
-                begin += reqSize
-            }
-        }
-
-        // Receive data from the peer
-        msg, err := peer.getMessage()
-        if err != nil {
-            return nil, errors.Wrap(err, "getPiece")
-        }
-        if currentWork, err = peer.handleMessage(msg, currentWork); err != nil {  // Handle message
-            return nil, errors.Wrap(err, "getPiece")
-        }
-    }
+    // for begin := 0; peer.workLeft > 0; {
+    //     if !peer.peerChoking {
+    //         // Send max number of requests to peer
+    //         for ; peer.reqsOut < peer.rate && begin < pieceSize; {
+    //             reqSize := common.Min(peer.workLeft, maxReqSize)
+    //             err := peer.sendRequest(index, begin, reqSize)
+    //             if err != nil {
+    //                 return nil, errors.Wrap(err, "getPiece")
+    //             }
+    //             peer.reqsOut++
+    //             begin += reqSize
+    //         }
+    //     }
+    // }
 
     // TODO end of elapsed time
     return currentWork, nil
