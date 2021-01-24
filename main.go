@@ -18,6 +18,7 @@ var (
     port uint16
     err error
     filename string
+    torrents []torrent.Torrent
 )
 
 func init() {
