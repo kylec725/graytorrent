@@ -112,7 +112,7 @@ func (peer *Peer) getPiece(index int) ([]byte, error) {
     workLeft := pieceSize
     currentWork := make([]byte, pieceSize)
 
-    // start of elapsed time
+    // TODO start of elapsed time
     for begin := 0; workLeft > 0; {
         if !peer.peerChoking {
             // Send max number of requests to peer
@@ -137,7 +137,7 @@ func (peer *Peer) getPiece(index int) ([]byte, error) {
         }
     }
 
-    // end of elapsed time
+    // TODO end of elapsed time
     return currentWork, nil
 }
 
