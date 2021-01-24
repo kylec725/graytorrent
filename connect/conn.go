@@ -48,7 +48,7 @@ func (conn *Conn) Read(data []byte) error {
     if err != nil {
         return errors.Wrap(err, "Read")
     }
-    bytesRead, err := conn.Conn.Write(data)
+    bytesRead, err := conn.Conn.Read(data)
     if err != nil {
         if netErr, ok := err.(net.Error); ok && netErr.Timeout() {
             return errors.Wrap(ErrTimeout, "Read")
