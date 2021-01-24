@@ -120,6 +120,7 @@ func (tr *Tracker) Run(peers chan peer.Peer, quit chan int) {
     for i := range peerList {
         peers <- peerList[i]
     }
+    return  // Temporary exit so that infinite loop does not occur
 
     for {
         // TODO handle tracker shutdown
