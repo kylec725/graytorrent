@@ -104,11 +104,6 @@ func (tr Tracker) buildURL(infoHash [20]byte, peerID [20]byte, port uint16, left
     return base.String(), nil
 }
 
-// Shutdown signals a tracker to shutdown
-func (tr *Tracker) Shutdown() {
-    tr.shutdown = true
-}
-
 // Run starts a tracker and gets peers for a torrent
 func (tr *Tracker) Run(peers chan peer.Peer, done chan bool) {
     tr.shutdown = false
@@ -127,20 +122,17 @@ func (tr *Tracker) Run(peers chan peer.Peer, done chan bool) {
     }
 
     for {
-        if tr.shutdown {
-            break
-        }
-
         select {
         case _, ok := <-done:
             if !ok {
-                return
+                break
             }
-        default:
-            // TODO try to connect to tracker again after interval
-            if !tr.Working {
-
-            }
+        // default:
+        //     // TODO try to connect to tracker again after interval
+        //     if !tr.Working {
+        //
+        //     }
         }
     }
+    // TODO send stop message to tracker
 }

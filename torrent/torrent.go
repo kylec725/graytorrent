@@ -58,8 +58,8 @@ func (to *Torrent) Setup() error {
 
 func (to *Torrent) removePeer(name string) error {
     removeIndex := -1
-    for i := range to.Peers {
-        if name == to.Peers[i].String() {
+    for i, peer := range to.Peers {
+        if name == peer.String() {
             removeIndex = i
         }
     }
@@ -102,10 +102,6 @@ func (to *Torrent) Download() {
     // Start tracker goroutines
     for i := range to.Trackers {
         go to.Trackers[i].Run(peers, done)
-    }
-    // TODO remove
-    for i := range to.Trackers {
-        to.Trackers[i].Shutdown()
     }
 
     // TODO setup listen port for incoming peers
