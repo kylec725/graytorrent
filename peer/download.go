@@ -26,8 +26,7 @@ var (
 
 func (peer *Peer) handleMessage(msg *message.Message, work chan int, results chan bool) error {
     if msg == nil {
-        // reset keep-alive
-        return nil
+        return nil  // keep-alive message
     }
     switch msg.ID {
     case message.MsgChoke:
