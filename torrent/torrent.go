@@ -16,6 +16,7 @@ import (
     "github.com/kylec725/graytorrent/peer"
     "github.com/kylec725/graytorrent/write"
     "github.com/pkg/errors"
+    "fmt"
 
     log "github.com/sirupsen/logrus"
 )
@@ -84,10 +85,10 @@ func (to *Torrent) Shutdown() {
 // TODO
 func (to *Torrent) Download() {
     to.shutdown = false
-    peers := make(chan peer.Peer) // For incoming peers from trackers
-    work := make(chan int)        // Piece indices we need
-    remove := make(chan string)   // For peers to notify they should be removed from our list
-    quit := make(chan int)        // Notify goroutines to quit
+    peers := make(chan peer.Peer)               // For incoming peers from trackers
+    work := make(chan int, to.Info.TotalPieces) // Piece indices we need
+    remove := make(chan string)                 // For peers to notify they should be removed from our list
+    quit := make(chan int)                      // Notify goroutines to quit
 
     // Initialize files for writing
     if err := write.NewWrite(&to.Info); err != nil {
@@ -99,16 +100,19 @@ func (to *Torrent) Download() {
         return
     }
 
+    fmt.Println("start trackers")
     // Start tracker goroutines
     for i := range to.Trackers {
         go to.Trackers[i].Run(peers, quit)
     }
 
+    fmt.Println("populate work queue")
     // Populate work queue
     for i := 0; i < to.Info.TotalPieces; i++ {
         work <- i
     }
 
+    fmt.Println("enter main download loop")
     for {
         if to.shutdown {
             close(quit)
