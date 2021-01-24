@@ -89,7 +89,6 @@ func (peer *Peer) handleMessage(msg *message.Message, work chan int) error {
         if len(msg.Payload) < 9 {
             return errors.Wrap(ErrMessage, "handleMessage")
         }
-        // TODO discard piece if it's not in our queue
         err := peer.handlePiece(msg, work)
         return errors.Wrap(err, "handleMessage")
     case message.MsgCancel:
@@ -179,6 +178,7 @@ func (peer *Peer) handlePiece(msg *message.Message, work chan int) error {
     begin := binary.BigEndian.Uint32(msg.Payload[4:8])
     block := msg.Payload[8:]
 
+    // If piece is not in work queue, nothing happens
     for i := range peer.workQueue {  // We want to operate directly on the workQueue pieces
         if index == uint32(peer.workQueue[i].index) {
             peer.workQueue[i].left -= len(block)
