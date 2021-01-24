@@ -154,6 +154,8 @@ func (peer *Peer) StartWork(work chan int, quit chan int) {
                 "peer": peer.String(),
                 "error": err.Error(),
             }).Debug("Error while receiving message")
+            peer.Shutdown()
+            continue
         }
         if _, err = peer.handleMessage(msg, nil); err != nil {
             if errors.Cause(err) != connect.ErrTimeout {
