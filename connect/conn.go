@@ -7,7 +7,7 @@ package connect
 import (
     "net"
     "time"
-    "fmt"
+    "io"
     
     "github.com/pkg/errors"
 )
@@ -52,9 +52,7 @@ func (conn *Conn) Read(buf []byte) error {
     if err != nil {
         return errors.Wrap(err, "Read")
     }
-    fmt.Println("number of bytes expected:", len(buf))
     bytesRead, err := conn.Conn.Read(buf)
-    fmt.Println("number of bytes read:", bytesRead)
     if err != nil {
         if netErr, ok := err.(net.Error); ok && netErr.Timeout() {
             return errors.Wrap(ErrTimeout, "Read")
@@ -72,20 +70,8 @@ func (conn *Conn) ReadFull(buf []byte) error {
     if err != nil {
         return errors.Wrap(err, "ReadFull")
     }
-    curr := 0
-    tries := 0
-    for curr < len(buf) && err != nil && tries < readFullRetry {
-        bytesRead, err := conn.Conn.Read(buf[curr:])
-        if err != nil {
-            return errors.Wrap(err, "ReadFull")
-        }
-        curr += bytesRead
-        tries++
-    }
-    if tries >= readFullRetry {
-        return errors.Wrap(ErrReadFull, "ReadFull")
-    }
-    return nil
+    _, err = io.ReadFull(conn.Conn, buf)
+    return errors.Wrap(err, "ReadFull")
 }
 
 // Close closes a connection

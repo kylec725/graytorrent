@@ -10,6 +10,7 @@ import (
     "strconv"
     "time"
     "math"
+    "fmt"
 
     "github.com/kylec725/graytorrent/common"
     "github.com/kylec725/graytorrent/bitfield"
@@ -116,11 +117,11 @@ func (peer *Peer) StartWork(work chan int, quit chan int) {
     peer.shutdown = false
     err := peer.verifyHandshake()
     if err != nil {
-        log.WithFields(log.Fields{"peer": peer.String(), "error": err.Error()}).Debug("Peer handshake failed")
+        log.WithFields(log.Fields{"peer": peer.String(), "error": err.Error()}).Debug("Handshake failed")
         // remove <- peer.String()  // Notify main to remove this peer from its list
         return
     }
-    log.WithFields(log.Fields{"peer": peer.String()}).Debug("Peer handshake successful")
+    log.WithFields(log.Fields{"peer": peer.String()}).Debug("Handshake successful")
 
     // Change connection timeout to poll setting
     peer.Conn.Timeout = pollTimeout
@@ -156,11 +157,13 @@ func (peer *Peer) StartWork(work chan int, quit chan int) {
         select {
         // Grab work from the channel
         case index := <-work:
+            fmt.Println("got work:", index)
             // Send the work back if the peer does not have the piece
             if !peer.bitfield.Has(index) {
                 work <- index
                 continue
             }
+            fmt.Println("try to download:", index)
 
             // Download piece from the peer
             peer.reqsOut = 0
@@ -179,6 +182,7 @@ func (peer *Peer) StartWork(work chan int, quit chan int) {
                 }
                 continue
             }
+            fmt.Println("piece was verified")
 
             // Write piece to file
             if err = write.AddPiece(peer.info, index, piece); err != nil {
@@ -197,7 +201,6 @@ func (peer *Peer) StartWork(work chan int, quit chan int) {
             if !ok {
                 peer.Shutdown()
             }
-        default:
         }
     }
 }
