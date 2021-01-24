@@ -7,8 +7,11 @@ import (
     "net/url"
     "net/http"
 
+    "github.com/kylec725/graytorrent/common"
     "github.com/kylec725/graytorrent/metainfo"
+    "github.com/kylec725/graytorrent/peer"
     "github.com/pkg/errors"
+    log "github.com/sirupsen/logrus"
 )
 
 // Errors
@@ -23,6 +26,8 @@ type Tracker struct {
     Interval int
     Complete int
     Incomplete int
+
+    info *common.TorrentInfo
     httpClient *http.Client
 }
 
@@ -33,6 +38,7 @@ func newTracker(announce string) Tracker {
         Interval: 60,
         Complete: 0,
         Incomplete: 0,
+
         httpClient: &http.Client{ Timeout: 20 * time.Second },
     }
 }
@@ -93,4 +99,29 @@ func (tr Tracker) buildURL(infoHash [20]byte, peerID [20]byte, port uint16, left
 
     base.RawQuery = params.Encode()
     return base.String(), nil
+}
+
+// Run starts a tracker and gets peers for a torrent
+func (tr *Tracker) Run(peers chan peer.Peer, quit chan int) {
+    peerList, err := tr.sendStarted(tr.info, 6881, tr.info.TotalLength)  // hardcoded number of bytes left
+    if err != nil {
+        tr.Working = false
+        log.WithFields(log.Fields{
+            "tracker": tr.Announce,
+        }).Debug("Failed sending start message")
+        return  // TODO have the tracker run in background
+    }
+    for i := range peerList {
+        peers <- peerList[i]
+    }
+
+
+    for {
+        select {
+        case _, ok := <-quit:
+            if !ok {
+                return
+            }
+        }
+    }
 }
