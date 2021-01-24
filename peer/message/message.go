@@ -72,9 +72,9 @@ func NotInterested() Message {
 }
 
 // Have returns a have message
-func Have(index int) Message {
+func Have(index uint32) Message {
     payload := make([]byte, 4)
-    binary.BigEndian.PutUint32(payload, uint32(index))
+    binary.BigEndian.PutUint32(payload, index)
     return Message{ID: MsgNotInterested, Payload: payload}
 }
 
@@ -84,18 +84,18 @@ func Bitfield(bf bitfield.Bitfield) Message {
 }
 
 // Request returns a request message for a piece
-func Request(index, begin, length int) Message {
+func Request(index, begin, length uint32) Message {
     payload := make([]byte, 12)
-    binary.BigEndian.PutUint32(payload[0:4], uint32(index))
-    binary.BigEndian.PutUint32(payload[4:8], uint32(begin))
-    binary.BigEndian.PutUint32(payload[8:12], uint32(length))
+    binary.BigEndian.PutUint32(payload[0:4], index)
+    binary.BigEndian.PutUint32(payload[4:8], begin)
+    binary.BigEndian.PutUint32(payload[8:12], length)
     return Message{ID: MsgRequest, Payload: payload}
 }
 
 // Piece returns a piece message containing a block
-func Piece(index, begin int, block []byte) Message {
+func Piece(index, begin uint32, block []byte) Message {
     payload := make([]byte, 4 + len(block))
-    binary.BigEndian.PutUint32(payload, uint32(index))
+    binary.BigEndian.PutUint32(payload, index)
     copy(payload[4:], block)
     return Message{ID: MsgPiece, Payload: payload}
 }
