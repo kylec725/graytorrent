@@ -63,7 +63,7 @@ func (peer *Peer) rcvHandshake() error {
     }
 
     buf = make([]byte, 48 + pstrLen)
-    if err := peer.Conn.Read(buf); err != nil {
+    if err := peer.Conn.ReadFull(buf); err != nil {
         return errors.Wrap(err, "RcvHandshake")
     }
 
