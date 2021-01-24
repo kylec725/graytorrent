@@ -168,10 +168,7 @@ func (peer *Peer) nextBlock(index int) error {
             length := common.Min(peer.workQueue[i].left, reqSize)
             err := peer.sendRequest(index, peer.workQueue[i].curr, length)
             peer.workQueue[i].curr += length
-            if err != nil {
-                return errors.Wrap(err, "nextBlock")
-            }
-            break
+            return errors.Wrap(err, "nextBlock")
         }
     }
     return nil
