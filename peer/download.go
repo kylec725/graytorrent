@@ -64,6 +64,9 @@ func (peer *Peer) handleMessage(msg *message.Message, currentWork []byte) ([]byt
         err := peer.handleRequest(msg)
         return currentWork, errors.Wrap(err, "handleMessage")
     case message.MsgPiece:
+        if currentWork == nil {  // Discard pieces if we are not trying to download a piece
+            return nil, nil
+        }
         currentWork, err := peer.handlePiece(msg, currentWork)
         return currentWork, errors.Wrap(err, "handleMessage")
     case message.MsgCancel:
