@@ -38,7 +38,7 @@ func (peer *Peer) removeWorkPiece(index int) {
 func (peer *Peer) adjustRate(wp workPiece) {
     duration := time.Since(wp.startTime)
     numBlocks := wp.curr / reqSize  // truncate number of blocks to be conservative
-    currRate := float64(numBlocks) / duration.Seconds()
+    currRate := float64(numBlocks) / duration.Seconds()  // reqSize per second
 
     // Use aggressive algorithm from rtorrent
     if currRate < 20 {
