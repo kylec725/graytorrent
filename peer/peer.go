@@ -20,7 +20,7 @@ import (
 )
 
 const peerTimeout = 120 * time.Second
-const startRate int = 2  // slow approach: hard limit on requests per peer
+const startRate = 2  // slow approach: hard limit on requests per peer
 const maxPeerQueue = 5  // Max number of pieces a peer can queue
 
 // Errors
@@ -110,7 +110,6 @@ func Unmarshal(peersBytes []byte, info *common.TorrentInfo) ([]Peer, error) {
 }
 
 // StartWork makes a peer wait for pieces to download
-// func (peer *Peer) StartWork(work chan int, remove chan string, quit chan int) {
 func (peer *Peer) StartWork(work chan int, results, done chan bool) {
     peer.shutdown = false
     err := peer.verifyHandshake()

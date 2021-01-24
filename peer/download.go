@@ -188,6 +188,6 @@ func (peer *Peer) downloadPiece(index int) error {
         peer.amInterested = true
     }
     peer.addWorkPiece(index)
-    err := peer.nextBlock(index)
+    err := peer.nextBlock(index)  // First block request
     return errors.Wrap(err, "downloadPiece")
 }
