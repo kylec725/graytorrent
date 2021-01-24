@@ -55,7 +55,6 @@ func main() {
 
     // Handle single torrent download for now
     if filename != "" {
-        fmt.Println("Filename:", filename)
         to := torrent.Torrent{Path: filename}
         if err := to.Setup(); err != nil {
             log.WithFields(log.Fields{
