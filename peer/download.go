@@ -38,6 +38,19 @@ func (peer *Peer) addWorkPiece(index int) {
     // peer.reqsOut++
 }
 
+func (peer *Peer) removeWorkPiece(index int) {
+    removeIndex := -1
+    for i, workPiece := range peer.workQueue {
+        if index == workPiece.index {
+            removeIndex = i
+        }
+    }
+    if removeIndex != -1 {
+        peer.workQueue[removeIndex] = peer.workQueue[len(peer.workQueue) - 1]
+        peer.workQueue = peer.workQueue[:len(peer.workQueue) - 1]
+    }
+}
+
 // getMessage reads in a message from the peer
 func (peer *Peer) getMessage() (*message.Message, error) {
     buf := make([]byte, 4)
