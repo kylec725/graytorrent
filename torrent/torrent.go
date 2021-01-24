@@ -81,10 +81,10 @@ func (to *Torrent) Shutdown() {
 // TODO
 func (to *Torrent) Download() {
     to.shutdown = false
-    peers := make(chan peer.Peer)  // For incoming peers from trackers
-    work := make(chan int)  // Piece indices we need
-    remove := make(chan string)  // For peers to notify they should be removed from our list
-    quit := make(chan int)  // For peers to notify they should be removed from our list
+    peers := make(chan peer.Peer)   // For incoming peers from trackers
+    work := make(chan int)          // Piece indices we need
+    remove := make(chan string)     // For peers to notify they should be removed from our list
+    quit := make(chan int)          // For peers to notify they should be removed from our list
 
     // Start tracker goroutines
     for i := range to.Trackers {
