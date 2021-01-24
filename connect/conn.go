@@ -8,6 +8,7 @@ import (
     "net"
     "time"
     "io"
+    "encoding/binary"
     
     "github.com/pkg/errors"
 )
@@ -86,7 +87,6 @@ func (conn *Conn) Quit() {
 }
 
 // Await polls a connection for data and returns it over a channel
-// TODO
 func (conn *Conn) Await(output chan []byte) {
     conn.shutdown = false
     if err := conn.Conn.SetDeadline(time.Time{}); err != nil {  // Connection dies after a set timeout period
@@ -94,17 +94,17 @@ func (conn *Conn) Await(output chan []byte) {
         return
     }
     for {
-        buf := make([]byte, 1)
+        buf := make([]byte, 4)
         if bytesRead, err := conn.Conn.Read(buf); err != nil && !conn.shutdown {
             break
-        } else if bytesRead != 1 && !conn.shutdown {
+        } else if bytesRead != 4 && !conn.shutdown {
             break
         }
-        length := int(buf[0])
+        length := binary.BigEndian.Uint32(buf)
         buf = make([]byte, length)
         if bytesRead, err := io.ReadFull(conn.Conn, buf); err != nil && !conn.shutdown {
             break
-        } else if bytesRead != length && !conn.shutdown {
+        } else if uint32(bytesRead) != length && !conn.shutdown {
             break
         }
         output <- buf

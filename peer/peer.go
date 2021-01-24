@@ -69,7 +69,7 @@ func New(host net.IP, port uint16, conn *connect.Conn, info *common.TorrentInfo)
         peerInterested: false,
         reqsOut: 0,
         rate: startRate,
-        workLeft: 0,
+        workQueue: []workPiece{},
         shutdown: false,
     }
 }
@@ -127,7 +127,7 @@ func (peer *Peer) StartWork(work chan int, quit chan int) {
 
     // Setup peer connection
     connection := make(chan []byte)
-    go peer.Conn.Await(connection)
+    go peer.Conn.Await(connection, 4)  // Messages have a length prefix of 4
     peer.Conn.Timeout = peerTimeout
 
     // Work loop
