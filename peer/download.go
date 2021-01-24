@@ -122,13 +122,13 @@ func (peer *Peer) handlePiece(msg *message.Message, work chan int, results chan 
             if err != nil {
                 errors.Wrap(err, "handlePiece")
             }
-            // If piece is not done, exit early
+            // If piece isn't done, request next piece and exit
             if peer.workQueue[i].left > 0 {
                 err := peer.nextBlock(int(index))
                 return errors.Wrap(err, "handlePiece")
             }
 
-            // Piece is done
+            // Piece is done: Verify hash then write
             peer.adjustRate(peer.workQueue[i])
             if !write.VerifyPiece(peer.info, int(index), peer.workQueue[i].piece) {  // Return to work pool if hash is incorrect
                 work <- peer.workQueue[i].index
@@ -141,6 +141,7 @@ func (peer *Peer) handlePiece(msg *message.Message, work chan int, results chan 
                 peer.removeWorkPiece(int(index))
                 return errors.Wrap(err, "handlePiece")
             }
+
             // Write was successful
             peer.info.Left -= peer.workQueue[i].curr
             peer.removeWorkPiece(int(index))
