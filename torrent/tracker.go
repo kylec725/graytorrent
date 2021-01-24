@@ -29,9 +29,10 @@ type Tracker struct {
 
     info *common.TorrentInfo
     httpClient *http.Client
+    shutdown bool
 }
 
-func newTracker(announce string) Tracker {
+func newTracker(announce string, info *common.TorrentInfo) Tracker {
     return Tracker{
         Announce: announce,
         Working: false,
@@ -39,11 +40,13 @@ func newTracker(announce string) Tracker {
         Complete: 0,
         Incomplete: 0,
 
+        info: info,
         httpClient: &http.Client{ Timeout: 20 * time.Second },
+        shutdown: false,
     }
 }
 
-func getTrackers(meta metainfo.BencodeMeta) ([]Tracker, error) {
+func getTrackers(meta metainfo.BencodeMeta, info *common.TorrentInfo) ([]Tracker, error) {
     // If announce-list is empty, use announce only
     if len(meta.AnnounceList) == 0 {
         // Check if no announce strings exist
@@ -52,7 +55,7 @@ func getTrackers(meta metainfo.BencodeMeta) ([]Tracker, error) {
         }
 
         trackers := make([]Tracker, 1)
-        trackers[0] = newTracker(meta.Announce)
+        trackers[0] = newTracker(meta.Announce, info)
         return trackers, nil
     }
 
@@ -62,7 +65,7 @@ func getTrackers(meta metainfo.BencodeMeta) ([]Tracker, error) {
     // Add each announce in announce-list as a tracker
     for _, group := range meta.AnnounceList {
         for _, announce := range group {
-            trackers = append(trackers, newTracker(announce))
+            trackers = append(trackers, newTracker(announce, info))
             numAnnounce++
         }
     }
