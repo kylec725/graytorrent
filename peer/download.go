@@ -186,11 +186,7 @@ func (peer *Peer) handlePiece(msg *message.Message, work chan int) error {
 
             // Write piece to file if done
             if err = write.AddPiece(peer.info, int(index), peer.workQueue[i].piece); err != nil {
-                log.WithFields(log.Fields{
-                    "peer": peer.String(),
-                    "piece index": index,
-                    "error": err.Error(),
-                }).Debug("Writing piece to file failed")
+                log.WithFields(log.Fields{"peer": peer.String(), "piece index": index, "error": err.Error()}).Debug("Writing piece to file failed")
                 work <- int(index)
                 peer.removeWorkPiece(int(index))
                 return errors.Wrap(err, "handlePiece")
@@ -251,18 +247,7 @@ func (peer *Peer) downloadPiece(index int) error {
         peer.amInterested = true
     }
 
-    // piece, err := peer.getPiece(index)
-    // if err != nil {
-    //     return nil, errors.Wrap(err, "downloadPiece")
-    // }
     peer.addWorkPiece(index)
-
-
-    // TODO handle verifying piece in handlePiece
-    // Verify the piece's hash
-    // if !write.VerifyPiece(peer.info, index, piece) {
-    //     return nil, errors.Wrap(ErrPieceHash, "downloadPiece")
-    // }
     return nil
 }
 

@@ -151,11 +151,7 @@ func (peer *Peer) StartWork(work chan int, done chan bool) {
             // Download piece from the peer
             err := peer.downloadPiece(index)
             if err != nil {
-                log.WithFields(log.Fields{
-                    "peer": peer.String(),
-                    "piece index": index,
-                    "error": err.Error(),
-                }).Debug("Starting piece download failed")
+                log.WithFields(log.Fields{"peer": peer.String(), "piece index": index, "error": err.Error()}).Debug("Starting piece download failed")
                 work <- index  // Put piece back onto work channel
 
                 // Kill peer if issue was not the piece hash

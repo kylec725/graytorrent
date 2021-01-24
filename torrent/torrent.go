@@ -91,11 +91,7 @@ func (to *Torrent) Download() {
 
     // Initialize files for writing
     if err := write.NewWrite(&to.Info); err != nil {
-        log.WithFields(log.Fields{
-            "path": to.Path,
-            "name": to.Info.Name,
-            "error": err.Error(),
-        }).Info("Failed to setup files")
+        log.WithFields(log.Fields{"path": to.Path, "name": to.Info.Name, "error": err.Error()}).Info("Failed to setup files")
         return
     }
 
