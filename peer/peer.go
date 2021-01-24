@@ -109,14 +109,15 @@ func Unmarshal(peersBytes []byte, info *common.TorrentInfo) ([]Peer, error) {
 }
 
 // StartWork makes a peer wait for pieces to download
-func (peer *Peer) StartWork(work chan int, remove chan string) {
+// func (peer *Peer) StartWork(work chan int, remove chan string) {
+func (peer *Peer) StartWork(work chan int, quit chan int) {
     err := peer.verifyHandshake()
     if err != nil {
         log.WithFields(log.Fields{
             "peer": peer.String(),
             "error": err.Error(),
         }).Debug("Peer handshake failed")
-        remove <- peer.String()  // Notify main to remove this peer from its list
+        // remove <- peer.String()  // Notify main to remove this peer from its list
         return
     }
 
@@ -133,7 +134,7 @@ func (peer *Peer) StartWork(work chan int, remove chan string) {
                     "error": err.Error(),
                 }).Debug("Error disconnecting with peer")
             }
-            remove <- peer.String()  // Notify main to remove this peer from its list
+            // remove <- peer.String()  // Notify main to remove this peer from its list
             return
         }
 
@@ -175,6 +176,10 @@ func (peer *Peer) StartWork(work chan int, remove chan string) {
             } else {  // Write was successful
                 peer.info.Bitfield.Set(index)
                 continue
+            }
+        case _, ok := <-quit:
+            if !ok {
+                return
             }
         default:
             // Receive a message from the peer
