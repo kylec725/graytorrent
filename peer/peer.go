@@ -160,7 +160,7 @@ func (peer *Peer) StartWork(work chan int, quit chan int) {
                 work <- index  // Put piece back onto work channel
 
                 // Kill peer if issue was not the piece hash
-                if errors.Unwrap(err) != ErrPieceHash {
+                if errors.Cause(err) != ErrPieceHash {
                     peer.Shutdown()
                 }
                 continue
@@ -187,7 +187,7 @@ func (peer *Peer) StartWork(work chan int, quit chan int) {
             // Receive a message from the peer
             msg, err := peer.getMessage()
             if _, err = peer.handleMessage(msg, nil); err != nil {  // Handle message
-                if errors.Unwrap(err) == connect.ErrTimeout {
+                if errors.Cause(err) == connect.ErrTimeout {
                     // Timeout on polling is fine
                     continue
                 }
