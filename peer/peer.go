@@ -179,7 +179,7 @@ func (peer *Peer) StartWork(work chan int, quit chan int) {
             }
         case _, ok := <-quit:
             if !ok {
-                return
+                peer.Shutdown()
             }
         default:
             // Receive a message from the peer
