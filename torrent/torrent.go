@@ -16,7 +16,6 @@ import (
     "github.com/kylec725/graytorrent/peer"
     "github.com/kylec725/graytorrent/write"
     "github.com/pkg/errors"
-    "fmt"
 
     log "github.com/sirupsen/logrus"
 )
@@ -85,9 +84,9 @@ func (to *Torrent) Shutdown() {
 // TODO
 func (to *Torrent) Download() {
     to.shutdown = false
-    peers := make(chan peer.Peer)               // For incoming peers from trackers
+    peers := make(chan peer.Peer)               // For incoming peers from trackers  // TODO consider buffering the peer channel
     work := make(chan int, to.Info.TotalPieces) // Piece indices we need
-    remove := make(chan string)                 // For peers to notify they should be removed from our list
+    // remove := make(chan string)                 // For peers to notify they should be removed from our list  // TODO buffer the remove channel
     quit := make(chan int)                      // Notify goroutines to quit
 
     // Initialize files for writing
@@ -100,19 +99,18 @@ func (to *Torrent) Download() {
         return
     }
 
-    fmt.Println("start trackers")
     // Start tracker goroutines
     for i := range to.Trackers {
         go to.Trackers[i].Run(peers, quit)
     }
 
-    fmt.Println("populate work queue")
+    // TODO setup listen port for incoming peers
+
     // Populate work queue
     for i := 0; i < to.Info.TotalPieces; i++ {
         work <- i
     }
 
-    fmt.Println("enter main download loop")
     for {
         if to.shutdown {
             close(quit)
@@ -122,9 +120,9 @@ func (to *Torrent) Download() {
         case newPeer := <-peers:
             to.Peers = append(to.Peers, newPeer)
             go newPeer.StartWork(work, quit)
-        case deadPeer := <-remove:
+        // case deadPeer := <-remove:
             // TODO close deadPeer
-            to.removePeer(deadPeer)
+            // to.removePeer(deadPeer)
         }
     }
 }
