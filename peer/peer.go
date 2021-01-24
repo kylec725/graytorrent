@@ -37,7 +37,6 @@ type Peer struct {
     rate int  // max number of outgoing requests
     workQueue []workPiece
     shutdown bool
-    // TODO make a work queue so a peer can request multiple pieces
 }
 
 func (peer Peer) String() string {
@@ -50,7 +49,7 @@ func New(host net.IP, port uint16, conn *connect.Conn, info *common.TorrentInfo)
     return Peer{
         Host: host,
         Port: port,
-        Conn: conn,  // Use a pointer so we can have a nil value
+        Conn: conn,
 
         info: info,
         bitfield: make([]byte, bitfieldSize),
@@ -117,12 +116,10 @@ func (peer *Peer) StartWork(work chan int, results, done chan bool) {
             }
             msg := message.Decode(data)
             if err = peer.handleMessage(msg, work, results); err != nil {
-                // if errors.Cause(err) != connect.ErrTimeout {
                 // Shutdown even if error is timeout
                 log.WithFields(log.Fields{"peer": peer.String(), "error": err.Error()}).Debug("Received bad message")
                 goto exit
                 // remove <- peer.String()  // Notify main to remove this peer from its list
-                // }
             }
         case _, ok := <-done:
             if !ok {
