@@ -121,8 +121,8 @@ func (tr *Tracker) Run(peers chan peer.Peer, quit chan int) {
     }
 
     // Send peers through channel
-    for _, newPeer := range peerList {
-        peers <- newPeer
+    for i := range peerList {
+        peers <- peerList[i]
     }
 
     for {
