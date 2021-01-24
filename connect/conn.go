@@ -25,7 +25,8 @@ var (
 // Conn is a wrapper around net.Conn with a variable timeout for read/write calls
 type Conn struct {
     Conn net.Conn
-    Timeout time.Duration
+    Timeout time.Duration  // TODO remove timeout in favor of goroutine based receiving
+    shutdown bool
 }
 
 // Write sends data over a connection, returns an error if not all of the data is sent
@@ -76,5 +77,41 @@ func (conn *Conn) ReadFull(buf []byte) error {
 
 // Close closes a connection
 func (conn *Conn) Close() error {
+    conn.shutdown = true
     return conn.Conn.Close()
+}
+
+// Await polls a connection for data and returns it over a channel
+// TODO
+func (conn *Conn) Await(output chan []byte) {
+    conn.shutdown = false
+    if err := conn.Conn.SetDeadline(time.Time{}); err != nil {
+        close(output)
+        return
+    }
+    for {
+        // Exit point
+        if conn.shutdown {
+            close(output)
+            return
+        }
+        buf := make([]byte, 1)
+        if bytesRead, err := conn.Conn.Read(buf); err != nil {
+            conn.shutdown = true
+            continue
+        } else if bytesRead != 1 {
+            conn.shutdown = true
+            continue
+        }
+        length := int(buf[0])
+        buf = make([]byte, length)
+        if bytesRead, err := io.ReadFull(conn.Conn, buf); err != nil {
+            conn.shutdown = true
+            continue
+        } else if bytesRead != length {
+            conn.shutdown = true
+            continue
+        }
+        output <- buf
+    }
 }
