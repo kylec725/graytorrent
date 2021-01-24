@@ -43,7 +43,7 @@ func (msg *Message) Encode() []byte {
 
 // Decode decodes a byte slice into a message
 func Decode(data []byte) *Message {
-    if data == nil {
+    if len(data) == 0 {
         return nil
     }
     id := messageID(data[0])
