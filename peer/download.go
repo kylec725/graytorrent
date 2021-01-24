@@ -12,7 +12,7 @@ import (
     log "github.com/sirupsen/logrus"
 )
 
-const maxReqSize = 16384
+const reqSize = 16384
 
 // TODO fix edge case with last piece
 
@@ -23,13 +23,6 @@ var (
     ErrPieceHash = errors.New("Received piece with bad hash")
     ErrUnexpectedPiece = errors.New("Received piece when not expecting it")
 )
-
-type workPiece struct {
-    index int
-    piece []byte
-    left int  // bytes remaining in piece
-    curr int  // current byte position in slice
-}
 
 // getMessage reads in a message from the peer
 func (peer *Peer) getMessage() (*message.Message, error) {
@@ -139,32 +132,12 @@ func (peer *Peer) handleRequest(msg *message.Message) error {
     return errors.Wrap(err, "handleRequest")
 }
 
-func (peer *Peer) addWorkPiece(index int) {
-    pieceSize := common.PieceSize(peer.info, index)
-    piece := make([]byte, pieceSize)
-    newWork := workPiece{index, piece, pieceSize, 0}
-    peer.workQueue = append(peer.workQueue, newWork)
-}
-
-func (peer *Peer) removeWorkPiece(index int) {
-    removeIndex := -1
-    for i, workPiece := range peer.workQueue {
-        if index == workPiece.index {
-            removeIndex = i
-        }
-    }
-    if removeIndex != -1 {
-        peer.workQueue[removeIndex] = peer.workQueue[len(peer.workQueue) - 1]
-        peer.workQueue = peer.workQueue[:len(peer.workQueue) - 1]
-    }
-}
-
 func (peer *Peer) nextRequest(index int) error {
     for i := range peer.workQueue {
         if index == peer.workQueue[i].index {
-            reqSize := common.Min(peer.workQueue[i].left, maxReqSize)
-            err := peer.sendRequest(index, peer.workQueue[i].curr, reqSize)
-            peer.workQueue[i].curr += reqSize
+            length := common.Min(peer.workQueue[i].left, reqSize)
+            err := peer.sendRequest(index, peer.workQueue[i].curr, length)
+            peer.workQueue[i].curr += length
             if err != nil {
                 return errors.Wrap(err, "nextRequest")
             }
