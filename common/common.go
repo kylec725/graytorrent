@@ -26,6 +26,7 @@ type TorrentInfo struct {
     PieceLength int  // number of bytes per piece
     TotalPieces int  // total pieces in the torrent
     TotalLength int  // total length of the torrent
+    Left int  // number of bytes left to torrent
     InfoHash [20]byte
     PieceHashes [][20]byte
     PeerID [20]byte
@@ -56,6 +57,7 @@ func GetInfo(meta metainfo.BencodeMeta) (TorrentInfo, error) {
     info.PieceLength = meta.Info.PieceLength
     info.TotalPieces = len(meta.Info.Pieces) / 20
     info.TotalLength = meta.Length()
+    info.Left = info.TotalLength
 
     // Initialize the bitfield
     bitfieldSize := int(math.Ceil(float64(info.TotalPieces) / 8))
