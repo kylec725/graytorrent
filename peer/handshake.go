@@ -5,7 +5,6 @@ import (
     "time"
     "bytes"
 
-    "github.com/kylec725/graytorrent/connect"
     "github.com/kylec725/graytorrent/peer/message"
     "github.com/pkg/errors"
 )
@@ -40,7 +39,7 @@ func (peer *Peer) sendHandshake() error {
         if err != nil {
             return errors.Wrap(err, "sendHandshake")
         }
-        peer.Conn = &connect.Conn{Conn: conn, Timeout: handshakeTimeout}
+        peer.Conn.Conn = conn
     }
 
     // Send the handshake
