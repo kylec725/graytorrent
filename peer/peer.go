@@ -111,6 +111,7 @@ func Unmarshal(peersBytes []byte, info *common.TorrentInfo) ([]Peer, error) {
 // StartWork makes a peer wait for pieces to download
 // func (peer *Peer) StartWork(work chan int, remove chan string) {
 func (peer *Peer) StartWork(work chan int, quit chan int) {
+    peer.shutdown = false
     err := peer.verifyHandshake()
     if err != nil {
         log.WithFields(log.Fields{
