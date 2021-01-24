@@ -12,7 +12,7 @@ import (
     log "github.com/sirupsen/logrus"
 )
 
-const reqSize = 16384
+const reqSize = 16384  // kilobyte
 
 // TODO fix edge case with last piece
 
