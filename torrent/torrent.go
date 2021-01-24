@@ -28,7 +28,7 @@ type Torrent struct {
     Info common.TorrentInfo
     Trackers []Tracker
     Peers []peer.Peer
-    // TODO figure out how to remove a peer from the list if it has disconnected
+    shutdown bool
 }
 
 // Setup gets and sets up necessary properties of a new torrent object
@@ -84,14 +84,24 @@ func (to *Torrent) removePeer(name string) error {
 //     }
 // }
 
+// Shutdown lets main signal a torrent to stop downloading
+func (to *Torrent) Shutdown() {
+    to.shutdown = true
+}
+
 // Download starts a routine to download a torrent from peers
 // TODO
 func (to *Torrent) Download() {
+    to.shutdown = false
     peers := make(chan peer.Peer)  // For incoming peers from trackers
     work := make(chan int)  // Piece indices we need
     remove := make(chan string)  // For peers to notify they should be removed from our list
+    quit := make(chan int)  // For peers to notify they should be removed from our list
 
     // Start tracker goroutines
+    for i := range to.Trackers {
+        go to.Trackers[i].Run(peers, quit)
+    }
 
     // Populate work queue
     for i := 0; i < to.Info.TotalPieces; i++ {
@@ -99,17 +109,16 @@ func (to *Torrent) Download() {
     }
 
     for {
+        if to.shutdown {
+            close(quit)
+        }
         select {
         case newPeer := <-peers:
             to.Peers = append(to.Peers, newPeer)
-            go newPeer.StartWork(work, remove)
+            go newPeer.StartWork(work, quit)
         case deadPeer := <-remove:
             // TODO close deadPeer
             to.removePeer(deadPeer)
         }
     }
 }
-
-// connect to all peers asynchronously
-// aynschronously add peers to an active peer list
-// then use this peer list start requesting/getting pieces
