@@ -101,6 +101,7 @@ func (peer *Peer) handlePiece(msg *message.Message, currentWork []byte) ([]byte,
     block := msg.Payload[8:]
 
     peer.reqsOut--
+    peer.workLeft -= len(block)
     err := write.AddBlock(peer.info, int(index), int(begin), block, currentWork)
     return currentWork, errors.Wrap(err, "handlePiece")
 }
@@ -109,15 +110,15 @@ func (peer *Peer) handlePiece(msg *message.Message, currentWork []byte) ([]byte,
 func (peer *Peer) getPiece(index int) ([]byte, error) {
     // Initialize peer's work
     pieceSize := common.PieceSize(peer.info, index)
-    workLeft := pieceSize
+    peer.workLeft = pieceSize
     currentWork := make([]byte, pieceSize)
 
     // TODO start of elapsed time
-    for begin := 0; workLeft > 0; {
+    for begin := 0; peer.workLeft > 0; {
         if !peer.peerChoking {
             // Send max number of requests to peer
             for ; peer.reqsOut < peer.rate; {
-                reqSize := common.Min(workLeft, maxReqSize)
+                reqSize := common.Min(peer.workLeft, maxReqSize)
                 err := peer.sendRequest(index, begin, reqSize)
                 if err != nil {
                     return nil, errors.Wrap(err, "getPiece")
