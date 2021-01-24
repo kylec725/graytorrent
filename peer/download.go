@@ -44,32 +44,40 @@ func (peer *Peer) handleMessage(msg *message.Message, currentWork []byte) ([]byt
     }
     switch msg.ID {
     case message.MsgChoke:
+        // fmt.Println("MsgChoke")
         peer.peerChoking = true
     case message.MsgUnchoke:
+        // fmt.Println("MsgUnchoke")
         peer.peerChoking = false
     case message.MsgInterested:
+        // fmt.Println("MsgInterested")
         peer.peerInterested = true
     case message.MsgNotInterested:
+        // fmt.Println("MsgNotInterested")
         peer.peerInterested = false
     case message.MsgHave:
+        // fmt.Println("MsgHave")
         if len(msg.Payload) != 4 {
             return currentWork, errors.Wrap(ErrMessage, "handleMessage")
         }
         index := binary.BigEndian.Uint32(msg.Payload)
         peer.bitfield.Set(int(index))
     case message.MsgBitfield:
+        // fmt.Println("MsgBitfield")
         expected := int(math.Ceil(float64(peer.info.TotalPieces) / 8))
         if len(msg.Payload) != expected {
             return currentWork, errors.Wrap(ErrBitfield, "handleMessage")
         }
         peer.bitfield = msg.Payload
     case message.MsgRequest:
+        // fmt.Println("MsgRequest")
         if len(msg.Payload) != 12 {
             return currentWork, errors.Wrap(ErrMessage, "handleMessage")
         }
         err := peer.handleRequest(msg)
         return currentWork, errors.Wrap(err, "handleMessage")
     case message.MsgPiece:
+        // fmt.Println("MsgPiece")
         if len(msg.Payload) < 9 {
             return currentWork, errors.Wrap(ErrMessage, "handleMessage")
         }
@@ -144,10 +152,11 @@ func (peer *Peer) getPiece(index int) ([]byte, error) {
     currentWork := make([]byte, pieceSize)
 
     // TODO start of elapsed time
+    // TODO fix getting last piece (because of irregular size?)
     for begin := 0; peer.workLeft > 0; {
         if !peer.peerChoking {
             // Send max number of requests to peer
-            for ; peer.reqsOut < peer.rate; {
+            for ; peer.reqsOut < peer.rate && begin < pieceSize; {
                 reqSize := common.Min(peer.workLeft, maxReqSize)
                 err := peer.sendRequest(index, begin, reqSize)
                 if err != nil {
