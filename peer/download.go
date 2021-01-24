@@ -116,14 +116,14 @@ func (peer *Peer) handleRequest(msg *message.Message) error {
     return errors.Wrap(err, "handleRequest")
 }
 
-func (peer *Peer) nextRequest(index int) error {
+func (peer *Peer) nextBlock(index int) error {
     for i := range peer.workQueue {
         if index == peer.workQueue[i].index {
             length := common.Min(peer.workQueue[i].left, reqSize)
             err := peer.sendRequest(index, peer.workQueue[i].curr, length)
             peer.workQueue[i].curr += length
             if err != nil {
-                return errors.Wrap(err, "nextRequest")
+                return errors.Wrap(err, "nextBlock")
             }
             break
         }
@@ -147,7 +147,7 @@ func (peer *Peer) handlePiece(msg *message.Message, work chan int) error {
             }
             // If piece is not done, exit early
             if peer.workQueue[i].left > 0 {
-                err := peer.nextRequest(int(index))
+                err := peer.nextBlock(int(index))
                 return errors.Wrap(err, "handlePiece")
             }
 
@@ -193,7 +193,7 @@ func (peer *Peer) downloadPiece(index int) error {
         peer.amInterested = true
     }
     peer.addWorkPiece(index)
-    err := peer.nextRequest(index)
+    err := peer.nextBlock(index)
     return errors.Wrap(err, "downloadPiece")
 }
 
