@@ -144,6 +144,7 @@ func (peer *Peer) StartWork(work chan int, remove chan string) {
             }
 
             // Download piece from the peer
+            peer.reqsOut = 0
             piece, err := peer.downloadPiece(index)
             if err != nil {
                 log.WithFields(log.Fields{
