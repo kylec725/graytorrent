@@ -9,6 +9,7 @@ import (
     "encoding/binary"
     "strconv"
     "time"
+    "math"
 
     "github.com/kylec725/graytorrent/common"
     "github.com/kylec725/graytorrent/bitfield"
@@ -51,13 +52,14 @@ func (peer Peer) String() string {
 
 // New returns a new instantiated peer
 func New(host net.IP, port uint16, conn *connect.Conn, info *common.TorrentInfo) Peer {
+    bitfieldSize := int(math.Ceil(float64(info.TotalPieces) / 8))
     return Peer{
         Host: host,
         Port: port,
         Conn: conn,  // Use a pointer so we can have a nil value
 
         info: info,
-        bitfield: nil,
+        bitfield: make([]byte, bitfieldSize),
         amChoking: true,
         amInterested: false,
         peerChoking: true,
@@ -121,6 +123,9 @@ func (peer *Peer) StartWork(work chan int, quit chan int) {
         // remove <- peer.String()  // Notify main to remove this peer from its list
         return
     }
+    log.WithFields(log.Fields{
+        "peer": peer.String(),
+    }).Debug("Peer handshake successful")
 
     // Change connection timeout to poll setting
     peer.Conn.Timeout = pollTimeout
