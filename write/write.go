@@ -14,7 +14,7 @@ import (
 
 // Errors
 var (
-    ErrFileExists = errors.New("Torrent's file already exists")
+    ErrFileExists = errors.New("File already exists")
     ErrBlockBounds = errors.New("Received invalid bounds for a block")
     ErrCopyFailed = errors.New("Unexpected number of bytes copied")
     ErrWriteFailed = errors.New("Unexpected number of bytes written")
