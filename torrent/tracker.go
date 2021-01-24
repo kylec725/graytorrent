@@ -107,6 +107,8 @@ func (tr Tracker) buildURL(infoHash [20]byte, peerID [20]byte, port uint16, left
 // Run starts a tracker and gets peers for a torrent
 func (tr *Tracker) Run(peers chan peer.Peer, done chan bool) {
     tr.shutdown = false
+    // TODO remove sendStopped, here for debugging purposes
+    err := tr.sendStopped(tr.info, 6881, tr.info.Left)
     peerList, err := tr.sendStarted(tr.info, 6881, tr.info.Left)  // hardcoded number of bytes left
     if err != nil {
         tr.Working = false
