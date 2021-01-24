@@ -104,8 +104,13 @@ func (tr Tracker) buildURL(infoHash [20]byte, peerID [20]byte, port uint16, left
     return base.String(), nil
 }
 
+// Shutdown signals a tracker to shutdown
+func (tr *Tracker) Shutdown() {
+    tr.shutdown = true
+}
+
 // Run starts a tracker and gets peers for a torrent
-func (tr *Tracker) Run(peers chan peer.Peer, quit chan int) {
+func (tr *Tracker) Run(peers chan peer.Peer, done chan bool) {
     tr.shutdown = false
     peerList, err := tr.sendStarted(tr.info, 6881, tr.info.TotalLength)  // hardcoded number of bytes left
     if err != nil {
@@ -120,12 +125,14 @@ func (tr *Tracker) Run(peers chan peer.Peer, quit chan int) {
     for i := range peerList {
         peers <- peerList[i]
     }
-    return  // Temporary exit so that infinite loop does not occur
 
     for {
-        // TODO handle tracker shutdown
+        if tr.shutdown {
+            break
+        }
+
         select {
-        case _, ok := <-quit:
+        case _, ok := <-done:
             if !ok {
                 return
             }

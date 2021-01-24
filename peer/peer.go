@@ -114,7 +114,7 @@ func Unmarshal(peersBytes []byte, info *common.TorrentInfo) ([]Peer, error) {
 
 // StartWork makes a peer wait for pieces to download
 // func (peer *Peer) StartWork(work chan int, remove chan string, quit chan int) {
-func (peer *Peer) StartWork(work chan int, quit chan int) {
+func (peer *Peer) StartWork(work chan int, done chan bool) {
     peer.shutdown = false
     err := peer.verifyHandshake()
     if err != nil {
@@ -131,12 +131,9 @@ func (peer *Peer) StartWork(work chan int, quit chan int) {
 
     // Work loop
     for {
-        // Check if peer should shut down
+        // Check main told peer to shutdown
         if peer.shutdown {
-            log.WithFields(log.Fields{"peer": peer.String()}).Debug("Peer shutdown")
-            // remove <- peer.String()  // Notify main to remove this peer from its list
-            peer.Conn.Quit()
-            return
+            break
         }
 
         select {
@@ -160,7 +157,7 @@ func (peer *Peer) StartWork(work chan int, quit chan int) {
 
                 // Kill peer if issue was not the piece hash
                 if errors.Cause(err) != ErrPieceHash {
-                    peer.Shutdown()
+                    break
                 }
                 continue
             }
@@ -168,22 +165,27 @@ func (peer *Peer) StartWork(work chan int, quit chan int) {
 
         case data, ok := <-connection:
             if !ok {
-                peer.Shutdown()
-                continue
+                break
             }
             msg := message.Decode(data)
             if err = peer.handleMessage(msg, work); err != nil {
                 // if errors.Cause(err) != connect.ErrTimeout {
                 // Shutdown even if error is timeout
                 log.WithFields(log.Fields{"peer": peer.String(), "error": err.Error()}).Debug("Received bad message")
-                peer.Shutdown()
-                continue
+                break
+                // remove <- peer.String()  // Notify main to remove this peer from its list
                 // }
             }
-        case _, ok := <-quit:
+        case _, ok := <-done:
             if !ok {
-                peer.Shutdown()
+                break
             }
         }
     }
+    for i := range peer.workQueue {
+        work <- peer.workQueue[i].index
+    }
+    peer.Conn.Quit()  // Tell connection goroutine to exit
+    log.WithFields(log.Fields{"peer": peer.String()}).Debug("Peer shutdown")
+    return
 }

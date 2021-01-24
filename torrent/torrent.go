@@ -87,7 +87,7 @@ func (to *Torrent) Download() {
     peers := make(chan peer.Peer)               // For incoming peers from trackers  // TODO consider buffering the peer channel
     work := make(chan int, to.Info.TotalPieces) // Piece indices we need
     // remove := make(chan string)                 // For peers to notify they should be removed from our list  // TODO buffer the remove channel
-    quit := make(chan int)                      // Notify goroutines to quit
+    done := make(chan bool)                      // Notify goroutines to quit
 
     // Initialize files for writing
     if err := write.NewWrite(&to.Info); err != nil {
@@ -101,7 +101,11 @@ func (to *Torrent) Download() {
 
     // Start tracker goroutines
     for i := range to.Trackers {
-        go to.Trackers[i].Run(peers, quit)
+        go to.Trackers[i].Run(peers, done)
+    }
+    // TODO remove
+    for i := range to.Trackers {
+        to.Trackers[i].Shutdown()
     }
 
     // TODO setup listen port for incoming peers
@@ -113,13 +117,14 @@ func (to *Torrent) Download() {
 
     for {
         if to.shutdown {
-            close(quit)
-            return
+            close(done)
+            break
         }
+
         select {
         case newPeer := <-peers:
             to.Peers = append(to.Peers, newPeer)
-            go newPeer.StartWork(work, quit)
+            go newPeer.StartWork(work, done)
         // case deadPeer := <-remove:
             // TODO close deadPeer
             // to.removePeer(deadPeer)
