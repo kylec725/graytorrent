@@ -60,7 +60,8 @@ func main() {
             fmt.Println("Torrent setup failed:", err)
         }
         fmt.Println("Start download")
-        // to.Download()
+        // go to.Download()
+        // to.Shutdown()  // signal for a torrent to shutdown
         fmt.Println("Download finished")
     }
 
