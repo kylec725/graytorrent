@@ -40,6 +40,7 @@ type Peer struct {
     peerInterested bool
     reqsOut uint16  // number of outgoing requests
     rate uint16  // max number of outgoing requests
+    workLeft int  // amount of bytes left to download from a piece
     shutdown bool
 }
 
@@ -62,6 +63,7 @@ func New(host net.IP, port uint16, conn net.Conn, info *common.TorrentInfo) Peer
         peerInterested: false,
         reqsOut: 0,
         rate: startRate,
+        workLeft: 0,
         shutdown: false,
     }
 }
