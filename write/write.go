@@ -10,7 +10,7 @@ import (
     "github.com/pkg/errors"
 )
 
-// TODO use index only for range functions to avoid copying
+// TODO only use index for range functions to avoid copying
 
 // Errors
 var (
