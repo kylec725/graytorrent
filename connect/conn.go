@@ -94,7 +94,7 @@ func (conn *Conn) Await(output chan []byte) {
         return
     }
     for {
-        buf := make([]byte, 4)
+        buf := make([]byte, 4)  // Expect message length prefix of 4 bytes
         if bytesRead, err := conn.Conn.Read(buf); err != nil && !conn.shutdown {
             break
         } else if bytesRead != 4 && !conn.shutdown {
