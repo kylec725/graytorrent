@@ -6,7 +6,6 @@ package peer
 
 import (
     "net"
-    "encoding/binary"
     "strconv"
     "time"
     "math"
@@ -22,11 +21,6 @@ import (
 const peerTimeout = 120 * time.Second
 const startRate = 2  // slow approach: hard limit on requests per peer
 const maxPeerQueue = 5  // Max number of pieces a peer can queue
-
-// Errors
-var (
-    ErrBadPeers = errors.New("Received malformed peers list")
-)
 
 // Peer stores info about connecting to peers as well as their state
 type Peer struct {
@@ -89,24 +83,6 @@ func (peer *Peer) Unchoke() error {
     msg := message.Unchoke()
     err := peer.Conn.Write(msg.Encode())
     return errors.Wrap(err, "Unchoke")
-}
-
-// Unmarshal creates a list of Peers from a serialized list of peers
-func Unmarshal(peersBytes []byte, info *common.TorrentInfo) ([]Peer, error) {
-    if len(peersBytes) % 6 != 0 {
-        return nil, errors.Wrap(ErrBadPeers, "Unmarshal")
-    }
-
-    numPeers := len(peersBytes) / 6
-    peersList := make([]Peer, numPeers)
-
-    for i := 0; i < numPeers; i++ {
-        host := net.IP(peersBytes[ i*6 : i*6+4 ])
-        port := binary.BigEndian.Uint16(peersBytes[ i*6+4 : (i+1)*6 ])
-        peersList[i] = New(host, port, nil, info)
-    }
-
-    return peersList, nil
 }
 
 // StartWork makes a peer wait for pieces to download
