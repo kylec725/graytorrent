@@ -45,7 +45,7 @@ func (to *Torrent) Setup() error {
     }
 
     // Create trackers list from metainfo announce or announce-list
-    to.Trackers, err = getTrackers(meta)
+    to.Trackers, err = getTrackers(meta, &to.Info)
     if err != nil {
         return errors.Wrap(err, "Setup")
     }
@@ -71,18 +71,6 @@ func (to *Torrent) removePeer(name string) error {
     to.Peers = to.Peers[:len(to.Peers) - 1]
     return nil
 }
-
-// Send request to trackers concurrently to get list of peers
-// func (to *Torrent) createStarted() {
-//     for _, tr := range to.Trackers {
-//         bytesLeft := (to.TotalPieces - to.Progress) * to.PieceLength
-//         url, err := tr.buildURL(to.InfoHash, to.PeerID, 6881, bytesLeft, "started")
-//         if err != nil {
-//             log.Println("Error creating URL for:", tr.Announce)
-//             continue
-//         }
-//     }
-// }
 
 // Shutdown lets main signal a torrent to stop downloading
 func (to *Torrent) Shutdown() {
@@ -111,6 +99,7 @@ func (to *Torrent) Download() {
     for {
         if to.shutdown {
             close(quit)
+            return
         }
         select {
         case newPeer := <-peers:
