@@ -52,26 +52,41 @@ func (peer *Peer) handleMessage(msg *message.Message, currentWork []byte) ([]byt
     case message.MsgNotInterested:
         peer.peerInterested = false
     case message.MsgHave:
+        if len(msg.Payload) != 4 {
+            return currentWork, errors.Wrap(ErrMessage, "handleMessage")
+        }
         index := binary.BigEndian.Uint32(msg.Payload)
         peer.bitfield.Set(int(index))
     case message.MsgBitfield:
         expected := int(math.Ceil(float64(peer.info.TotalPieces) / 8))
-        if expected != len(msg.Payload) {
+        if len(msg.Payload) != expected {
             return currentWork, errors.Wrap(ErrBitfield, "handleMessage")
         }
         peer.bitfield = msg.Payload
     case message.MsgRequest:
+        if len(msg.Payload) != 12 {
+            return currentWork, errors.Wrap(ErrMessage, "handleMessage")
+        }
         err := peer.handleRequest(msg)
         return currentWork, errors.Wrap(err, "handleMessage")
     case message.MsgPiece:
+        if len(msg.Payload) < 9 {
+            return currentWork, errors.Wrap(ErrMessage, "handleMessage")
+        }
         if currentWork == nil {  // Discard pieces if we are not trying to download a piece
             return nil, nil
         }
         currentWork, err := peer.handlePiece(msg, currentWork)
         return currentWork, errors.Wrap(err, "handleMessage")
     case message.MsgCancel:
+        if len(msg.Payload) != 12 {
+            return currentWork, errors.Wrap(ErrMessage, "handleMessage")
+        }
         fmt.Println("MsgCancel not yet implemented")
     case message.MsgPort:
+        if len(msg.Payload) != 2 {
+            return currentWork, errors.Wrap(ErrMessage, "handleMessage")
+        }
         fmt.Println("MsgPort not yet implemented")
     }
     return currentWork, nil
@@ -79,19 +94,34 @@ func (peer *Peer) handleMessage(msg *message.Message, currentWork []byte) ([]byt
 
 // sendRequest sends a piece request message to a peer
 func (peer *Peer) sendRequest(index, begin, length int) error {
-    msg := message.Request(index, begin, length)
+    msg := message.Request(uint32(index), uint32(begin), uint32(length))
     err := peer.Conn.Write(msg.Encode())
     return errors.Wrap(err, "sendRequest")
 }
 
-// TODO
 func (peer *Peer) handleRequest(msg *message.Message) error {
     if peer.amChoking {  // Tell the peer we are choking them and return
         chokeMsg := message.Choke()
         err := peer.Conn.Write(chokeMsg.Encode())
         return errors.Wrap(err, "handleRequest")
     }
-    return errors.New("Not yet implemented")
+
+    index := binary.BigEndian.Uint32(msg.Payload[0:4])
+    begin := binary.BigEndian.Uint32(msg.Payload[4:8])
+    length := binary.BigEndian.Uint32(msg.Payload[8:12])
+    if !peer.info.Bitfield.Has(int(index)) {  // Ignore request if we don't have the piece
+        return nil
+    }
+
+    piece, err := write.ReadPiece(peer.info, int(index))
+    if err != nil {
+        return errors.Wrap(err, "handleRequest")
+    } else if len(piece) < int(begin + length) {  // Ignore request if the bounds aren't possible
+        return nil
+    }
+    pieceMsg := message.Piece(index, begin, piece[begin:begin+length])
+    err = peer.Conn.Write(pieceMsg.Encode())
+    return errors.Wrap(err, "handleRequest")
 }
 
 // handlePiece adds a MsgPiece to the current work slice
