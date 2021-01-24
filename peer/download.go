@@ -116,21 +116,6 @@ func (peer *Peer) handleRequest(msg *message.Message) error {
     return errors.Wrap(err, "handleRequest")
 }
 
-func (peer *Peer) nextBlock(index int) error {
-    for i := range peer.workQueue {
-        if index == peer.workQueue[i].index {
-            length := common.Min(peer.workQueue[i].left, reqSize)
-            err := peer.sendRequest(index, peer.workQueue[i].curr, length)
-            peer.workQueue[i].curr += length
-            if err != nil {
-                return errors.Wrap(err, "nextBlock")
-            }
-            break
-        }
-    }
-    return nil
-}
-
 // handlePiece adds a MsgPiece to the current work slice
 func (peer *Peer) handlePiece(msg *message.Message, work chan int) error {
     index := binary.BigEndian.Uint32(msg.Payload[0:4])
@@ -178,6 +163,21 @@ func (peer *Peer) handlePiece(msg *message.Message, work chan int) error {
             }
             fmt.Println("Wrote piece", index, "from", peer.String())
             break  // Exit loop early on successful write
+        }
+    }
+    return nil
+}
+
+func (peer *Peer) nextBlock(index int) error {
+    for i := range peer.workQueue {
+        if index == peer.workQueue[i].index {
+            length := common.Min(peer.workQueue[i].left, reqSize)
+            err := peer.sendRequest(index, peer.workQueue[i].curr, length)
+            peer.workQueue[i].curr += length
+            if err != nil {
+                return errors.Wrap(err, "nextBlock")
+            }
+            break
         }
     }
     return nil
