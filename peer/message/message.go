@@ -34,7 +34,7 @@ func (msg *Message) Encode() []byte {
         return make([]byte, 4)
     }
     length := uint32(1 + len(msg.Payload))
-    serial := make([]byte, length)
+    serial := make([]byte, 4 + length)
     binary.BigEndian.PutUint32(serial[0:4], length)
     serial[4] = byte(msg.ID)
     copy(serial[5:], msg.Payload)
