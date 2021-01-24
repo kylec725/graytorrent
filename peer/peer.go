@@ -128,10 +128,11 @@ func (peer *Peer) StartWork(work chan int, done chan bool) {
 
     // Work loop
     for {
-        // Check main told peer to shutdown
+        // Check if main told peer to shutdown
         if peer.shutdown {
             goto exit
         }
+
         select {
         case data, ok := <-connection:
             if !ok {
@@ -183,6 +184,7 @@ func (peer *Peer) StartWork(work chan int, done chan bool) {
             }
         }
     }
+
     exit:
     for i := range peer.workQueue {
         work <- peer.workQueue[i].index
