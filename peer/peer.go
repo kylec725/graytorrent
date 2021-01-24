@@ -12,6 +12,7 @@ import (
 
     "github.com/kylec725/graytorrent/common"
     "github.com/kylec725/graytorrent/bitfield"
+    "github.com/kylec725/graytorrent/peer/message"
     "github.com/kylec725/graytorrent/write"
     "github.com/kylec725/graytorrent/connect"
     "github.com/pkg/errors"
@@ -73,20 +74,20 @@ func (peer *Peer) Shutdown() {
     peer.shutdown = true
 }
 
-// Choke changes a peer's state of amChoking to true
-// TODO
-func (peer *Peer) Choke() error {
-    // Send choking message
+// Choke notifies a peer that we are choking them
+func (peer *Peer) Choke() error {  // Main should handle shutting down the peer if we have an error
     peer.amChoking = true
-    return nil
+    msg := message.Choke()
+    err := peer.Conn.Write(msg.Encode())
+    return errors.Wrap(err, "Choke")
 }
 
-// Unchoke changes a peer's state of amChoking to false
-// TODO
+// Unchoke notifies a peer that we are not choking them
 func (peer *Peer) Unchoke() error {
-    // Send unchoking message
     peer.amChoking = false
-    return nil
+    msg := message.Unchoke()
+    err := peer.Conn.Write(msg.Encode())
+    return errors.Wrap(err, "Unchoke")
 }
 
 // Unmarshal creates a list of Peers from a serialized list of peers
