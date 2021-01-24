@@ -85,33 +85,26 @@ func (conn *Conn) Close() error {
 // TODO
 func (conn *Conn) Await(output chan []byte) {
     conn.shutdown = false
-    if err := conn.Conn.SetDeadline(time.Time{}); err != nil {
+    if err := conn.Conn.SetDeadline(time.Time{}); err != nil {  // Connection dies after a set timeout period
         close(output)
         return
     }
     for {
-        // Exit point
-        if conn.shutdown {
-            close(output)
-            return
-        }
         buf := make([]byte, 1)
-        if bytesRead, err := conn.Conn.Read(buf); err != nil {
-            conn.shutdown = true
-            continue
-        } else if bytesRead != 1 {
-            conn.shutdown = true
-            continue
+        if bytesRead, err := conn.Conn.Read(buf); err != nil && !conn.shutdown {
+            break
+        } else if bytesRead != 1 && !conn.shutdown {
+            break
         }
         length := int(buf[0])
         buf = make([]byte, length)
-        if bytesRead, err := io.ReadFull(conn.Conn, buf); err != nil {
-            conn.shutdown = true
-            continue
-        } else if bytesRead != length {
-            conn.shutdown = true
-            continue
+        if bytesRead, err := io.ReadFull(conn.Conn, buf); err != nil && !conn.shutdown {
+            break
+        } else if bytesRead != length && !conn.shutdown {
+            break
         }
         output <- buf
     }
+    close(output)
+    return
 }
