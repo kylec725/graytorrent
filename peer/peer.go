@@ -147,6 +147,26 @@ func (peer *Peer) StartWork(work chan int, quit chan int) {
             return
         }
 
+        // Receive a message from the peer
+        msg, err := peer.getMessage()
+        if err != nil {
+            log.WithFields(log.Fields{
+                "peer": peer.String(),
+                "error": err.Error(),
+            }).Debug("Error while receiving message")
+        }
+        if _, err = peer.handleMessage(msg, nil); err != nil {
+            if errors.Cause(err) != connect.ErrTimeout {
+                // Only shutdown if the error was not a time out
+                log.WithFields(log.Fields{
+                    "peer": peer.String(),
+                    "error": err.Error(),
+                }).Debug("Received bad message")
+                peer.Shutdown()
+                continue
+            }
+        }
+
         select {
         // Grab work from the channel
         case index := <-work:
@@ -192,20 +212,6 @@ func (peer *Peer) StartWork(work chan int, quit chan int) {
                 peer.Shutdown()
             }
         default:
-            // Receive a message from the peer
-            msg, err := peer.getMessage()
-            if _, err = peer.handleMessage(msg, nil); err != nil {  // Handle message
-                if errors.Cause(err) == connect.ErrTimeout {
-                    // Timeout on polling is fine
-                    continue
-                }
-                log.WithFields(log.Fields{
-                    "peer": peer.String(),
-                    "error": err.Error(),
-                }).Debug("Received bad message")
-                peer.Shutdown()
-                continue
-            }
         }
     }
 }
