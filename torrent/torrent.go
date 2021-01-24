@@ -94,6 +94,7 @@ func (to *Torrent) Download() {
         log.WithFields(log.Fields{
             "path": to.Path,
             "name": to.Info.Name,
+            "error": err.Error(),
         }).Info("Failed to setup files")
         return
     }

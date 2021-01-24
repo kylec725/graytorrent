@@ -171,6 +171,7 @@ func (peer *Peer) StartWork(work chan int, quit chan int) {
                 log.WithFields(log.Fields{
                     "peer": peer.String(),
                     "piece index": index,
+                    "error": err.Error(),
                 }).Debug("Writing piece to file failed")
                 work <- index
                 continue

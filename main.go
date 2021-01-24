@@ -11,7 +11,7 @@ import (
     viper "github.com/spf13/viper"
 )
 
-const debug = false
+const debug = true
 
 var (
     logFile *os.File
@@ -58,10 +58,14 @@ func main() {
         fmt.Println("Filename:", filename)
         to := torrent.Torrent{Path: filename}
         if err := to.Setup(); err != nil {
+            log.WithFields(log.Fields{
+                "file": filename,
+                "error": err.Error(),
+            }).Info("Torrent setup failed")
             fmt.Println("Torrent setup failed:", err)
         }
         fmt.Println("Start download")
-        // go to.Download()
+        to.Download()
         // to.Shutdown()  // signal for a torrent to shutdown
         fmt.Println("Download finished")
     }

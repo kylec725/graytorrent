@@ -111,8 +111,13 @@ func (tr *Tracker) Run(peers chan peer.Peer, quit chan int) {
         tr.Working = false
         log.WithFields(log.Fields{
             "tracker": tr.Announce,
+            "error": err.Error(),
         }).Debug("Failed sending start message")
         return  // TODO have the tracker run in background
+    } else {
+        log.WithFields(log.Fields{
+            "tracker": tr.Announce,
+        }).Debug("Received list of peers")
     }
     for i := range peerList {
         peers <- peerList[i]
