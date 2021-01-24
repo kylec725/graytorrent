@@ -14,6 +14,8 @@ import (
 
 const maxReqSize = 16384
 
+// TODO fix edge case with last piece
+
 // Errors
 var (
     ErrBitfield = errors.New("Malformed bitfield received")
