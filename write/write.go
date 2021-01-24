@@ -10,8 +10,6 @@ import (
     "github.com/pkg/errors"
 )
 
-// TODO only use index for range functions to avoid copying
-
 // Errors
 var (
     ErrFileExists = errors.New("File already exists")
@@ -124,7 +122,7 @@ func AddPiece(info *common.TorrentInfo, index int, piece []byte) error {
 
     for _, file := range info.Paths {
         if offset < file.Length {  // Piece is part of the file
-            bytesToWrite := file.Length - offset  // Figure out how much of the piece info write info file
+            bytesToWrite := file.Length - offset  // Figure out how much of the piece to write
             bytesToWrite = common.Min(bytesToWrite, pieceLeft)
             pieceEnd = pieceStart + bytesToWrite
 
@@ -162,7 +160,7 @@ func ReadPiece(info *common.TorrentInfo, index int) ([]byte, error) {
 
     for _, file := range info.Paths {
         if offset < file.Length {  // Piece is part of the file
-            bytesToRead := file.Length - offset  // Figure out how much of the piece info write info file
+            bytesToRead := file.Length - offset  // Figure out how much of the piece to read
             bytesToRead = common.Min(bytesToRead, pieceLeft)
             pieceEnd = pieceStart + bytesToRead
 
