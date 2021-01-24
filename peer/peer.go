@@ -23,6 +23,7 @@ import (
 
 const pollTimeout = 2 * time.Second
 const startRate uint16 = 3  // slow approach: hard limit on requests per peer
+const maxPeerQueue = 5  // Max number of pieces a peer can queue
 
 // Errors
 var (
@@ -45,6 +46,7 @@ type Peer struct {
     rate uint16  // max number of outgoing requests
     workLeft int  // amount of bytes left to download from a piece
     shutdown bool
+    // TODO make a work queue so a peer can request multiple pieces
 }
 
 func (peer Peer) String() string {
@@ -124,15 +126,13 @@ func (peer *Peer) StartWork(work chan int, quit chan int) {
     log.WithFields(log.Fields{"peer": peer.String()}).Debug("Handshake successful")
 
     // Change connection timeout to poll setting
+    defer peer.Conn.Close()
     peer.Conn.Timeout = pollTimeout
 
     // Work loop
     for {
         // Check if peer should shut down
         if peer.shutdown {
-            if err := peer.Conn.Close(); err != nil {
-                log.WithFields(log.Fields{"peer": peer.String(), "error": err.Error()}).Debug("Error disconnecting with peer")
-            }
             log.WithFields(log.Fields{"peer": peer.String()}).Debug("Peer shutdown")
             // remove <- peer.String()  // Notify main to remove this peer from its list
             return
@@ -157,13 +157,11 @@ func (peer *Peer) StartWork(work chan int, quit chan int) {
         select {
         // Grab work from the channel
         case index := <-work:
-            fmt.Println("got work:", index)
             // Send the work back if the peer does not have the piece
             if !peer.bitfield.Has(index) {
                 work <- index
                 continue
             }
-            fmt.Println("try to download:", index)
 
             // Download piece from the peer
             peer.reqsOut = 0
@@ -182,7 +180,7 @@ func (peer *Peer) StartWork(work chan int, quit chan int) {
                 }
                 continue
             }
-            fmt.Println("piece was verified")
+            fmt.Println("Got piece:", index)
 
             // Write piece to file
             if err = write.AddPiece(peer.info, index, piece); err != nil {
@@ -195,6 +193,7 @@ func (peer *Peer) StartWork(work chan int, quit chan int) {
                 continue
             } else {  // Write was successful
                 peer.info.Bitfield.Set(index)
+                fmt.Println("Wrote piece:", index)
                 continue
             }
         case _, ok := <-quit:
