@@ -133,35 +133,7 @@ func (peer *Peer) StartWork(work chan int, done chan bool) {
         if peer.shutdown {
             break
         }
-
         select {
-        // Grab work from the channel
-        case index := <-work:
-            // Send the work back if the peer does not have the piece
-            if !peer.bitfield.Has(index) {
-                work <- index
-                continue
-            }
-            // If workQueue is full, send it back
-            if len(peer.workQueue) >= peer.rate {
-                work <- index
-                continue
-            }
-
-            // Download piece from the peer
-            err := peer.downloadPiece(index)
-            if err != nil {
-                log.WithFields(log.Fields{"peer": peer.String(), "piece index": index, "error": err.Error()}).Debug("Starting piece download failed")
-                work <- index  // Put piece back onto work channel
-
-                // Kill peer if issue was not the piece hash
-                if errors.Cause(err) != ErrPieceHash {
-                    break
-                }
-                continue
-            }
-            fmt.Println("Got piece:", index)
-
         case data, ok := <-connection:
             if !ok {
                 break
@@ -178,6 +150,40 @@ func (peer *Peer) StartWork(work chan int, done chan bool) {
         case _, ok := <-done:
             if !ok {
                 break
+            }
+        }
+
+        // Only try to find new work piece if queue is open
+        if len(peer.workQueue) < peer.rate {
+            select {
+                // Grab work from the channel
+            case index := <-work:
+                // Send the work back if the peer does not have the piece
+                if !peer.bitfield.Has(index) {
+                    fmt.Println("send back piece")
+                    work <- index
+                    continue
+                }
+                // If workQueue is full, send it back
+                if len(peer.workQueue) >= peer.rate {
+                    fmt.Println("send back piece")
+                    work <- index
+                    continue
+                }
+
+                // Download piece from the peer
+                err := peer.downloadPiece(index)
+                if err != nil {
+                    log.WithFields(log.Fields{"peer": peer.String(), "piece index": index, "error": err.Error()}).Debug("Starting piece download failed")
+                    work <- index  // Put piece back onto work channel
+
+                    // Kill peer if issue was not the piece hash
+                    if errors.Cause(err) != ErrPieceHash {
+                        break
+                    }
+                    continue
+                }
+                fmt.Println("Got piece:", index)
             }
         }
     }
