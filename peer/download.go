@@ -106,7 +106,7 @@ func (peer *Peer) handleRequest(msg *message.Message) error {
     return errors.Wrap(err, "handleRequest")
 }
 
-// handlePiece adds a MsgPiece to the current work slice
+// handlePiece adds a block to a piece we are getting
 func (peer *Peer) handlePiece(msg *message.Message, work chan int, results chan bool) error {
     index := binary.BigEndian.Uint32(msg.Payload[0:4])
     begin := binary.BigEndian.Uint32(msg.Payload[4:8])
