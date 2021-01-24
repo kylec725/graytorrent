@@ -129,7 +129,7 @@ func (peer *Peer) handlePiece(msg *message.Message, work chan int, results chan 
             // Piece is done: Verify hash then write
             peer.adjustRate(peer.workQueue[i])
             if !write.VerifyPiece(peer.info, int(index), peer.workQueue[i].piece) {  // Return to work pool if hash is incorrect
-                work <- peer.workQueue[i].index
+                work <- int(index)
                 peer.removeWorkPiece(int(index))
                 return errors.Wrap(ErrPieceHash, "handlePiece")
             }
