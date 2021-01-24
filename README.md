@@ -2,7 +2,7 @@
 BitTorrent client implemented in golang
 
 ## In Progress...
-- Peer interaction protocol
+- Adaptive download rate
 - UDP Tracker support
 - Tracker scraping
 
