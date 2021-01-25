@@ -125,9 +125,11 @@ func (to *Torrent) Download() {
         case <- results:
             pieces++
             if pieces == to.Info.TotalPieces {
-                break
+                goto exit
             }
         }
     }
+
+    exit:
     close(done)
 }
