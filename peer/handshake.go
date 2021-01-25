@@ -85,18 +85,10 @@ func (peer *Peer) rcvHandshake() error {
 
 // Verifies a peer has sent a handshake if necessary
 func (peer *Peer) verifyHandshake() error {
-    if peer.Conn == nil {  // Initiate handshake
-        if err := peer.sendHandshake(); err != nil {
-            return errors.Wrap(err, "verifyHandshake")
-        } else if err = peer.rcvHandshake(); err != nil {
-            return errors.Wrap(err, "verifyHandshake")
-        }
-    } else {  // Receive handshake
-        if err := peer.rcvHandshake(); err != nil {
-            return errors.Wrap(err, "verifyHandshake")
-        } else if err := peer.sendHandshake(); err != nil {
-            return errors.Wrap(err, "verifyHandshake")
-        }
+    if err := peer.sendHandshake(); err != nil {
+        return errors.Wrap(err, "verifyHandshake")
+    } else if err = peer.rcvHandshake(); err != nil {
+        return errors.Wrap(err, "verifyHandshake")
     }
     // Send bitfield to the peer
     msg := message.Bitfield(peer.info.Bitfield)
