@@ -120,7 +120,7 @@ func (peer *Peer) StartWork(work chan int, results, done chan bool) {
             msg := message.Decode(data)
             if err = peer.handleMessage(msg, work, results); err != nil {
                 // Shutdown even if error is timeout
-                ctxLog.WithFields(log.Fields{"error": err.Error()}).Debug("Error handling message")
+                ctxLog.WithFields(log.Fields{"type": msg.String(), "size": len(msg.Payload), "error": err.Error()}).Debug("Error handling message")
                 goto exit
                 // remove <- peer.String()  // Notify main to remove this peer from its list
             }
