@@ -28,8 +28,7 @@ func (peer *Peer) newHandshake() []byte {
     handshake[0] = pstrLen
     curr := 1
     curr += copy(handshake[curr:], pstr)
-    // curr += copy(handshake[curr:], make([]byte, 8))
-    curr += 8
+    curr += copy(handshake[curr:], make([]byte, 8))  // TODO Extensions
     curr += copy(handshake[curr:], peer.info.InfoHash[:])
     curr += copy(handshake[curr:], peer.info.PeerID[:])
     return handshake

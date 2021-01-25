@@ -136,5 +136,8 @@ func (tr *Tracker) Run(peers chan peer.Peer, done chan bool) {
         //     }
         }
     }
-    // TODO send stop message to tracker
+    err := tr.sendStopped(tr.info, 6881, tr.info.Left)
+    if err != nil {
+        log.WithFields(log.Fields{"tracker": tr.Announce, "error": err.Error()}).Debug("Failed sending stopped message")
+    }
 }
