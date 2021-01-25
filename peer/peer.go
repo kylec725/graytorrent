@@ -20,6 +20,7 @@ import (
 )
 
 const peerTimeout = 120 * time.Second
+const pollTimeout = 5 * time.Second
 const startRate = 2  // slow approach: hard limit on requests per peer
 const maxPeerQueue = 5  // Max number of pieces a peer can queue
 
@@ -87,14 +88,15 @@ func (peer *Peer) Unchoke() error {
 
 // StartWork makes a peer wait for pieces to download
 func (peer *Peer) StartWork(work chan int, results, done chan bool) {
+    ctxLog := log.WithField("peer", peer.String())
     peer.shutdown = false
     err := peer.verifyHandshake()
     if err != nil {
-        log.WithFields(log.Fields{"peer": peer.String(), "error": err.Error()}).Debug("Handshake failed")
+        ctxLog.WithFields(log.Fields{"error": err.Error()}).Debug("Handshake failed")
         // remove <- peer.String()  // Notify main to remove this peer from its list
         return
     }
-    log.WithFields(log.Fields{"peer": peer.String()}).Debug("Handshake successful")
+    ctxLog.Debug("Handshake successful")
 
     // Setup peer connection
     connection := make(chan []byte)
@@ -118,7 +120,7 @@ func (peer *Peer) StartWork(work chan int, results, done chan bool) {
             msg := message.Decode(data)
             if err = peer.handleMessage(msg, work, results); err != nil {
                 // Shutdown even if error is timeout
-                log.WithFields(log.Fields{"peer": peer.String(), "error": err.Error()}).Debug("Received bad message")
+                ctxLog.WithFields(log.Fields{"error": err.Error()}).Debug("Error handling message")
                 goto exit
                 // remove <- peer.String()  // Notify main to remove this peer from its list
             }
@@ -126,6 +128,7 @@ func (peer *Peer) StartWork(work chan int, results, done chan bool) {
             if !ok {
                 goto exit
             }
+        case <-time.After(pollTimeout):  // Poll to get unstuck if no messages are received
         }
 
         // Only try to find new work piece if queue is open
@@ -142,9 +145,9 @@ func (peer *Peer) StartWork(work chan int, results, done chan bool) {
                 // Download piece from the peer
                 err := peer.downloadPiece(index)
                 if err != nil {
-                    log.WithFields(log.Fields{"peer": peer.String(), "piece index": index, "error": err.Error()}).Debug("Starting piece download failed")
+                    ctxLog.WithFields(log.Fields{"peer": peer.String(), "piece index": index, "error": err.Error()}).Debug("Starting piece download failed")
                     work <- index  // Put piece back onto work channel
-                    continue
+                    goto exit
                 }
             default:  // Don't block if we can't find work
             }
@@ -156,6 +159,6 @@ func (peer *Peer) StartWork(work chan int, results, done chan bool) {
         work <- peer.workQueue[i].index
     }
     peer.Conn.Quit()  // Tell connection goroutine to exit
-    log.WithFields(log.Fields{"peer": peer.String()}).Debug("Peer shutdown")
+    ctxLog.Debug("Peer shutdown")
     return
 }
