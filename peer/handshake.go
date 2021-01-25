@@ -54,22 +54,22 @@ func (peer *Peer) sendHandshake() error {
 func (peer *Peer) rcvHandshake() error {
     buf := make([]byte, 1)
     if err := peer.Conn.Read(buf); err != nil {
-        return errors.Wrap(err, "RcvHandshake")
+        return errors.Wrap(err, "rcvHandshake")
     }
 
     pstrLen := buf[0]
     if pstrLen == 0 {
-        return errors.Wrap(ErrPstrLen, "RcvHandshake")
+        return errors.Wrap(ErrPstrLen, "rcvHandshake")
     }
 
     buf = make([]byte, 48 + pstrLen)
     if err := peer.Conn.ReadFull(buf); err != nil {
-        return errors.Wrap(err, "RcvHandshake")
+        return errors.Wrap(err, "rcvHandshake")
     }
 
     pstr := string(buf[:pstrLen])
     if pstr != protocol {
-        return errors.Wrap(ErrPstr, "RcvHandshake")
+        return errors.Wrap(ErrPstr, "rcvHandshake")
     }
 
     var infoHash [20]byte
@@ -77,7 +77,7 @@ func (peer *Peer) rcvHandshake() error {
     copy(infoHash[:], buf[ pstrLen+8 : pstrLen+28 ])
     // copy(peerID[:], buf[ pstrLen+28 : pstrLen+48 ])  // TODO need to check for the corrent peer ID
     if !bytes.Equal(peer.info.InfoHash[:], infoHash[:]) {
-        return errors.Wrap(ErrInfoHash, "RcvHandshake")
+        return errors.Wrap(ErrInfoHash, "rcvHandshake")
     }
 
     return nil
