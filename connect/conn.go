@@ -9,11 +9,12 @@ import (
     "time"
     "io"
     "encoding/binary"
+    "fmt"
     
     "github.com/pkg/errors"
 )
 
-const readFullRetry = 10
+const retry = 3
 
 // Errors
 var (
@@ -32,43 +33,59 @@ type Conn struct {
 
 // Write sends data over a connection, returns an error if not all of the data is sent
 func (conn *Conn) Write(buf []byte) error {
-    err := conn.Conn.SetDeadline(time.Now().Add(conn.Timeout))
-    if err != nil {
-        return errors.Wrap(err, "Write")
-    }
-    bytesSent, err := conn.Conn.Write(buf)
-    if err != nil {
+    conn.Conn.SetWriteDeadline(time.Time{})  // No deadline for writing
+    for i := 0; i < retry; i++ {
+        bytesSent, err := conn.Conn.Write(buf)
+        if err == nil {
+            break
+        }
+        fmt.Println("write error unwrapped:", errors.Unwrap(err))
+        if bytesSent != len(buf) {
+            return errors.Wrap(ErrSend, "Write")
+        }
         if netErr, ok := err.(net.Error); ok && netErr.Timeout() {
             return errors.Wrap(ErrTimeout, "Write")
+        } else if err.Error() == "connection reset by peer" {
+            fmt.Println("Write: connection reset by peer")
+            continue
+        } else if errors.Unwrap(err).Error() == "use of closed network connection" {
+            fmt.Println("Write: use of closed network connection")
+            continue
         }
         return errors.Wrap(err, "Write")
-    } else if bytesSent != len(buf) {
-        return errors.Wrap(ErrSend, "Write")
     }
     return nil
 }
 
 // Read reads in data from a connection, returns an error if the buffer is not filled
 func (conn *Conn) Read(buf []byte) error {
-    err := conn.Conn.SetDeadline(time.Now().Add(conn.Timeout))
+    err := conn.Conn.SetReadDeadline(time.Now().Add(conn.Timeout))
     if err != nil {
         return errors.Wrap(err, "Read")
     }
-    bytesRead, err := conn.Conn.Read(buf)
-    if err != nil {
+    for i := 0; i < retry; i++ {
+        bytesRead, err := conn.Conn.Read(buf)
+        if err == nil {
+            break
+        }
+        if bytesRead != len(buf) {
+            return errors.Wrap(ErrRcv, "Read")
+        }
+        fmt.Println("read error:", err)
         if netErr, ok := err.(net.Error); ok && netErr.Timeout() {
             return errors.Wrap(ErrTimeout, "Read")
+        } else if err.Error() == "connection reset by peer" {
+            fmt.Println("Read: connection reset by peer")
+            continue
         }
         return errors.Wrap(err, "Read")
-    } else if bytesRead != len(buf) {
-        return errors.Wrap(ErrRcv, "Read")
     }
     return nil
 }
 
 // ReadFull reads until the buffer is full
 func (conn *Conn) ReadFull(buf []byte) error {
-    err := conn.Conn.SetDeadline(time.Now().Add(conn.Timeout))
+    err := conn.Conn.SetReadDeadline(time.Now().Add(conn.Timeout))
     if err != nil {
         return errors.Wrap(err, "ReadFull")
     }
@@ -95,16 +112,16 @@ func (conn *Conn) Await(output chan []byte) {
     }
     for {
         buf := make([]byte, 4)  // Expect message length prefix of 4 bytes
-        if bytesRead, err := conn.Conn.Read(buf); err != nil && !conn.shutdown {
+        if bytesRead, err := conn.Conn.Read(buf); err != nil || conn.shutdown {
             break
         } else if bytesRead != 4 && !conn.shutdown {
             break
         }
         length := binary.BigEndian.Uint32(buf)
         buf = make([]byte, length)
-        if bytesRead, err := io.ReadFull(conn.Conn, buf); err != nil && !conn.shutdown {
+        if bytesRead, err := io.ReadFull(conn.Conn, buf); err != nil || conn.shutdown {
             break
-        } else if uint32(bytesRead) != length && !conn.shutdown {
+        } else if uint32(bytesRead) != length || conn.shutdown {
             break
         }
         output <- buf
