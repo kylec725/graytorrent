@@ -18,7 +18,7 @@ var (
     port uint16
     err error
     filename string
-    torrents []torrent.Torrent
+    torrentList []torrent.Torrent
 )
 
 func init() {
@@ -55,15 +55,7 @@ func main() {
 
     // Handle single torrent download for now
     if filename != "" {
-        to := torrent.Torrent{Path: filename}
-        if err := to.Setup(); err != nil {
-            log.WithFields(log.Fields{"file": filename, "error": err.Error()}).Info("Torrent setup failed")
-            return
-        }
-        fmt.Println("Start download")
-        to.Download()
-        // to.Shutdown()  // signal for a torrent to shutdown
-        fmt.Println("Download finished")
+        addTorrent(filename)
     }
 
     // Send torrent stopped messages
@@ -72,3 +64,16 @@ func main() {
     log.Info("Graytorrent stopped")
 }
 
+func addTorrent(filename string) {
+    to := torrent.Torrent{Path: filename}
+    if err := to.Setup(); err != nil {
+        log.WithFields(log.Fields{"file": filename, "error": err.Error()}).Info("Torrent setup failed")
+        return
+    }
+    log.WithField("name", to.Info.Name).Info("Torrent added")
+    torrentList = append(torrentList, to)
+    fmt.Println("Start download")
+    to.Start()
+    fmt.Println("Download finished")
+    // to.Shutdown()  // signal for a torrent to shutdown
+}
