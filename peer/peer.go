@@ -119,10 +119,8 @@ func (peer *Peer) StartWork(work chan int, results, done chan bool) {
             }
             msg := message.Decode(data)
             if err = peer.handleMessage(msg, work, results); err != nil {
-                // Shutdown even if error is timeout
                 ctxLog.WithFields(log.Fields{"type": msg.String(), "size": len(msg.Payload), "error": err.Error()}).Debug("Error handling message")
                 goto exit
-                // remove <- peer.String()  // Notify main to remove this peer from its list
             }
         case _, ok := <-done:
             if !ok {
@@ -131,10 +129,9 @@ func (peer *Peer) StartWork(work chan int, results, done chan bool) {
         case <-time.After(pollTimeout):  // Poll to get unstuck if no messages are received
         }
 
-        // Only try to find new work piece if queue is open
+        // Find new work piece if queue is open
         if len(peer.workQueue) < peer.rate {
             select {
-                // Grab work from the channel
             case index := <-work:
                 // Send the work back if the peer does not have the piece
                 if !peer.bitfield.Has(index) {
@@ -159,6 +156,7 @@ func (peer *Peer) StartWork(work chan int, results, done chan bool) {
         work <- peer.workQueue[i].index
     }
     peer.Conn.Quit()  // Tell connection goroutine to exit
+    // remove <- peer.String()  // Notify main to remove this peer from its list
     ctxLog.Debug("Peer shutdown")
     return
 }
