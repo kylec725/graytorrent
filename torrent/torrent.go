@@ -111,8 +111,7 @@ func (to *Torrent) Download() {
     pieces := 0  // Counter of finished pieces
     for {
         if to.shutdown {
-            close(done)
-            break
+            goto exit
         }
 
         select {
