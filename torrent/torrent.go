@@ -16,8 +16,6 @@ import (
     "github.com/kylec725/graytorrent/peer"
     "github.com/kylec725/graytorrent/write"
     "github.com/pkg/errors"
-
-    log "github.com/sirupsen/logrus"
 )
 
 // Errors
@@ -42,6 +40,7 @@ func (to *Torrent) Setup() error {
         return errors.Wrap(err, "Setup")
     }
 
+    // Convert to a TorrentInfo struct
     to.Info, err = common.GetInfo(meta)
     if err != nil {
         return errors.Wrap(err, "Setup")
@@ -50,6 +49,11 @@ func (to *Torrent) Setup() error {
     // Create trackers list from metainfo announce or announce-list
     to.Trackers, err = getTrackers(meta, &to.Info)
     if err != nil {
+        return errors.Wrap(err, "Setup")
+    }
+
+    // Initialize files for writing
+    if err := write.NewWrite(&to.Info); err != nil {
         return errors.Wrap(err, "Setup")
     }
 
@@ -75,26 +79,20 @@ func (to *Torrent) removePeer(name string) error {
     return nil
 }
 
-// Shutdown lets main signal a torrent to stop downloading
-func (to *Torrent) Shutdown() {
+// Stop signals a torrent to stop downloading
+func (to *Torrent) Stop() {
     to.shutdown = true
 }
 
-// Download starts a routine to download a torrent from peers
+// Start initiates a routine to download a torrent from peers
 // TODO
-func (to *Torrent) Download() {
+func (to *Torrent) Start() {
     to.shutdown = false
     peers := make(chan peer.Peer)                   // For incoming peers from trackers  // TODO consider buffering the peer channel
     work := make(chan int, to.Info.TotalPieces)     // Piece indices we need
     results := make(chan bool, to.Info.TotalPieces) // Notification that a piece is done
     // remove := make(chan string)                  // For peers to notify they should be removed from our list  // TODO buffer the remove channel
     done := make(chan bool)                         // Notify goroutines to quit
-
-    // Initialize files for writing
-    if err := write.NewWrite(&to.Info); err != nil {
-        log.WithFields(log.Fields{"path": to.Path, "name": to.Info.Name, "error": err.Error()}).Info("Failed to setup files")
-        return
-    }
 
     // Start tracker goroutines
     for i := range to.Trackers {
