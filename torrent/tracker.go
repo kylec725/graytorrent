@@ -108,12 +108,10 @@ func (tr Tracker) buildURL(infoHash [20]byte, peerID [20]byte, port uint16, left
 func (tr *Tracker) Run(peers chan peer.Peer, done chan bool) {
     ctxLog := log.WithField("tracker", tr.Announce)
     tr.shutdown = false
-    // TODO remove sendStopped, here for debugging purposes
-    err := tr.sendStopped(tr.info, 6881, tr.info.Left)
     peerList, err := tr.sendStarted(tr.info, 6881, tr.info.Left)  // hardcoded number of bytes left
     if err != nil {
         tr.Working = false
-        ctxLog.WithField("error", err.Error()).Debug("Failed sending start message")
+        ctxLog.WithField("error", err.Error()).Debug("Error while sending started message")
     } else {
         tr.Working = true
         ctxLog.WithField("amount", len(peerList)).Debug("Received list of peers")
@@ -128,8 +126,10 @@ func (tr *Tracker) Run(peers chan peer.Peer, done chan bool) {
         select {
         case _, ok := <-done:
             if !ok {
-                break
+                goto exit
             }
+        case <-time.After(time.Duration(tr.Interval) * time.Second):
+            // Contact tracker again
         // default:
         //     // TODO try to connect to tracker again after interval
         //     if !tr.Working {
@@ -137,5 +137,10 @@ func (tr *Tracker) Run(peers chan peer.Peer, done chan bool) {
         //     }
         }
     }
-    // TODO send stop message to tracker
+
+    exit:
+    err = tr.sendStopped(tr.info, 6881, tr.info.Left)
+    if err != nil {
+        ctxLog.WithField("error", err.Error()).Debug("Error while sending stopped message")
+    }
 }
