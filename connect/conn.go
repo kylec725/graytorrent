@@ -35,21 +35,18 @@ type Conn struct {
 func (conn *Conn) Write(buf []byte) error {
     conn.Conn.SetWriteDeadline(time.Time{})  // No deadline for writing
     for i := 0; i < retry; i++ {
-        bytesSent, err := conn.Conn.Write(buf)
+        _, err := conn.Conn.Write(buf)
         if err == nil {
             break
         }
         fmt.Println("write error unwrapped:", errors.Unwrap(err))
-        if bytesSent != len(buf) {
-            return errors.Wrap(ErrSend, "Write")
-        }
         if netErr, ok := err.(net.Error); ok && netErr.Timeout() {
             return errors.Wrap(ErrTimeout, "Write")
         } else if err.Error() == "connection reset by peer" {
             fmt.Println("Write: connection reset by peer")
             continue
         } else if errors.Unwrap(err).Error() == "use of closed network connection" {
-            fmt.Println("Write: use of closed network connection")
+            fmt.Println("Write caught: use of closed network connection")
             continue
         }
         return errors.Wrap(err, "Write")
@@ -64,12 +61,9 @@ func (conn *Conn) Read(buf []byte) error {
         return errors.Wrap(err, "Read")
     }
     for i := 0; i < retry; i++ {
-        bytesRead, err := conn.Conn.Read(buf)
+        _, err := conn.Conn.Read(buf)
         if err == nil {
             break
-        }
-        if bytesRead != len(buf) {
-            return errors.Wrap(ErrRcv, "Read")
         }
         fmt.Println("read error:", err)
         if netErr, ok := err.(net.Error); ok && netErr.Timeout() {
