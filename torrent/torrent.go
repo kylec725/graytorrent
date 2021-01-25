@@ -103,7 +103,9 @@ func (to *Torrent) Start() {
 
     // Populate work queue
     for i := 0; i < to.Info.TotalPieces; i++ {
-        work <- i
+        if !to.Info.Bitfield.Has(i) {
+            work <- i
+        }
     }
 
     pieces := 0  // Counter of finished pieces
