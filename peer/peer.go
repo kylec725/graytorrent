@@ -92,7 +92,7 @@ func (peer *Peer) StartWork(work chan int, results, done chan bool) {
     peer.shutdown = false
     err := peer.verifyHandshake()
     if err != nil {
-        ctxLog.WithFields(log.Fields{"error": err.Error()}).Debug("Handshake failed")
+        ctxLog.WithField("error", err.Error()).Debug("Handshake failed")
         // remove <- peer.String()  // Notify main to remove this peer from its list
         return
     }
