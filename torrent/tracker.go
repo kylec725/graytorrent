@@ -106,16 +106,17 @@ func (tr Tracker) buildURL(infoHash [20]byte, peerID [20]byte, port uint16, left
 
 // Run starts a tracker and gets peers for a torrent
 func (tr *Tracker) Run(peers chan peer.Peer, done chan bool) {
+    ctxLog := log.WithField("tracker", tr.Announce)
     tr.shutdown = false
     // TODO remove sendStopped, here for debugging purposes
     err := tr.sendStopped(tr.info, 6881, tr.info.Left)
     peerList, err := tr.sendStarted(tr.info, 6881, tr.info.Left)  // hardcoded number of bytes left
     if err != nil {
         tr.Working = false
-        log.WithFields(log.Fields{"tracker": tr.Announce, "error": err.Error()}).Debug("Failed sending start message")
+        ctxLog.WithField("error", err.Error()).Debug("Failed sending start message")
     } else {
         tr.Working = true
-        log.WithFields(log.Fields{"tracker": tr.Announce}).Debug("Received list of peers")
+        ctxLog.WithField("amount", len(peerList)).Debug("Received list of peers")
     }
 
     // Send peers through channel
@@ -136,8 +137,5 @@ func (tr *Tracker) Run(peers chan peer.Peer, done chan bool) {
         //     }
         }
     }
-    err := tr.sendStopped(tr.info, 6881, tr.info.Left)
-    if err != nil {
-        log.WithFields(log.Fields{"tracker": tr.Announce, "error": err.Error()}).Debug("Failed sending stopped message")
-    }
+    // TODO send stop message to tracker
 }

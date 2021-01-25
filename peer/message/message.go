@@ -1,6 +1,7 @@
 package message
 
 import (
+    "fmt"
     "encoding/binary"
 
     "github.com/kylec725/graytorrent/bitfield"
@@ -98,4 +99,34 @@ func Piece(index, begin uint32, block []byte) Message {
     binary.BigEndian.PutUint32(payload, index)
     copy(payload[4:], block)
     return Message{ID: MsgPiece, Payload: payload}
+}
+
+func (msg *Message) String() string {
+    if msg == nil {
+        return "Keep Alive"
+    }
+    switch msg.ID {
+    case MsgChoke:
+        return "Choke"
+    case MsgUnchoke:
+        return "Unchoke"
+    case MsgInterested:
+        return "Interested"
+    case MsgNotInterested:
+        return "Not Interested"
+    case MsgHave:
+        return "Have"
+    case MsgBitfield:
+        return "Bitfield"
+    case MsgRequest:
+        return "Request"
+    case MsgPiece:
+        return "Piece"
+    case MsgCancel:
+        return "Cancel"
+    case MsgPort:
+        return "Port"
+    default:
+        return fmt.Sprintf("Unknown: %d", msg.ID)
+    }
 }
