@@ -75,6 +75,14 @@ func (tr *Tracker) sendStopped(info *common.TorrentInfo, port uint16, left int) 
 
     resp, err := tr.httpClient.Get(req)
     if err != nil {
+        // Retry once in case of connection reset
+        if errors.Unwrap(errors.Unwrap(errors.Unwrap(err))).Error() == "connection reset by peer" {
+            fmt.Println("just needed to reset")
+            resp, err = tr.httpClient.Get(req)
+            if err != nil {
+                return errors.Wrap(err, "sendStopped")
+            }
+        }
         return errors.Wrap(err, "sendStopped")
     }
     defer resp.Body.Close()
