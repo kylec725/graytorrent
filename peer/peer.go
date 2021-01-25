@@ -145,7 +145,7 @@ func (peer *Peer) StartWork(work chan int, results, done chan bool) {
                 // Download piece from the peer
                 err := peer.downloadPiece(index)
                 if err != nil {
-                    ctxLog.WithFields(log.Fields{"peer": peer.String(), "piece index": index, "error": err.Error()}).Debug("Starting piece download failed")
+                    ctxLog.WithFields(log.Fields{"peer": peer.String(), "piece index": index, "error": err.Error()}).Debug("Attempt to download piece failed")
                     work <- index  // Put piece back onto work channel
                     goto exit
                 }
