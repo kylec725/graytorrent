@@ -19,7 +19,7 @@ func peerListen() {
         newPeer := peer.New(conn.RemoteAddr().String(), conn, nil)
         infoHash, err := newPeer.RcvHandshake()
         if err != nil {
-            log.WithFields(log.Fields{"peer": newPeer.String(), "error": err.Error()}).Debug("Incoming peer handshake failed")
+            log.WithFields(log.Fields{"peer": newPeer.String(), "error": err.Error()}).Debug("Incoming peer handshake sequence failed")
             continue
         }
 
@@ -29,11 +29,11 @@ func peerListen() {
                 newPeer.Info = &torrentList[i].Info  // Assign correct info before sending handshake
                 // Send back a handshake
                 if err = newPeer.SendHandshake(); err != nil {
-                    log.WithFields(log.Fields{"peer": newPeer.String(), "error": err.Error()}).Debug("Incoming peer handshake failed")
+                    log.WithFields(log.Fields{"peer": newPeer.String(), "error": err.Error()}).Debug("Incoming peer handshake sequence failed")
+                    break
                 }
 
                 torrentList[i].IncomingPeers <- newPeer  // Send to torrent session
-                newPeer.Verified = true  // So that StartWork does not send another handshake
                 log.WithField("peer", newPeer.String()).Debug("Incoming peer was accepted")
             }
         }
