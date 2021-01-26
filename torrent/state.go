@@ -28,29 +28,3 @@ func (state State) String() string {
         return "Unknown"
     }
 }
-
-// Command represents commands to switch a torrent's state
-type Command uint8
-
-// Possible commands
-const (
-    Start    Command = 0
-    Stop     Command = 1
-    Delete   Command = 2
-    Shutdown Command = 3
-)
-
-func (command Command) String() string {
-    switch command {
-    case Start:
-        return "Start"
-    case Stop:
-        return "Stop"
-    case Delete:
-        return "Delete"
-    case Shutdown:
-        return "Shutdown"
-    default:
-        return "Unknown"
-    }
-}
