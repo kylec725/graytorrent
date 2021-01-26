@@ -34,6 +34,7 @@ type Torrent struct {
     IncomingPeers chan peer.Peer  // Used by main to forward incoming peers
 
     shutdown bool
+    // TODO save path, left, bitfield, peerid somewhere to keep track of state
 }
 
 // Setup gets and sets up necessary properties of a new torrent object
