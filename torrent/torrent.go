@@ -30,6 +30,8 @@ type Torrent struct {
     Info common.TorrentInfo
     Trackers []Tracker
     Peers []peer.Peer
+    IncomingPeers chan peer.Peer  // Used by main to forward incoming peers
+
     shutdown bool
 }
 
@@ -71,11 +73,11 @@ func (to *Torrent) Stop() {
 func (to *Torrent) Start() {
     log.WithField("name", to.Info.Name).Info("Torrent started")
     to.shutdown = false
-    peers := make(chan peer.Peer)                   // For incoming peers from trackers  // TODO consider buffering the peer channel
-    work := make(chan int, to.Info.TotalPieces)     // Piece indices we need
+    peers := make(chan peer.Peer)                  // For incoming peers from trackers
+    work := make(chan int, to.Info.TotalPieces)    // Piece indices we need
     results := make(chan int, to.Info.TotalPieces) // Notification that a piece is done
-    remove := make(chan string)                     // For peers to notify they should be removed from our list
-    done := make(chan bool)                         // Notify goroutines to quit
+    remove := make(chan string)                    // For peers to notify they should be removed from our list
+    done := make(chan bool)                        // Notify goroutines to quit
 
     // Start tracker goroutines
     for i := range to.Trackers {
@@ -89,8 +91,6 @@ func (to *Torrent) Start() {
         }
     }
 
-    // TODO setup listen port for incoming peers
-
     pieces := 0  // Counter of finished pieces
     for {
         if to.shutdown {
@@ -98,7 +98,10 @@ func (to *Torrent) Start() {
         }
 
         select {
-        case newPeer := <-peers:
+        case newPeer := <-peers:  // peers from trackers
+            to.Peers = append(to.Peers, newPeer)
+            go newPeer.StartWork(work, results, remove, done)
+        case newPeer := <-to.IncomingPeers:  // incoming peers from main
             to.Peers = append(to.Peers, newPeer)
             go newPeer.StartWork(work, results, remove, done)
         case deadPeer := <-remove:

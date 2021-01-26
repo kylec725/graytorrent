@@ -114,11 +114,13 @@ func (peer *Peer) StartWork(work chan int, results chan int, remove chan string,
         select {
         case data, ok := <-connection:
             if !ok {
+                remove <- peer.String()  // Notify main to remove this peer from its list
                 goto exit
             }
             msg := message.Decode(data)
             if err := peer.handleMessage(msg, work, results); err != nil {
                 ctxLog.WithFields(log.Fields{"type": msg.String(), "size": len(msg.Payload), "error": err.Error()}).Debug("Error handling message")
+                remove <- peer.String()  // Notify main to remove this peer from its list
                 goto exit
             }
         case _, ok := <-done:
@@ -143,6 +145,7 @@ func (peer *Peer) StartWork(work chan int, results chan int, remove chan string,
                 if err != nil {
                     ctxLog.WithFields(log.Fields{"piece index": index, "error": err.Error()}).Debug("Failed to start piece download")
                     work <- index  // Put piece back onto work channel
+                    remove <- peer.String()  // Notify main to remove this peer from its list
                     goto exit
                 }
             default:  // Don't block if we can't find work
@@ -155,7 +158,7 @@ func (peer *Peer) StartWork(work chan int, results chan int, remove chan string,
         work <- peer.workQueue[i].index
     }
     peer.Conn.Quit()  // Tell connection goroutine to exit
-    remove <- peer.String()  // Notify main to remove this peer from its list
+    peer.verified = false  // Make sure we send a handshake when we start again
     ctxLog.Debug("Peer shutdown")
     return
 }
