@@ -30,7 +30,6 @@ func setupLog() {
         TimestampFormat: "2006-01-02 15:04:05",
         FullTimestamp: true,
         ForceFormatting: true,
-        ForceColors: true,
     })
     if verbose {
         dualOutput := io.MultiWriter(os.Stdout, logFile)
