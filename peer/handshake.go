@@ -82,7 +82,7 @@ func (peer *Peer) RcvHandshake() ([20]byte, error) {
     return infoHash, nil
 }
 
-// Verifies a peer has sent a handshake if necessary
+// Sends and receives a handshake from the peer
 func (peer *Peer) initHandshake() error {
     if err := peer.SendHandshake(); err != nil {
         return errors.Wrap(err, "initHandshake")
