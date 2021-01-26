@@ -27,11 +27,7 @@ func setupLog() {
         FullTimestamp: true,
         ForceFormatting: true,
     })
-    if debug {
-        log.SetLevel(log.DebugLevel)
-    } else {
-        log.SetLevel(log.InfoLevel)
-    }
+    log.SetLevel(logLevel)
 }
 
 func setupViper() {

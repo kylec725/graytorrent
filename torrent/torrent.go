@@ -91,7 +91,7 @@ func (to *Torrent) Start() {
     peers := make(chan peer.Peer)                   // For incoming peers from trackers  // TODO consider buffering the peer channel
     work := make(chan int, to.Info.TotalPieces)     // Piece indices we need
     results := make(chan bool, to.Info.TotalPieces) // Notification that a piece is done
-    // remove := make(chan string)                  // For peers to notify they should be removed from our list  // TODO buffer the remove channel
+    // remove := make(chan string)                  // For peers to notify they should be removed from our list
     done := make(chan bool)                         // Notify goroutines to quit
 
     // Start tracker goroutines

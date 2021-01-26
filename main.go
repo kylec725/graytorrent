@@ -11,7 +11,7 @@ import (
     viper "github.com/spf13/viper"
 )
 
-const debug = true
+const logLevel = log.TraceLevel  // InfoLevel || DebugLevel || TraceLevel
 
 var (
     logFile *os.File
