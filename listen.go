@@ -11,9 +11,8 @@ import (
 func peerListen() {
     for {
         conn, err := listener.Accept()
-        if err != nil {
-            log.WithField("error", err.Error()).Debug("Error with incoming peer connection")
-            continue
+        if err != nil {  // Close if the listener encounters an error
+            return
         }
 
         newPeer := peer.New(conn.RemoteAddr().String(), conn, nil)
