@@ -1,6 +1,7 @@
 package torrent
 
 import (
+    // "fmt"
     "github.com/kylec725/graytorrent/common"
     "github.com/kylec725/graytorrent/peer"
 
@@ -29,13 +30,16 @@ func (tr *Tracker) sendStarted(info *common.TorrentInfo, port uint16, left int) 
 
     resp, err := tr.httpClient.Get(req)
     if err != nil {
-        // Retry once in case of connection reset
-        if errors.Unwrap(errors.Unwrap(errors.Unwrap(err))).Error() == "connection reset by peer" {
-            resp, err = tr.httpClient.Get(req)
-            if err != nil {
-                return nil, errors.Wrap(err, "sendStarted")
-            }
-        }
+        // fmt.Println("err:", errors.Unwrap(err))
+        // if errors.Unwrap(err).Error() == "read: connection reset by peer" {
+        //     fmt.Println("connection was reset but we good")
+        //     resp, err = tr.httpClient.Get(req)
+        //     if err != nil {
+        //         return nil, errors.Wrap(err, "sendStarted")
+        //     }
+        // } else{
+                // return nil, errors.Wrap(err, "sendStarted")
+        // }
         return nil, errors.Wrap(err, "sendStarted")
     }
     defer resp.Body.Close()
@@ -73,13 +77,6 @@ func (tr *Tracker) sendStopped(info *common.TorrentInfo, port uint16, left int) 
 
     resp, err := tr.httpClient.Get(req)
     if err != nil {
-        // Retry once in case of connection reset
-        if errors.Unwrap(errors.Unwrap(errors.Unwrap(err))).Error() == "connection reset by peer" {
-            resp, err = tr.httpClient.Get(req)
-            if err != nil {
-                return errors.Wrap(err, "sendStopped")
-            }
-        }
         return errors.Wrap(err, "sendStopped")
     }
     defer resp.Body.Close()
