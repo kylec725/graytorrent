@@ -115,8 +115,9 @@ func (tr *Tracker) Run(peers chan peer.Peer, done chan bool) {
     }
 
     exit:
-    err = tr.sendStopped()
-    if err != nil {
-        ctxLog.WithField("error", err.Error()).Debug("Error while sending stopped message")
+    if tr.Working {
+        if err = tr.sendStopped(); err != nil {
+            ctxLog.WithField("error", err.Error()).Debug("Error while sending stopped message")
+        }
     }
 }
