@@ -28,11 +28,11 @@ var (
 // Torrent stores metainfo and current progress on a torrent
 type Torrent struct {
     Path string
-    Info common.TorrentInfo
-    Trackers []tracker.Tracker
-    Peers []peer.Peer
     Port uint16
     IncomingPeers chan peer.Peer  // Used by main to forward incoming peers
+    Info common.TorrentInfo  // Contains meta data of the torrent
+    Trackers []tracker.Tracker
+    Peers []peer.Peer
 
     shutdown bool
     // TODO save path, left, bitfield, peerid somewhere to keep track of state
@@ -96,7 +96,7 @@ func (to *Torrent) Start() {
 
     pieces := 0  // Counter of finished pieces
     for {
-        if to.shutdown {
+        if to.shutdown {  // TODO force torrent to shutdown if select is blocking
             goto exit
         }
 
@@ -122,6 +122,11 @@ func (to *Torrent) Start() {
 
     exit:
     close(done)
+}
+
+// Save saves data about a managed torrent's state to a file
+func (to *Torrent) Save() {
+
 }
 
 func (to *Torrent) removePeer(name string) {
