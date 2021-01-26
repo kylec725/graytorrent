@@ -72,8 +72,6 @@ func addTorrent(filename string) {
     }
     log.WithField("name", to.Info.Name).Info("Torrent added")
     torrentList = append(torrentList, to)
-    fmt.Println("Start download")
     to.Start()
-    fmt.Println("Download finished")
     // to.Shutdown()  // signal for a torrent to shutdown
 }
