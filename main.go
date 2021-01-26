@@ -37,7 +37,7 @@ func init() {
     setupViper()
     viper.WatchConfig()
 
-    listener, port = setupListen()
+    setupListen()
 }
 
 func main() {

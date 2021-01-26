@@ -64,18 +64,18 @@ func setupViper() {
 }
 
 // Binds a socket to some port for peers to contact us
-func setupListen() (net.Listener, uint16) {
+func setupListen() {
     portRange := viper.GetIntSlice("network.portrange")
     port, err = connect.OpenPort(portRange)
     if err != nil {
         log.WithFields(log.Fields{
             "portrange": portRange,
             "error": err.Error(),
-        }).Warn("No open port found in portrange, using random port")
+        }).Warn("No open port found in port range, using random port")
     }
 
     service := ":" + strconv.Itoa(int(port))
-    listener, err := net.Listen("tcp", service)
+    listener, err = net.Listen("tcp", service)
     if err != nil {
         panic("Could not bind to any port")
     }
@@ -84,5 +84,4 @@ func setupListen() (net.Listener, uint16) {
     if err != nil {
         panic("Could not find the binded port")
     }
-    return listener, port
 }
