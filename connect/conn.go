@@ -42,8 +42,8 @@ func (conn *Conn) Write(buf []byte) error {
         fmt.Println("write error unwrapped:", errors.Unwrap(err))
         if netErr, ok := err.(net.Error); ok && netErr.Timeout() {
             return errors.Wrap(ErrTimeout, "Write")
-        } else if err.Error() == "connection reset by peer" {
-            fmt.Println("Write: connection reset by peer")
+        } else if errors.Unwrap(err).Error() == "connection reset by peer" {
+            fmt.Println("Write caught: connection reset by peer")
             continue
         } else if errors.Unwrap(err).Error() == "use of closed network connection" {
             fmt.Println("Write caught: use of closed network connection")
@@ -65,10 +65,10 @@ func (conn *Conn) Read(buf []byte) error {
         if err == nil {
             break
         }
-        fmt.Println("read error:", err)
+        fmt.Println("read error unwrapped:", errors.Unwrap(err))
         if netErr, ok := err.(net.Error); ok && netErr.Timeout() {
             return errors.Wrap(ErrTimeout, "Read")
-        } else if err.Error() == "connection reset by peer" {
+        } else if errors.Unwrap(err).Error() == "connection reset by peer" {
             fmt.Println("Read: connection reset by peer")
             continue
         }
