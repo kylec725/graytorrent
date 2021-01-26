@@ -4,7 +4,6 @@ import (
     "testing"
     "fmt"
 
-    "github.com/kylec725/graytorrent/metainfo"
     "github.com/stretchr/testify/assert"
 )
 
@@ -13,9 +12,8 @@ const debugRequests = false
 func TestTrackerReqs(t *testing.T) {
     assert := assert.New(t)
 
-    to := Torrent{Path: "../tmp/batonroad.torrent"}
+    to := Torrent{Path: "../tmp/batonroad.torrent", Port: 6881}
     to.Setup()
-    meta, _ := metainfo.Meta(to.Path)
 
     var testTracker Tracker
     for _, tr := range to.Trackers {
@@ -30,14 +28,14 @@ func TestTrackerReqs(t *testing.T) {
         fmt.Printf("Tracker%+v\n", testTracker)
     }
 
-    peersList, err := testTracker.sendStarted(&to.Info, 6881, meta.Length())
+    peersList, err := testTracker.sendStarted()
     if assert.Nil(err) {
         for _, peer := range peersList {
             if debugRequests {
                 fmt.Println("Peer:", peer)
             }
         }
-        err = testTracker.sendStopped(&to.Info, 6881, meta.Length())
+        err = testTracker.sendStopped()
         assert.Nil(err)
 
         if debugRequests {

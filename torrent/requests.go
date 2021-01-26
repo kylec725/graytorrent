@@ -2,7 +2,6 @@ package torrent
 
 import (
     // "fmt"
-    "github.com/kylec725/graytorrent/common"
     "github.com/kylec725/graytorrent/peer"
 
     "github.com/pkg/errors"
@@ -22,8 +21,8 @@ type bencodeTrackerResp struct {
     Incomplete int `bencode:"incomplete"`
 }
 
-func (tr *Tracker) sendStarted(info *common.TorrentInfo, port uint16, left int) ([]peer.Peer, error) {
-    req, err := tr.buildURL(info.InfoHash, info.PeerID, port, left, "started")
+func (tr *Tracker) sendStarted() ([]peer.Peer, error) {
+    req, err := tr.buildURL(tr.info.InfoHash, tr.info.PeerID, tr.port, tr.info.Left, "started")
     if err != nil {
         return nil, errors.Wrap(err, "sendStarted")
     }
@@ -61,7 +60,7 @@ func (tr *Tracker) sendStarted(info *common.TorrentInfo, port uint16, left int) 
     tr.Incomplete = trResp.Incomplete
 
     peersBytes := []byte(trResp.Peers)
-    peersList, err := peer.Unmarshal(peersBytes, info)
+    peersList, err := peer.Unmarshal(peersBytes, tr.info)
     if err != nil {
         return nil, errors.Wrap(err, "sendStarted")
     }
@@ -69,8 +68,8 @@ func (tr *Tracker) sendStarted(info *common.TorrentInfo, port uint16, left int) 
     return peersList, nil
 }
 
-func (tr *Tracker) sendStopped(info *common.TorrentInfo, port uint16, left int) error {
-    req, err := tr.buildURL(info.InfoHash, info.PeerID, port, left, "stopped")
+func (tr *Tracker) sendStopped() error {
+    req, err := tr.buildURL(tr.info.InfoHash, tr.info.PeerID, tr.port, tr.info.Left, "stopped")
     if err != nil {
         return errors.Wrap(err, "sendStopped")
     }

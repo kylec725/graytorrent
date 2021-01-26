@@ -30,6 +30,7 @@ type Torrent struct {
     Info common.TorrentInfo
     Trackers []Tracker
     Peers []peer.Peer
+    Port uint16
     IncomingPeers chan peer.Peer  // Used by main to forward incoming peers
 
     shutdown bool
@@ -50,7 +51,7 @@ func (to *Torrent) Setup() error {
     }
 
     // Create trackers list from metainfo announce or announce-list
-    to.Trackers, err = getTrackers(meta, &to.Info)
+    to.Trackers, err = getTrackers(meta, &to.Info, to.Port)
     if err != nil {
         return errors.Wrap(err, "Setup")
     }

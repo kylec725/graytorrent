@@ -22,7 +22,7 @@ func TestGetTrackers(t *testing.T) {
     info, err := common.GetInfo(meta)
     require.Nil(err, "GetInfo() error")
 
-    to.Trackers, err = getTrackers(meta, &info)
+    to.Trackers, err = getTrackers(meta, &info, 6881)
     if assert.Nil(err) {
         for _, tr := range to.Trackers {
             assert.NotNil(tr)

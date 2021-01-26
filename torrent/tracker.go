@@ -29,10 +29,11 @@ type Tracker struct {
 
     info *common.TorrentInfo
     httpClient *http.Client
+    port uint16
     shutdown bool
 }
 
-func newTracker(announce string, info *common.TorrentInfo) Tracker {
+func newTracker(announce string, info *common.TorrentInfo, port uint16) Tracker {
     return Tracker{
         Announce: announce,
         Working: false,
@@ -42,11 +43,12 @@ func newTracker(announce string, info *common.TorrentInfo) Tracker {
 
         info: info,
         httpClient: &http.Client{ Timeout: 20 * time.Second },
+        port: port,
         shutdown: false,
     }
 }
 
-func getTrackers(meta metainfo.BencodeMeta, info *common.TorrentInfo) ([]Tracker, error) {
+func getTrackers(meta metainfo.BencodeMeta, info *common.TorrentInfo, port uint16) ([]Tracker, error) {
     // If announce-list is empty, use announce only
     if len(meta.AnnounceList) == 0 {
         // Check if no announce strings exist
@@ -55,7 +57,7 @@ func getTrackers(meta metainfo.BencodeMeta, info *common.TorrentInfo) ([]Tracker
         }
 
         trackers := make([]Tracker, 1)
-        trackers[0] = newTracker(meta.Announce, info)
+        trackers[0] = newTracker(meta.Announce, info, port)
         return trackers, nil
     }
 
@@ -65,7 +67,7 @@ func getTrackers(meta metainfo.BencodeMeta, info *common.TorrentInfo) ([]Tracker
     // Add each announce in announce-list as a tracker
     for _, group := range meta.AnnounceList {
         for _, announce := range group {
-            trackers = append(trackers, newTracker(announce, info))
+            trackers = append(trackers, newTracker(announce, info, port))
             numAnnounce++
         }
     }
@@ -108,7 +110,7 @@ func (tr Tracker) buildURL(infoHash [20]byte, peerID [20]byte, port uint16, left
 func (tr *Tracker) Run(peers chan peer.Peer, done chan bool) {
     ctxLog := log.WithField("tracker", tr.Announce)
     tr.shutdown = false
-    peerList, err := tr.sendStarted(tr.info, 6881, tr.info.Left)  // hardcoded number of bytes left
+    peerList, err := tr.sendStarted()  // hardcoded number of bytes left
     if err != nil {
         tr.Working = false
         ctxLog.WithField("error", err.Error()).Debug("Error while sending started message")
@@ -139,7 +141,7 @@ func (tr *Tracker) Run(peers chan peer.Peer, done chan bool) {
     }
 
     exit:
-    err = tr.sendStopped(tr.info, 6881, tr.info.Left)
+    err = tr.sendStopped()
     if err != nil {
         ctxLog.WithField("error", err.Error()).Debug("Error while sending stopped message")
     }

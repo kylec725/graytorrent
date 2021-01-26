@@ -59,7 +59,7 @@ func setupViper() {
 }
 
 // Binds a socket to some port for peers to contact us
-func setupListen() net.Listener {
+func setupListen() (net.Listener, uint16) {
     portRange := viper.GetIntSlice("network.portrange")
     port, err := connect.OpenPort(portRange)
     if err != nil {
@@ -74,5 +74,9 @@ func setupListen() net.Listener {
     if err != nil {
         panic("Could not bind to any port")
     }
-    return listener
+    port, err = connect.PortFromAddr(listener.Addr().String())  // Get actual port in case none in portrange were available
+    if err != nil {
+        panic("Could not find the binded port")
+    }
+    return listener, port
 }
