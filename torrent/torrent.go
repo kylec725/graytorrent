@@ -34,8 +34,7 @@ type Torrent struct {
     Trackers []tracker.Tracker
     Peers []peer.Peer
 
-    shutdown bool
-    // TODO save path, left, bitfield, peerid somewhere to keep track of state
+    shutdown chan bool
 }
 
 // Setup gets and sets up necessary properties of a new torrent object
@@ -63,24 +62,31 @@ func (to *Torrent) Setup() error {
         return errors.Wrap(err, "Setup")
     }
 
+    // Make the shutdown channel
+    to.shutdown = make(chan bool)
+
     return nil
 }
 
 // Stop signals a torrent to stop downloading
 func (to *Torrent) Stop() {
-    to.shutdown = true
-    log.WithField("name", to.Info.Name).Info("Torrent stopped")
+    to.shutdown <- true
 }
 
 // Start initiates a routine to download a torrent from peers
 func (to *Torrent) Start() {
     log.WithField("name", to.Info.Name).Info("Torrent started")
-    to.shutdown = false
     peers := make(chan peer.Peer)                  // For incoming peers from trackers
     work := make(chan int, to.Info.TotalPieces)    // Piece indices we need
     results := make(chan int, to.Info.TotalPieces) // Notification that a piece is done
     remove := make(chan string)                    // For peers to notify they should be removed from our list
     done := make(chan bool)                        // Notify goroutines to quit
+
+    // Cleanup
+    defer func() {
+        to.Peers = nil  // Clear peers
+        close(done)  // Signal peers and trackers to shutdown
+    }()
 
     // Start tracker goroutines
     for i := range to.Trackers {
@@ -96,15 +102,11 @@ func (to *Torrent) Start() {
 
     pieces := 0  // Counter of finished pieces
     for {
-        if to.shutdown {  // TODO force torrent to shutdown if select is blocking
-            goto exit
-        }
-
         select {
-        case newPeer := <-peers:  // peers from trackers
+        case newPeer := <-peers:  // Peers from trackers
             to.Peers = append(to.Peers, newPeer)
             go newPeer.StartWork(work, results, remove, done)
-        case newPeer := <-to.IncomingPeers:  // incoming peers from main
+        case newPeer := <-to.IncomingPeers:  // Incoming peers from main
             to.Peers = append(to.Peers, newPeer)
             go newPeer.StartWork(work, results, remove, done)
         case deadPeer := <-remove:
@@ -113,15 +115,13 @@ func (to *Torrent) Start() {
             to.Info.Bitfield.Set(index)
             pieces++
             if pieces == to.Info.TotalPieces {
-                // TODO go to seeding mode after finishing the download
-                log.WithField("name", to.Info.Name).Info("Torrent finished")
-                goto exit
+                log.WithField("name", to.Info.Name).Info("Torrent completed")
             }
+        case <-to.shutdown:
+            log.WithField("name", to.Info.Name).Info("Torrent stopped")
+            return
         }
     }
-
-    exit:
-    close(done)
 }
 
 // Save saves data about a managed torrent's state to a file
@@ -144,7 +144,6 @@ func (to *Torrent) removePeer(name string) {
         return
     }
     // Notify the peer to shutdown if it hasn't already
-    to.Peers[removeIndex].Shutdown()
     to.Peers[removeIndex] = to.Peers[len(to.Peers) - 1]
     to.Peers = to.Peers[:len(to.Peers) - 1]
 }

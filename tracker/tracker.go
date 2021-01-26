@@ -86,6 +86,15 @@ func (tr *Tracker) Run(peers chan peer.Peer, done chan bool) {
         ctxLog.WithField("amount", len(peerList)).Debug("Received list of peers")
     }
 
+    // Cleanup
+    defer func() {
+        if tr.Working {  // Send stopped message if necessary
+            if err = tr.sendStopped(); err != nil {
+                ctxLog.WithField("error", err.Error()).Debug("Error while sending stopped message")
+            }
+        }
+    }()
+
     // Send peers through channel
     for i := range peerList {
         peers <- peerList[i]
@@ -95,7 +104,7 @@ func (tr *Tracker) Run(peers chan peer.Peer, done chan bool) {
         select {
         case _, ok := <-done:
             if !ok {
-                goto exit
+                return
             }
         case <-time.After(time.Duration(tr.Interval) * time.Second):
             // Contact tracker again
@@ -104,13 +113,6 @@ func (tr *Tracker) Run(peers chan peer.Peer, done chan bool) {
         //     if !tr.Working {
         //
         //     }
-        }
-    }
-
-    exit:
-    if tr.Working {
-        if err = tr.sendStopped(); err != nil {
-            ctxLog.WithField("error", err.Error()).Debug("Error while sending stopped message")
         }
     }
 }

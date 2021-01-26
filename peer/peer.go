@@ -27,7 +27,6 @@ type Peer struct {
     Addr string
     Conn *connect.Conn  // nil if not connected
     Info *common.TorrentInfo
-    Verified bool  // says whether the infohash matches or not
 
     bitfield bitfield.Bitfield
     amChoking bool
@@ -36,7 +35,6 @@ type Peer struct {
     peerInterested bool
     rate int  // max number of outgoing requests/pieces a peer can queue
     workQueue []workPiece
-    shutdown bool
 }
 
 func (peer Peer) String() string {
@@ -62,13 +60,7 @@ func New(addr string, conn net.Conn, info *common.TorrentInfo) Peer {
         peerInterested: false,
         rate: startRate,
         workQueue: []workPiece{},
-        shutdown: false,
     }
-}
-
-// Shutdown lets the main goroutine signal a peer to stop working
-func (peer *Peer) Shutdown() {
-    peer.shutdown = true
 }
 
 // Choke notifies a peer that we are choking them
@@ -90,8 +82,7 @@ func (peer *Peer) Unchoke() error {
 // StartWork makes a peer wait for pieces to download
 func (peer *Peer) StartWork(work chan int, results chan int, remove chan string, done chan bool) {
     ctxLog := log.WithField("peer", peer.String())
-    peer.shutdown = false
-    if !peer.Verified {
+    if peer.Conn == nil {
         err := peer.initHandshake()
         if err != nil {
             ctxLog.WithField("error", err.Error()).Debug("Handshake failed")
@@ -101,35 +92,38 @@ func (peer *Peer) StartWork(work chan int, results chan int, remove chan string,
     }
     ctxLog.Debug("Handshake successful")
 
+    // Cleanup
+    defer func() {
+        for i := range peer.workQueue {
+            work <- peer.workQueue[i].index
+        }
+        peer.Conn.Close()  // Close the connection, results in the goroutine exiting due to error
+        peer.Conn = nil  // Clear the connection for next time
+        ctxLog.Debug("Peer shutdown")
+    }()
+
     // Setup peer connection
-    connection := make(chan []byte)
+    connection := make(chan []byte, 2)  // Buffer so that connection can exit if we haven't read the data yet
     go peer.Conn.Await(connection)
     peer.Conn.Timeout = peerTimeout
 
     // Work loop
     for {
-        // Check if main told peer to shutdown
-        if peer.shutdown {
-            goto exit
-        }
-
-        // TODO what happens if no data is received, but we need to get more work? i.e. this is the only peer with
-        // the needed piece, but we block because we don't receive data
         select {
         case data, ok := <-connection:
-            if !ok {
+            if !ok {  // Connection failed
                 remove <- peer.String()  // Notify main to remove this peer from its list
-                goto exit
+                return
             }
             msg := message.Decode(data)
             if err := peer.handleMessage(msg, work, results); err != nil {
                 ctxLog.WithFields(log.Fields{"type": msg.String(), "size": len(msg.Payload), "error": err.Error()}).Debug("Error handling message")
                 remove <- peer.String()  // Notify main to remove this peer from its list
-                goto exit
+                return
             }
-        case _, ok := <-done:
+        case _, ok := <-done:  // Check if the torrent told the peer to shutdown
             if !ok {
-                goto exit
+                return
             }
         case <-time.After(pollTimeout):  // Poll to get unstuck if no messages are received
         }
@@ -150,19 +144,10 @@ func (peer *Peer) StartWork(work chan int, results chan int, remove chan string,
                     ctxLog.WithFields(log.Fields{"piece index": index, "error": err.Error()}).Debug("Failed to start piece download")
                     work <- index  // Put piece back onto work channel
                     remove <- peer.String()  // Notify main to remove this peer from its list
-                    goto exit
+                    return
                 }
             default:  // Don't block if we can't find work
             }
         }
     }
-
-    exit:
-    for i := range peer.workQueue {
-        work <- peer.workQueue[i].index
-    }
-    peer.Conn.Quit()  // Tell connection goroutine to exit
-    peer.Verified = false  // Make sure we send a handshake when we start again
-    ctxLog.Debug("Peer shutdown")
-    return
 }

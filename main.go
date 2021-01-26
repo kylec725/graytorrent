@@ -58,6 +58,7 @@ func main() {
         }
         log.WithField("name", to.Info.Name).Info("Torrent added")
         to.Start()
+        to.Stop()
         to.Save()
         fmt.Println("Torrent done:", to.Info.Name)
         return
