@@ -14,10 +14,10 @@ BitTorrent client implemented in golang
 - Use Google Protocol Buffers for network interactions
 
 ## Dependencies
-- [bencode-go](github.com/jackpal/bencode-go)
-- [pkg/errors](github.com/pkg/errors)
-- [logrus](github.com/sirupsen/logrus)
-- [pflag](github.com/spf13/pflag)
-- [viper](github.com/spf13/viper)
-- [testify](github.com/stretchr/testify)
-- [logrus-prefixed-formatter](github.com/x-cray/logrus-prefixed-formatter)
+- [bencode-go](https://github.com/jackpal/bencode-go)
+- [pkg/errors](https://github.com/pkg/errors)
+- [logrus](https://github.com/sirupsen/logrus)
+- [pflag](https://github.com/spf13/pflag)
+- [viper](https://github.com/spf13/viper)
+- [testify](https://github.com/stretchr/testify)
+- [logrus-prefixed-formatter](https://github.com/x-cray/logrus-prefixed-formatter)
