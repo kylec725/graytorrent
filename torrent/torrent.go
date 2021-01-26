@@ -61,25 +61,6 @@ func (to *Torrent) Setup() error {
     return nil
 }
 
-func (to *Torrent) removePeer(name string) error {
-    removeIndex := -1
-    for i, peer := range to.Peers {
-        if name == peer.String() {
-            removeIndex = i
-        }
-    }
-    if removeIndex == -1 {
-        return errors.Wrap(ErrPeerNotFound, "removePeer")
-    }
-    // Close the connection before returning
-    if err := to.Peers[removeIndex].Conn.Close(); err != nil {
-        return errors.Wrap(err, "removePeer")
-    }
-    to.Peers[removeIndex] = to.Peers[len(to.Peers) - 1]
-    to.Peers = to.Peers[:len(to.Peers) - 1]
-    return nil
-}
-
 // Stop signals a torrent to stop downloading
 func (to *Torrent) Stop() {
     to.shutdown = true
@@ -101,14 +82,14 @@ func (to *Torrent) Start() {
         go to.Trackers[i].Run(peers, done)
     }
 
-    // TODO setup listen port for incoming peers
-
     // Populate work queue
     for i := 0; i < to.Info.TotalPieces; i++ {
         if !to.Info.Bitfield.Has(i) {
             work <- i
         }
     }
+
+    // TODO setup listen port for incoming peers
 
     pieces := 0  // Counter of finished pieces
     for {
@@ -135,4 +116,20 @@ func (to *Torrent) Start() {
 
     exit:
     close(done)
+}
+
+func (to *Torrent) removePeer(name string) {
+    removeIndex := -1
+    for i, peer := range to.Peers {
+        if name == peer.String() {
+            removeIndex = i
+        }
+    }
+    if removeIndex == -1 {
+        return
+    }
+    // Notify the peer to shutdown if it hasn't already
+    to.Peers[removeIndex].Shutdown()
+    to.Peers[removeIndex] = to.Peers[len(to.Peers) - 1]
+    to.Peers = to.Peers[:len(to.Peers) - 1]
 }
