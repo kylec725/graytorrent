@@ -25,8 +25,7 @@ const startRate = 2  // Uses adaptive rate after first requests
 
 // Peer stores info about connecting to peers as well as their state
 type Peer struct {
-    Host net.IP
-    Port uint16
+    Addr string
     Conn *connect.Conn  // nil if not connected
 
     info *common.TorrentInfo
@@ -41,15 +40,14 @@ type Peer struct {
 }
 
 func (peer Peer) String() string {
-    return net.JoinHostPort(peer.Host.String(), strconv.Itoa(int(peer.Port)))
+    return peer.Addr
 }
 
 // New returns a new instantiated peer
-func New(host net.IP, port uint16, conn *connect.Conn, info *common.TorrentInfo) Peer {
+func New(addr string, conn *connect.Conn, info *common.TorrentInfo) Peer {
     bitfieldSize := int(math.Ceil(float64(info.TotalPieces) / 8))
     return Peer{
-        Host: host,
-        Port: port,
+        Addr: addr,
         Conn: conn,
 
         info: info,
