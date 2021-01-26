@@ -35,7 +35,7 @@ type Peer struct {
     amInterested bool
     peerChoking bool
     peerInterested bool
-    rate int  // max number of outgoing requests
+    rate int  // max number of outgoing requests/pieces a peer can queue
     workQueue []workPiece
     shutdown bool
 }
