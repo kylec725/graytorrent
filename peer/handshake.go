@@ -34,7 +34,8 @@ func (peer *Peer) newHandshake() []byte {
     return handshake
 }
 
-func (peer *Peer) sendHandshake() error {
+// SendHandshake sends a handshake message to a peer
+func (peer *Peer) SendHandshake() error {
     if peer.Conn == nil {
         // Start the TCP connection
         conn, err := net.DialTimeout("tcp", peer.String(), 5 * time.Second)  // TODO fix dial issues with certain peers
@@ -50,7 +51,8 @@ func (peer *Peer) sendHandshake() error {
     return errors.Wrap(err, "sendHandshake")
 }
 
-func (peer *Peer) rcvHandshake() ([20]byte, error) {
+// RcvHandshake receives a handshake from a peer and returns the infohash received
+func (peer *Peer) RcvHandshake() ([20]byte, error) {
     buf := make([]byte, 1)
     if err := peer.Conn.ReadFull(buf); err != nil {
         return [20]byte{}, errors.Wrap(err, "rcvHandshake")
@@ -94,4 +96,9 @@ func (peer *Peer) initHandshake() error {
     msg := message.Bitfield(peer.info.Bitfield)
     err = peer.Conn.Write(msg.Encode())
     return errors.Wrap(err, "initHandshake")
+}
+
+// AcceptNew attempts to accept an incoming peer
+func (peer *Peer) AcceptNew() error {
+    return nil
 }
