@@ -143,7 +143,6 @@ func (peer *Peer) handlePiece(msg *message.Message, work chan int, results chan 
             // Write was successful
             peer.info.Left -= peer.workQueue[i].curr
             peer.removeWorkPiece(int(index))
-            peer.info.Bitfield.Set(int(index))
             results <- int(index)  // Notify main that a piece is done
 
             // Send not interested if necessary
