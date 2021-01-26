@@ -7,6 +7,7 @@ import (
 
     "github.com/kylec725/graytorrent/peer/message"
     "github.com/kylec725/graytorrent/connect"
+    "github.com/kylec725/graytorrent/torrent"
     "github.com/pkg/errors"
 )
 
@@ -17,7 +18,7 @@ const handshakeTimeout = 20 * time.Second
 var (
     ErrPstrLen = errors.New("Got bad pstr length")
     ErrPstr = errors.New("Got incorrect pstr")
-    ErrInfoHash = errors.New("Received incorrect info hash")
+    ErrInfoHash = errors.New("Received infohash does not match")
     // ErrPeerID = errors.New("Received peer ID was incorrect")
 )
 
@@ -98,7 +99,18 @@ func (peer *Peer) initHandshake() error {
     return errors.Wrap(err, "initHandshake")
 }
 
-// AcceptNew attempts to accept an incoming peer
-func (peer *Peer) AcceptNew() error {
-    return nil
+// AcceptHandshake attempts to accept an incoming peer and add it to a torrent's session
+func (peer *Peer) AcceptHandshake(torrentList []torrent.Torrent) error {
+    infoHash, err := peer.RcvHandshake()
+    if err != nil {
+        return errors.Wrap(err, "AcceptHandshake")
+    }
+    for i, to := range torrentList {
+        if bytes.Equal(infoHash, to.Info.InfoHash) {
+            peer.info = &torrentList[i].Info
+            torrentList[i].IncomingPeers <- *peer
+            return nil
+        }
+    }
+    return errors.Wrap(ErrInfoHash, "AcceptHandshake")
 }
