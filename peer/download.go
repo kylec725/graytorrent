@@ -138,7 +138,7 @@ func (peer *Peer) handlePiece(msg *message.Message, work chan int, results chan 
                 peer.removeWorkPiece(int(index))
                 return errors.Wrap(err, "handlePiece")
             }
-            log.WithFields(log.Fields{"peer": peer.String(), "piece index": index}).Trace("Wrote piece to file")
+            log.WithFields(log.Fields{"peer": peer.String(), "piece index": index, "rate": peer.rate}).Trace("Wrote piece to file")
 
             // Write was successful
             peer.info.Left -= peer.workQueue[i].curr
