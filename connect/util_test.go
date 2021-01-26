@@ -19,3 +19,12 @@ func TestOpenPort(t *testing.T) {
         fmt.Println("Got open port:", port)
     }
 }
+
+func TestPortFromAddr(t *testing.T) {
+    assert := assert.New(t)
+
+    port, err := PortFromAddr("23493:5000")
+    if assert.Nil(err) {
+        assert.Equal(uint16(5000), port)
+    }
+}

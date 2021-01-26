@@ -4,6 +4,7 @@ import (
     "net"
     "os"
     "strconv"
+    "strings"
 
     "github.com/pkg/errors"
 )
@@ -30,4 +31,15 @@ func OpenPort(portRange []int) (uint16, error) {
         }
     }
     return 0, errors.Wrap(ErrNoOpenPort, "OpenPort")
+}
+
+// PortFromAddr returns the port from a string address
+func PortFromAddr(addr string) (uint16, error) {
+    split := strings.Split(addr, ":")
+    portString := split[len(split) - 1]
+    port, err := strconv.Atoi(portString)
+    if err != nil {
+        return 0, errors.Wrap(err, "PortFromAddr")
+    }
+    return uint16(port), nil
 }
