@@ -126,6 +126,7 @@ func (to *Torrent) Start() {
         case <- results:
             pieces++
             if pieces == to.Info.TotalPieces {
+                // TODO go to seeding mode after finishing the download
                 log.WithField("name", to.Info.Name).Info("Torrent finished")
                 goto exit
             }
