@@ -83,6 +83,7 @@ func (to *Torrent) removePeer(name string) error {
 // Stop signals a torrent to stop downloading
 func (to *Torrent) Stop() {
     to.shutdown = true
+    log.WithField("name", to.Info.Name).Info("Torrent stopped")
 }
 
 // Start initiates a routine to download a torrent from peers
@@ -125,6 +126,7 @@ func (to *Torrent) Start() {
         case <- results:
             pieces++
             if pieces == to.Info.TotalPieces {
+                log.WithField("name", to.Info.Name).Info("Torrent finished")
                 goto exit
             }
         }
@@ -132,5 +134,4 @@ func (to *Torrent) Start() {
 
     exit:
     close(done)
-    log.WithField("name", to.Info.Name).Info("Torrent stopped")
 }
