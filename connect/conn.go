@@ -62,7 +62,7 @@ func (conn *Conn) Read(buf []byte) error {
         return errors.Wrap(err, "Read")
     }
     for i := 0; i < retry; i++ {
-        _, err := conn.Conn.Read(buf)
+        _, err = conn.Conn.Read(buf)
         if err == nil {
             break
         }
@@ -75,7 +75,7 @@ func (conn *Conn) Read(buf []byte) error {
         }
         return errors.Wrap(err, "Read")
     }
-    return nil
+    return errors.Wrap(err, "Read")
 }
 
 // ReadFull reads until the buffer is full
