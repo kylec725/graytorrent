@@ -56,6 +56,7 @@ func main() {
             return
         }
         to.Start()
+        return
     }
 
     // Initialize GUI
