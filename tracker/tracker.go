@@ -26,7 +26,6 @@ type Tracker struct {
     info *common.TorrentInfo
     httpClient *http.Client
     port uint16
-    shutdown bool
 }
 
 func newTracker(announce string, info *common.TorrentInfo, port uint16) Tracker {
@@ -38,7 +37,6 @@ func newTracker(announce string, info *common.TorrentInfo, port uint16) Tracker 
         info: info,
         httpClient: &http.Client{ Timeout: 20 * time.Second },
         port: port,
-        shutdown: false,
     }
 }
 
@@ -79,7 +77,6 @@ func GetTrackers(meta metainfo.BencodeMeta, info *common.TorrentInfo, port uint1
 // Run starts a tracker and gets peers for a torrent
 func (tr *Tracker) Run(peers chan peer.Peer, done chan bool) {
     ctxLog := log.WithField("tracker", tr.Announce)
-    tr.shutdown = false
     peerList, err := tr.sendStarted()  // hardcoded number of bytes left
     if err != nil {
         tr.Working = false
