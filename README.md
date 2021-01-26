@@ -2,11 +2,13 @@
 BitTorrent client implemented in golang
 
 ## In Progress...
-- Adaptive download rate
+- Fine-tune the adaptive download rate
+- Restructure the peers, trackers, and torrents as formal finite-state machines
 - UDP Tracker support
 - Tracker scraping
 
 ## Potential Goals
+- Extensions (BEP6, DHT/PEX)
 - Efficient rarest first requesting algorithm
 - Use Google Protocol Buffers for network interactions
 
