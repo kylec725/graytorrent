@@ -8,6 +8,7 @@ package peer
 import (
     "time"
     "math"
+    "net"
 
     "github.com/kylec725/graytorrent/common"
     "github.com/kylec725/graytorrent/bitfield"
@@ -34,6 +35,7 @@ type Peer struct {
     peerInterested bool
     rate int  // max number of outgoing requests/pieces a peer can queue
     workQueue []workPiece
+    verified bool  // says whether the infohash matches or not
     shutdown bool
 }
 
@@ -42,11 +44,11 @@ func (peer Peer) String() string {
 }
 
 // New returns a new instantiated peer
-func New(addr string, conn *connect.Conn, info *common.TorrentInfo) Peer {
+func New(addr string, conn net.Conn, info *common.TorrentInfo) Peer {
     bitfieldSize := int(math.Ceil(float64(info.TotalPieces) / 8))
     return Peer{
         Addr: addr,
-        Conn: conn,
+        Conn: &connect.Conn{Conn: conn, Timeout: handshakeTimeout},
 
         info: info,
         bitfield: make([]byte, bitfieldSize),
@@ -85,11 +87,13 @@ func (peer *Peer) Unchoke() error {
 func (peer *Peer) StartWork(work chan int, results chan int, remove chan string, done chan bool) {
     ctxLog := log.WithField("peer", peer.String())
     peer.shutdown = false
-    err := peer.initHandshake()
-    if err != nil {
-        ctxLog.WithField("error", err.Error()).Debug("Handshake failed")
-        remove <- peer.String()  // Notify main to remove this peer from its list
-        return
+    if !peer.verified {
+        err := peer.initHandshake()
+        if err != nil {
+            ctxLog.WithField("error", err.Error()).Debug("Handshake failed")
+            remove <- peer.String()  // Notify main to remove this peer from its list
+            return
+        }
     }
     ctxLog.Debug("Handshake successful")
 
@@ -113,7 +117,7 @@ func (peer *Peer) StartWork(work chan int, results chan int, remove chan string,
                 goto exit
             }
             msg := message.Decode(data)
-            if err = peer.handleMessage(msg, work, results); err != nil {
+            if err := peer.handleMessage(msg, work, results); err != nil {
                 ctxLog.WithFields(log.Fields{"type": msg.String(), "size": len(msg.Payload), "error": err.Error()}).Debug("Error handling message")
                 goto exit
             }
