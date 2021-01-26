@@ -8,10 +8,7 @@ import (
     log "github.com/sirupsen/logrus"
 )
 
-/*
-Command provides main with facilities to manage its
-list of torrents.
-*/
+// Command provides main with facilities to manage its torrents
 
 func addTorrent(filename string) (torrent.Torrent, error) {
     to := torrent.Torrent{Path: filename, Port: port}
