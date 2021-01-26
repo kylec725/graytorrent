@@ -11,7 +11,8 @@ import (
 func peerListen() {
     for {
         conn, err := listener.Accept()
-        if err != nil {  // Close if the listener encounters an error
+        if err != nil {  // Exit if the listener encounters an error
+            log.WithField("error", err.Error()).Debug("Listener shutdown")
             return
         }
 
