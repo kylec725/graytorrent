@@ -22,7 +22,6 @@ import (
 const peerTimeout = 120 * time.Second
 const pollTimeout = 5 * time.Second
 const startRate = 2  // Uses adaptive rate after first requests
-const maxPeerQueue = 5  // Max number of pieces a peer can queue
 
 // Peer stores info about connecting to peers as well as their state
 type Peer struct {
