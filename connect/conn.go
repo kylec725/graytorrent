@@ -69,10 +69,11 @@ func (conn *Conn) Read(buf []byte) error {
         fmt.Println("read error unwrapped:", errors.Unwrap(err))
         if netErr, ok := err.(net.Error); ok && netErr.Timeout() {
             return errors.Wrap(ErrTimeout, "Read")
-        } else if errors.Unwrap(err).Error() == "connection reset by peer" {
-            fmt.Println("Read: connection reset by peer")
-            continue
         }
+        // } else if errors.Unwrap(err).Error() == "read: connection reset by peer" {
+        //     fmt.Println("Read caught: connection reset by peer")
+        //     continue
+        // }
         return errors.Wrap(err, "Read")
     }
     return errors.Wrap(err, "Read")
@@ -107,7 +108,7 @@ func (conn *Conn) Await(output chan []byte) {
         }
 
         buf := make([]byte, 4)  // Expect message length prefix of 4 bytes
-        if bytesRead, err := conn.Conn.Read(buf); err != nil || conn.shutdown {
+        if bytesRead, err := io.ReadFull(conn.Conn, buf); err != nil || conn.shutdown {
             goto exit
         } else if bytesRead != 4 && !conn.shutdown {
             goto exit
