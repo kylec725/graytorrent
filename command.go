@@ -1,8 +1,11 @@
 package main
 
 import (
+    "fmt"
+    "time"
     "github.com/kylec725/graytorrent/torrent"
     "github.com/pkg/errors"
+    log "github.com/sirupsen/logrus"
 )
 
 /*
@@ -34,5 +37,26 @@ func removeTorrent(to torrent.Torrent) {
 func saveTorrents() {
     for i := range torrentList {
         torrentList[i].Save()
+    }
+}
+
+func singleTorrent(name string) {
+    to, err := addTorrent(name)
+    if err != nil {
+        fmt.Println("Single torrent failed:", err)
+        log.WithFields(log.Fields{"filename": filename, "error": err.Error()}).Info("Failed to add torrent")
+        return
+    }
+    log.WithField("name", to.Info.Name).Info("Torrent added")
+    go to.Start()
+    for to.Info.Left > 0 && len(to.Peers) > 0 {
+        time.Sleep(time.Second)
+    }
+    to.Stop()
+    to.Save()
+    if to.Info.Left > 0 {
+        fmt.Println("Torrent crashed:", to.Info.Name)
+    } else {
+        fmt.Println("Torrent done:", to.Info.Name)
     }
 }

@@ -111,7 +111,7 @@ func (to *Torrent) Start() {
             go newPeer.StartWork(work, results, remove, done)
         case deadPeer := <-remove:
             to.removePeer(deadPeer)
-        case index := <-results:
+        case index := <-results:  // TODO change states
             to.Info.Bitfield.Set(index)
             pieces++
             if pieces == to.Info.TotalPieces {

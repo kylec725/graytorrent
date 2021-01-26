@@ -2,7 +2,6 @@ package main
 
 import (
 	"os"
-    "fmt"
     "net"
 
     "github.com/kylec725/graytorrent/torrent"
@@ -50,17 +49,7 @@ func main() {
 
     // Single file torrent then exit
     if filename != "" {
-        to, err := addTorrent(filename)
-        if err != nil {
-            fmt.Println("Single torrent failed:", err)
-            log.WithFields(log.Fields{"filename": filename, "error": err.Error()}).Info("Failed to add torrent")
-            return
-        }
-        log.WithField("name", to.Info.Name).Info("Torrent added")
-        to.Start()
-        to.Stop()
-        to.Save()
-        fmt.Println("Torrent done:", to.Info.Name)
+        singleTorrent(filename)
         return
     }
 
