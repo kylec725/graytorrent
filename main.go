@@ -2,6 +2,7 @@ package main
 
 import (
 	"os"
+    "fmt"
 
     "github.com/kylec725/graytorrent/connect"
     "github.com/kylec725/graytorrent/torrent"
@@ -43,34 +44,34 @@ func init() {
     }
 }
 
-// Initialize GUI
-func init() {
-
-}
-
 func main() {
     defer logFile.Close()
-    // defer g.Close()
+    defer log.Info("Graytorrent stopped")
 
-    // Handle single torrent download for now
+    // Single file torrent then exit
     if filename != "" {
-        addTorrent(filename)
+        to, err := newTorrent(filename)
+        if err != nil {
+            fmt.Println("Single torrent failed:", err)
+            return
+        }
+        to.Start()
     }
+
+    // Initialize GUI
+    // defer g.Close()
 
     // Send torrent stopped messages
     // Save torrent progresses to history file
-
-    log.Info("Graytorrent stopped")
 }
 
-func addTorrent(filename string) {
+func newTorrent(filename string) (torrent.Torrent, error) {
     to := torrent.Torrent{Path: filename}
     if err := to.Setup(); err != nil {
         log.WithFields(log.Fields{"file": filename, "error": err.Error()}).Info("Torrent setup failed")
-        return
+        return torrent.Torrent{}, err
     }
-    log.WithField("name", to.Info.Name).Info("Torrent added")
     torrentList = append(torrentList, to)
-    to.Start()
-    // to.Shutdown()  // signal for a torrent to shutdown
+    log.WithField("name", to.Info.Name).Info("Torrent added")
+    return to, nil
 }
