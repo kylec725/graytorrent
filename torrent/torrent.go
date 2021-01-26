@@ -73,8 +73,8 @@ func (to *Torrent) Start() {
     to.shutdown = false
     peers := make(chan peer.Peer)                   // For incoming peers from trackers  // TODO consider buffering the peer channel
     work := make(chan int, to.Info.TotalPieces)     // Piece indices we need
-    results := make(chan bool, to.Info.TotalPieces) // Notification that a piece is done
-    // remove := make(chan string)                  // For peers to notify they should be removed from our list
+    results := make(chan int, to.Info.TotalPieces) // Notification that a piece is done
+    remove := make(chan string)                     // For peers to notify they should be removed from our list
     done := make(chan bool)                         // Notify goroutines to quit
 
     // Start tracker goroutines
@@ -100,11 +100,11 @@ func (to *Torrent) Start() {
         select {
         case newPeer := <-peers:
             to.Peers = append(to.Peers, newPeer)
-            go newPeer.StartWork(work, results, done)
-        // case deadPeer := <-remove:
-            // TODO close deadPeer
-            // to.removePeer(deadPeer)
-        case <- results:
+            go newPeer.StartWork(work, results, remove, done)
+        case deadPeer := <-remove:
+            to.removePeer(deadPeer)
+        case index := <-results:
+            to.Info.Bitfield.Set(index)
             pieces++
             if pieces == to.Info.TotalPieces {
                 // TODO go to seeding mode after finishing the download

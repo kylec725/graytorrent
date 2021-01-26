@@ -22,7 +22,7 @@ var (
     ErrPieceHash = errors.New("Received piece with bad hash")
 )
 
-func (peer *Peer) handleMessage(msg *message.Message, work chan int, results chan bool) error {
+func (peer *Peer) handleMessage(msg *message.Message, work chan int, results chan int) error {
     if msg == nil {
         return nil  // keep-alive message
     }
@@ -106,7 +106,7 @@ func (peer *Peer) handleRequest(msg *message.Message) error {
 }
 
 // handlePiece adds a block to a piece we are getting
-func (peer *Peer) handlePiece(msg *message.Message, work chan int, results chan bool) error {
+func (peer *Peer) handlePiece(msg *message.Message, work chan int, results chan int) error {
     index := binary.BigEndian.Uint32(msg.Payload[0:4])
     begin := binary.BigEndian.Uint32(msg.Payload[4:8])
     block := msg.Payload[8:]
@@ -144,7 +144,7 @@ func (peer *Peer) handlePiece(msg *message.Message, work chan int, results chan 
             peer.info.Left -= peer.workQueue[i].curr
             peer.removeWorkPiece(int(index))
             peer.info.Bitfield.Set(int(index))
-            results <- true  // Notify main that a piece is done
+            results <- int(index)  // Notify main that a piece is done
 
             // Send not interested if necessary
             if len(peer.workQueue) == 0 {
