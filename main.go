@@ -16,17 +16,19 @@ const logLevel = log.TraceLevel  // InfoLevel || DebugLevel || TraceLevel
 var (
     err error
     logFile *os.File
-    filename string
     torrentList []torrent.Torrent
     listener net.Listener
+    filename string
+    verbose bool
     port uint16
 )
 
 func init() {
     flag.StringVarP(&filename, "file", "f", "", "Filename of torrent file")
+    flag.BoolVarP(&verbose, "verbose", "v", false, "Print events to stdout")
     flag.Parse()
 
-    setupLog()
+    setupLog(verbose)
     log.Info("Graytorrent started")
 
     setupViper()

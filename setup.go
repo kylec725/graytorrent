@@ -4,6 +4,7 @@ import (
     "os"
     "net"
     "strconv"
+    "io"
 
     "github.com/kylec725/graytorrent/connect"
     log "github.com/sirupsen/logrus"
@@ -15,7 +16,7 @@ var (
     homeDir = os.Getenv("HOME")
 )
 
-func setupLog() {
+func setupLog(verbose bool) {
     // Logging file
     logFile, err = os.OpenFile("info.log", os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0644)
     // logFile, err = os.OpenFile(homeDir + "/.config/graytorrent/info.log", os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0644)
@@ -30,6 +31,10 @@ func setupLog() {
         FullTimestamp: true,
         ForceFormatting: true,
     })
+    if verbose {
+        dualOutput := io.MultiWriter(os.Stdout, logFile)
+        log.SetOutput(dualOutput)
+    }
     log.SetLevel(logLevel)
 }
 
