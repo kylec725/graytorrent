@@ -5,10 +5,10 @@ import (
     "net"
     "strconv"
 
+    "github.com/kylec725/graytorrent/connect"
     log "github.com/sirupsen/logrus"
     prefixed "github.com/x-cray/logrus-prefixed-formatter"
     viper "github.com/spf13/viper"
-    "github.com/pkg/errors"
 )
 
 var (
@@ -61,7 +61,7 @@ func setupViper() {
 // Binds a socket to some port for peers to contact us
 func setupListen() net.Listener {
     portRange := viper.GetIntSlice("network.portrange")
-    port, err = connect.OpenPort(portRange)
+    port, err := connect.OpenPort(portRange)
     if err != nil {
         log.WithFields(log.Fields{
             "portrange": portRange,
@@ -69,7 +69,7 @@ func setupListen() net.Listener {
         }).Warn("No open port found in portrange, using random port")
     }
 
-    service := ":" + strconv.Itoa(port)
+    service := ":" + strconv.Itoa(int(port))
     listener, err := net.Listen("tcp", service)
     if err != nil {
         panic("Could not bind to any port")

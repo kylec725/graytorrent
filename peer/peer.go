@@ -6,8 +6,6 @@ Peers also handle writing pieces to file if necessary.
 package peer
 
 import (
-    "net"
-    "strconv"
     "time"
     "math"
 
@@ -87,7 +85,7 @@ func (peer *Peer) Unchoke() error {
 func (peer *Peer) StartWork(work chan int, results chan int, remove chan string, done chan bool) {
     ctxLog := log.WithField("peer", peer.String())
     peer.shutdown = false
-    err := peer.verifyHandshake()
+    err := peer.initHandshake()
     if err != nil {
         ctxLog.WithField("error", err.Error()).Debug("Handshake failed")
         remove <- peer.String()  // Notify main to remove this peer from its list

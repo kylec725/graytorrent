@@ -5,7 +5,6 @@ import (
     "fmt"
     "net"
 
-    "github.com/kylec725/graytorrent/connect"
     "github.com/kylec725/graytorrent/torrent"
     flag "github.com/spf13/pflag"
     log "github.com/sirupsen/logrus"
@@ -67,4 +66,15 @@ func newTorrent(filename string) (torrent.Torrent, error) {
     torrentList = append(torrentList, to)
     log.WithField("name", to.Info.Name).Info("Torrent added")
     return to, nil
+}
+
+func peerListen(listener net.Listener) {
+    for {
+        conn, err := listener.Accept()
+        if err != nil {
+            log.WithField("error", err).Debug("Error with incoming peer connection")
+            continue
+        }
+        fmt.Println("New connection:", conn.LocalAddr().String())
+    }
 }
