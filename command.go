@@ -1,13 +1,38 @@
 package main
 
+import (
+    "github.com/kylec725/graytorrent/torrent"
+    "github.com/pkg/errors"
+)
 
-func newTorrent(filename string, port uint16) (torrent.Torrent, error) {
+/*
+Command provides main with facilities to manage its
+list of torrents.
+*/
+
+func addTorrent(torrentList []torrent.Torrent, filename string, port uint16) (torrent.Torrent, error) {
     to := torrent.Torrent{Path: filename, Port: port}
     if err := to.Setup(); err != nil {
-        log.WithFields(log.Fields{"file": filename, "error": err.Error()}).Info("Torrent setup failed")
-        return torrent.Torrent{}, err
+        return torrent.Torrent{}, errors.Wrap(err, "addTorrent")
     }
     torrentList = append(torrentList, to)
-    log.WithField("name", to.Info.Name).Info("Torrent added")
     return to, nil
+}
+
+func startTorrent(to torrent.Torrent) {
+    return
+}
+
+func stopTorrent(to torrent.Torrent) {
+    return
+}
+
+func removeTorrent(to torrent.Torrent) {
+    return
+}
+
+func shutdown(torrentList []torrent.Torrent) {
+    for i := range torrentList {
+        torrentList[i].Save()
+    }
 }

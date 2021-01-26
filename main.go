@@ -16,11 +16,13 @@ const logLevel = log.TraceLevel  // InfoLevel || DebugLevel || TraceLevel
 var (
     err error
     logFile *os.File
-    torrentList []torrent.Torrent
-    listener net.Listener
+
     filename string
     verbose bool
     port uint16
+
+    torrentList []torrent.Torrent
+    listener net.Listener
 )
 
 func init() {
@@ -45,12 +47,15 @@ func main() {
 
     // Single file torrent then exit
     if filename != "" {
-        to, err := newTorrent(filename, port)
+        to, err := addTorrent(torrentList, filename, port)
         if err != nil {
             fmt.Println("Single torrent failed:", err)
+            log.WithFields(log.Fields{"filename": filename, "error": err.Error()}).Info("Failed to add torrent")
             return
         }
+        log.WithField("name", to.Info.Name).Info("Torrent added")
         to.Start()
+        shutdown(torrentList)
         fmt.Println("Torrent done:", to.Info.Name)
         return
     }
@@ -60,15 +65,4 @@ func main() {
 
     // Send torrent stopped messages
     // Save torrent progresses to history file
-}
-
-func newTorrent(filename string, port uint16) (torrent.Torrent, error) {
-    to := torrent.Torrent{Path: filename, Port: port}
-    if err := to.Setup(); err != nil {
-        log.WithFields(log.Fields{"file": filename, "error": err.Error()}).Info("Torrent setup failed")
-        return torrent.Torrent{}, err
-    }
-    torrentList = append(torrentList, to)
-    log.WithField("name", to.Info.Name).Info("Torrent added")
-    return to, nil
 }
