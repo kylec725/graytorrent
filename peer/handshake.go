@@ -50,47 +50,48 @@ func (peer *Peer) sendHandshake() error {
     return errors.Wrap(err, "sendHandshake")
 }
 
-func (peer *Peer) rcvHandshake() error {
+func (peer *Peer) rcvHandshake() ([20]byte, error) {
     buf := make([]byte, 1)
     if err := peer.Conn.ReadFull(buf); err != nil {
-        return errors.Wrap(err, "rcvHandshake")
+        return [20]byte{}, errors.Wrap(err, "rcvHandshake")
     }
 
     pstrLen := buf[0]
     if pstrLen == 0 {
-        return errors.Wrap(ErrPstrLen, "rcvHandshake")
+        return [20]byte{}, errors.Wrap(ErrPstrLen, "rcvHandshake")
     }
 
     buf = make([]byte, 48 + pstrLen)
     if err := peer.Conn.ReadFull(buf); err != nil {
-        return errors.Wrap(err, "rcvHandshake")
+        return [20]byte{}, errors.Wrap(err, "rcvHandshake")
     }
 
     pstr := string(buf[:pstrLen])
     if pstr != protocol {
-        return errors.Wrap(ErrPstr, "rcvHandshake")
+        return [20]byte{}, errors.Wrap(ErrPstr, "rcvHandshake")
     }
 
     var infoHash [20]byte
     // var infoHash, peerID [20]byte
     copy(infoHash[:], buf[ pstrLen+8 : pstrLen+28 ])
     // copy(peerID[:], buf[ pstrLen+28 : pstrLen+48 ])  // TODO need to check for the corrent peer ID
-    if !bytes.Equal(peer.info.InfoHash[:], infoHash[:]) {
-        return errors.Wrap(ErrInfoHash, "rcvHandshake")
-    }
 
-    return nil
+    return infoHash, nil
 }
 
 // Verifies a peer has sent a handshake if necessary
-func (peer *Peer) verifyHandshake() error {
+func (peer *Peer) initHandshake() error {
     if err := peer.sendHandshake(); err != nil {
-        return errors.Wrap(err, "verifyHandshake")
-    } else if err = peer.rcvHandshake(); err != nil {
-        return errors.Wrap(err, "verifyHandshake")
+        return errors.Wrap(err, "initHandshake")
+    }
+    infoHash, err := peer.rcvHandshake()
+    if err != nil {
+        return errors.Wrap(err, "initHandshake")
+    } else if !bytes.Equal(peer.info.InfoHash[:], infoHash[:]) {  // Verify the infohash
+        return errors.Wrap(ErrInfoHash, "initHandshake")
     }
     // Send bitfield to the peer
     msg := message.Bitfield(peer.info.Bitfield)
-    err := peer.Conn.Write(msg.Encode())
-    return errors.Wrap(err, "verifyHandshake")
+    err = peer.Conn.Write(msg.Encode())
+    return errors.Wrap(err, "initHandshake")
 }
