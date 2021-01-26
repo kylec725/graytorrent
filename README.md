@@ -2,6 +2,7 @@
 BitTorrent client implemented in golang
 
 ## In Progress...
+- Manage multiple torrents
 - Fine-tune the adaptive download rate
 - Restructure the peers, trackers, and torrents as formal finite-state machines
 - UDP Tracker support
