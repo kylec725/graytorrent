@@ -86,13 +86,13 @@ func (peer *Peer) Unchoke() error {
 }
 
 // StartWork makes a peer wait for pieces to download
-func (peer *Peer) StartWork(work chan int, results, done chan bool) {
+func (peer *Peer) StartWork(work chan int, results chan int, remove chan string, done chan bool) {
     ctxLog := log.WithField("peer", peer.String())
     peer.shutdown = false
     err := peer.verifyHandshake()
     if err != nil {
         ctxLog.WithField("error", err.Error()).Debug("Handshake failed")
-        // remove <- peer.String()  // Notify main to remove this peer from its list
+        remove <- peer.String()  // Notify main to remove this peer from its list
         return
     }
     ctxLog.Debug("Handshake successful")
@@ -155,7 +155,7 @@ func (peer *Peer) StartWork(work chan int, results, done chan bool) {
         work <- peer.workQueue[i].index
     }
     peer.Conn.Quit()  // Tell connection goroutine to exit
-    // remove <- peer.String()  // Notify main to remove this peer from its list
+    remove <- peer.String()  // Notify main to remove this peer from its list
     ctxLog.Debug("Peer shutdown")
     return
 }
