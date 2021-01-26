@@ -15,7 +15,7 @@ type workPiece struct {
 }
 
 func (peer *Peer) addWorkPiece(index int) {
-    pieceSize := common.PieceSize(peer.info, index)
+    pieceSize := common.PieceSize(peer.Info, index)
     piece := make([]byte, pieceSize)
     newWork := workPiece{index, piece, pieceSize, 0, time.Now()}
     peer.workQueue = append(peer.workQueue, newWork)

@@ -7,7 +7,6 @@ import (
 
     "github.com/kylec725/graytorrent/peer/message"
     "github.com/kylec725/graytorrent/connect"
-    "github.com/kylec725/graytorrent/torrent"
     "github.com/pkg/errors"
 )
 
@@ -30,8 +29,8 @@ func (peer *Peer) newHandshake() []byte {
     curr := 1
     curr += copy(handshake[curr:], pstr)
     curr += copy(handshake[curr:], make([]byte, 8))  // TODO Extensions
-    curr += copy(handshake[curr:], peer.info.InfoHash[:])
-    curr += copy(handshake[curr:], peer.info.PeerID[:])
+    curr += copy(handshake[curr:], peer.Info.InfoHash[:])
+    curr += copy(handshake[curr:], peer.Info.PeerID[:])
     return handshake
 }
 
@@ -90,28 +89,11 @@ func (peer *Peer) initHandshake() error {
     infoHash, err := peer.RcvHandshake()
     if err != nil {
         return errors.Wrap(err, "initHandshake")
-    } else if !bytes.Equal(peer.info.InfoHash[:], infoHash[:]) {  // Verify the infohash
+    } else if !bytes.Equal(peer.Info.InfoHash[:], infoHash[:]) {  // Verify the infohash
         return errors.Wrap(ErrInfoHash, "initHandshake")
     }
     // Send bitfield to the peer
-    msg := message.Bitfield(peer.info.Bitfield)
+    msg := message.Bitfield(peer.Info.Bitfield)
     err = peer.Conn.Write(msg.Encode())
     return errors.Wrap(err, "initHandshake")
-}
-
-// AcceptHandshake attempts to accept an incoming peer and add it to a torrent's session
-func (peer *Peer) AcceptHandshake(torrentList []torrent.Torrent) error {
-    infoHash, err := peer.RcvHandshake()
-    if err != nil {
-        return errors.Wrap(err, "AcceptHandshake")
-    }
-    for i, to := range torrentList {
-        if bytes.Equal(infoHash, to.Info.InfoHash) {
-            peer.info = &torrentList[i].Info
-            torrentList[i].IncomingPeers <- *peer  // Send to torrent session
-            peer.verified = true  // So that StartWork does not send another handshake
-            return nil
-        }
-    }
-    return errors.Wrap(ErrInfoHash, "AcceptHandshake")
 }

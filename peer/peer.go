@@ -26,8 +26,8 @@ const startRate = 2  // Uses adaptive rate after first requests
 type Peer struct {
     Addr string
     Conn *connect.Conn  // nil if not connected
+    Info *common.TorrentInfo
 
-    info *common.TorrentInfo
     bitfield bitfield.Bitfield
     amChoking bool
     amInterested bool
@@ -49,8 +49,8 @@ func New(addr string, conn net.Conn, info *common.TorrentInfo) Peer {
     return Peer{
         Addr: addr,
         Conn: &connect.Conn{Conn: conn, Timeout: handshakeTimeout},
+        Info: info,
 
-        info: info,
         bitfield: make([]byte, bitfieldSize),
         amChoking: true,
         amInterested: false,

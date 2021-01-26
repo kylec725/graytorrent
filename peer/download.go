@@ -42,7 +42,7 @@ func (peer *Peer) handleMessage(msg *message.Message, work chan int, results cha
         index := binary.BigEndian.Uint32(msg.Payload)
         peer.bitfield.Set(int(index))
     case message.MsgBitfield:
-        expected := int(math.Ceil(float64(peer.info.TotalPieces) / 8))
+        expected := int(math.Ceil(float64(peer.Info.TotalPieces) / 8))
         if len(msg.Payload) != expected {
             return errors.Wrap(ErrBitfield, "handleMessage")
         }
@@ -90,11 +90,11 @@ func (peer *Peer) handleRequest(msg *message.Message) error {
     index := binary.BigEndian.Uint32(msg.Payload[0:4])
     begin := binary.BigEndian.Uint32(msg.Payload[4:8])
     length := binary.BigEndian.Uint32(msg.Payload[8:12])
-    if !peer.info.Bitfield.Has(int(index)) {  // Ignore request if we don't have the piece
+    if !peer.Info.Bitfield.Has(int(index)) {  // Ignore request if we don't have the piece
         return nil
     }
 
-    piece, err := write.ReadPiece(peer.info, int(index))
+    piece, err := write.ReadPiece(peer.Info, int(index))
     if err != nil {
         return errors.Wrap(err, "handleRequest")
     } else if len(piece) < int(begin + length) {  // Ignore request if the bounds aren't possible
@@ -115,7 +115,7 @@ func (peer *Peer) handlePiece(msg *message.Message, work chan int, results chan 
     for i := range peer.workQueue {  // We want to operate directly on the workQueue pieces
         if index == uint32(peer.workQueue[i].index) {
             peer.workQueue[i].left -= len(block)
-            err := write.AddBlock(peer.info, int(index), int(begin), block, peer.workQueue[i].piece)
+            err := write.AddBlock(peer.Info, int(index), int(begin), block, peer.workQueue[i].piece)
             if err != nil {
                 errors.Wrap(err, "handlePiece")
             }
@@ -127,12 +127,12 @@ func (peer *Peer) handlePiece(msg *message.Message, work chan int, results chan 
 
             // Piece is done: Verify hash then write
             peer.adjustRate(peer.workQueue[i])  // Change rate regardless whether piece was correct
-            if !write.VerifyPiece(peer.info, int(index), peer.workQueue[i].piece) {  // Return to work pool if hash is incorrect
+            if !write.VerifyPiece(peer.Info, int(index), peer.workQueue[i].piece) {  // Return to work pool if hash is incorrect
                 work <- int(index)
                 peer.removeWorkPiece(int(index))
                 return errors.Wrap(ErrPieceHash, "handlePiece")
             }
-            if err = write.AddPiece(peer.info, int(index), peer.workQueue[i].piece); err != nil {  // Write piece to file
+            if err = write.AddPiece(peer.Info, int(index), peer.workQueue[i].piece); err != nil {  // Write piece to file
                 log.WithFields(log.Fields{"peer": peer.String(), "piece index": index, "error": err.Error()}).Debug("Writing piece to file failed")
                 work <- int(index)
                 peer.removeWorkPiece(int(index))
@@ -141,7 +141,7 @@ func (peer *Peer) handlePiece(msg *message.Message, work chan int, results chan 
             log.WithFields(log.Fields{"peer": peer.String(), "piece index": index, "rate": peer.rate}).Trace("Wrote piece to file")
 
             // Write was successful
-            peer.info.Left -= peer.workQueue[i].curr
+            peer.Info.Left -= peer.workQueue[i].curr
             peer.removeWorkPiece(int(index))
             results <- int(index)  // Notify main that a piece is done
 
