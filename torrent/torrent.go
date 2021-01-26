@@ -16,6 +16,7 @@ import (
     "github.com/kylec725/graytorrent/peer"
     "github.com/kylec725/graytorrent/write"
     "github.com/pkg/errors"
+    log "github.com/sirupsen/logrus"
 )
 
 // Errors
@@ -85,8 +86,8 @@ func (to *Torrent) Stop() {
 }
 
 // Start initiates a routine to download a torrent from peers
-// TODO
 func (to *Torrent) Start() {
+    log.WithField("name", to.Info.Name).Info("Torrent started")
     to.shutdown = false
     peers := make(chan peer.Peer)                   // For incoming peers from trackers  // TODO consider buffering the peer channel
     work := make(chan int, to.Info.TotalPieces)     // Piece indices we need
@@ -131,4 +132,5 @@ func (to *Torrent) Start() {
 
     exit:
     close(done)
+    log.WithField("name", to.Info.Name).Info("Torrent stopped")
 }
