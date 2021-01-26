@@ -34,8 +34,9 @@ type Conn struct {
 // Write sends data over a connection, returns an error if not all of the data is sent
 func (conn *Conn) Write(buf []byte) error {
     conn.Conn.SetWriteDeadline(time.Time{})  // No deadline for writing
+    var err error
     for i := 0; i < retry; i++ {
-        _, err := conn.Conn.Write(buf)
+        _, err = conn.Conn.Write(buf)
         if err == nil {
             break
         }
@@ -51,7 +52,7 @@ func (conn *Conn) Write(buf []byte) error {
         }
         return errors.Wrap(err, "Write")
     }
-    return nil
+    return errors.Wrap(err, "Write")
 }
 
 // Read reads in data from a connection, returns an error if the buffer is not filled
@@ -100,26 +101,28 @@ func (conn *Conn) Quit() {
 // Await polls a connection for data and returns it over a channel
 func (conn *Conn) Await(output chan []byte) {
     conn.shutdown = false
-    if err := conn.Conn.SetDeadline(time.Time{}); err != nil {  // Connection dies after a set timeout period
-        close(output)
-        return
-    }
     for {
+        if err := conn.Conn.SetReadDeadline(time.Now().Add(conn.Timeout)); err != nil {  // Connection dies after a set timeout period
+            goto exit
+        }
+
         buf := make([]byte, 4)  // Expect message length prefix of 4 bytes
         if bytesRead, err := conn.Conn.Read(buf); err != nil || conn.shutdown {
-            break
+            goto exit
         } else if bytesRead != 4 && !conn.shutdown {
-            break
+            goto exit
         }
         length := binary.BigEndian.Uint32(buf)
         buf = make([]byte, length)
         if bytesRead, err := io.ReadFull(conn.Conn, buf); err != nil || conn.shutdown {
-            break
+            goto exit
         } else if uint32(bytesRead) != length || conn.shutdown {
-            break
+            goto exit
         }
         output <- buf
     }
+
+    exit:
     close(output)
     conn.Conn.Close()
     return
