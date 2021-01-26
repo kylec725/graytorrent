@@ -1,10 +1,8 @@
-package torrent
+package tracker
 
 import (
-    "strconv"
     "time"
     "math/rand"
-    "net/url"
     "net/http"
 
     "github.com/kylec725/graytorrent/common"
@@ -48,7 +46,8 @@ func newTracker(announce string, info *common.TorrentInfo, port uint16) Tracker 
     }
 }
 
-func getTrackers(meta metainfo.BencodeMeta, info *common.TorrentInfo, port uint16) ([]Tracker, error) {
+// GetTrackers parses metainfo to retrieve a list of trackers
+func GetTrackers(meta metainfo.BencodeMeta, info *common.TorrentInfo, port uint16) ([]Tracker, error) {
     // If announce-list is empty, use announce only
     if len(meta.AnnounceList) == 0 {
         // Check if no announce strings exist
@@ -79,31 +78,6 @@ func getTrackers(meta metainfo.BencodeMeta, info *common.TorrentInfo, port uint1
     })
 
     return trackers, nil
-}
-
-func (tr Tracker) buildURL(infoHash [20]byte, peerID [20]byte, port uint16, left int, event string) (string, error) {
-    base, err := url.Parse(tr.Announce)
-    if err != nil {
-        return "", errors.Wrap(err, "buildURL")
-    }
-
-    params := url.Values{
-        "info_hash": []string{string(infoHash[:])},
-        "peer_id": []string{string(peerID[:])},
-        "port": []string{strconv.Itoa(int(port))},
-        "uploaded": []string{"0"},
-        "downloaded": []string{"0"},
-        "left": []string{strconv.Itoa(left)},
-        "compact": []string{"1"},
-        "event": []string{event},
-    }
-
-    if event == "" {
-        delete(params, "event")
-    }
-
-    base.RawQuery = params.Encode()
-    return base.String(), nil
 }
 
 // Run starts a tracker and gets peers for a torrent

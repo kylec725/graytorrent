@@ -1,9 +1,10 @@
-package torrent
+package tracker
 
 import (
-    // "fmt"
-    "github.com/kylec725/graytorrent/peer"
+    "net/url"
+    "strconv"
 
+    "github.com/kylec725/graytorrent/peer"
     "github.com/pkg/errors"
     bencode "github.com/jackpal/bencode-go"
 )
@@ -19,6 +20,31 @@ type bencodeTrackerResp struct {
     Failure string `bencode:"failure reason"`
     Complete int `bencode:"complete"`
     Incomplete int `bencode:"incomplete"`
+}
+
+func (tr Tracker) buildURL(infoHash [20]byte, peerID [20]byte, port uint16, left int, event string) (string, error) {
+    base, err := url.Parse(tr.Announce)
+    if err != nil {
+        return "", errors.Wrap(err, "buildURL")
+    }
+
+    params := url.Values{
+        "info_hash": []string{string(infoHash[:])},
+        "peer_id": []string{string(peerID[:])},
+        "port": []string{strconv.Itoa(int(port))},
+        "uploaded": []string{"0"},
+        "downloaded": []string{"0"},
+        "left": []string{strconv.Itoa(left)},
+        "compact": []string{"1"},
+        "event": []string{event},
+    }
+
+    if event == "" {
+        delete(params, "event")
+    }
+
+    base.RawQuery = params.Encode()
+    return base.String(), nil
 }
 
 func (tr *Tracker) sendStarted() ([]peer.Peer, error) {

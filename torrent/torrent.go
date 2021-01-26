@@ -13,6 +13,7 @@ package torrent
 import (
     "github.com/kylec725/graytorrent/common"
     "github.com/kylec725/graytorrent/metainfo"
+    "github.com/kylec725/graytorrent/tracker"
     "github.com/kylec725/graytorrent/peer"
     "github.com/kylec725/graytorrent/write"
     "github.com/pkg/errors"
@@ -28,7 +29,7 @@ var (
 type Torrent struct {
     Path string
     Info common.TorrentInfo
-    Trackers []Tracker
+    Trackers []tracker.Tracker
     Peers []peer.Peer
     Port uint16
     IncomingPeers chan peer.Peer  // Used by main to forward incoming peers
@@ -52,7 +53,7 @@ func (to *Torrent) Setup() error {
     }
 
     // Create trackers list from metainfo announce or announce-list
-    to.Trackers, err = getTrackers(meta, &to.Info, to.Port)
+    to.Trackers, err = tracker.GetTrackers(meta, &to.Info, to.Port)
     if err != nil {
         return errors.Wrap(err, "Setup")
     }
