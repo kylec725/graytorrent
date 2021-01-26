@@ -125,8 +125,8 @@ func (to *Torrent) Start() {
 }
 
 // Save saves data about a managed torrent's state to a file
-func (to *Torrent) Save() {
-
+func (to *Torrent) Save() error {
+    return nil
 }
 
 func (to *Torrent) removePeer(name string) {
