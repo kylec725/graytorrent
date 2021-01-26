@@ -2,7 +2,6 @@ package main
 
 import (
 	"os"
-    "fmt"
 
     "github.com/kylec725/graytorrent/connect"
     "github.com/kylec725/graytorrent/torrent"
