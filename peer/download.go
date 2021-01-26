@@ -140,6 +140,7 @@ func (peer *Peer) handlePiece(msg *message.Message, work chan int, results chan 
                 peer.removeWorkPiece(int(index))
                 return errors.Wrap(err, "handlePiece")
             }
+            log.WithFields(log.Fields{"peer": peer.String(), "piece index": index}).Trace("Wrote piece to file")
 
             // Write was successful
             peer.info.Left -= peer.workQueue[i].curr
@@ -155,7 +156,6 @@ func (peer *Peer) handlePiece(msg *message.Message, work chan int, results chan 
                 }
                 peer.amInterested = false
             }
-            fmt.Println("Wrote piece", index, "from", peer.String(), "New rate:", peer.rate)
             break  // Exit loop early on successful write
         }
     }
