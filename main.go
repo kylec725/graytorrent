@@ -49,7 +49,7 @@ func main() {
 
     // Single file torrent then exit
     if filename != "" {
-        singleTorrent(filename)
+        singleTorrent()
         return
     }
 
