@@ -28,7 +28,6 @@ var (
 type Conn struct {
     Conn net.Conn
     Timeout time.Duration  // TODO remove timeout in favor of goroutine based receiving
-    shutdown bool
 }
 
 // Write sends data over a connection, returns an error if not all of the data is sent
@@ -94,30 +93,24 @@ func (conn *Conn) Close() error {
     return conn.Conn.Close()
 }
 
-// Quit signals a connection goroutine to exit
-func (conn *Conn) Quit() {
-    conn.shutdown = true
-}
-
 // Await polls a connection for data and returns it over a channel
 func (conn *Conn) Await(output chan []byte) {
-    conn.shutdown = false
     for {
-        if err := conn.Conn.SetReadDeadline(time.Now().Add(conn.Timeout)); err != nil {  // Connection dies after a set timeout period
+        if err := conn.Conn.SetReadDeadline(time.Now().Add(conn.Timeout)); err != nil {  // We use this to check if the connection was closed
             goto exit
         }
 
         buf := make([]byte, 4)  // Expect message length prefix of 4 bytes
-        if bytesRead, err := io.ReadFull(conn.Conn, buf); err != nil || conn.shutdown {
+        if bytesRead, err := io.ReadFull(conn.Conn, buf); err != nil {
             goto exit
-        } else if bytesRead != 4 && !conn.shutdown {
+        } else if bytesRead != 4 {
             goto exit
         }
         length := binary.BigEndian.Uint32(buf)
         buf = make([]byte, length)
-        if bytesRead, err := io.ReadFull(conn.Conn, buf); err != nil || conn.shutdown {
+        if bytesRead, err := io.ReadFull(conn.Conn, buf); err != nil {
             goto exit
-        } else if uint32(bytesRead) != length || conn.shutdown {
+        } else if uint32(bytesRead) != length {
             goto exit
         }
         output <- buf
