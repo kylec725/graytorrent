@@ -22,8 +22,6 @@ type Tracker struct {
     Announce string
     Working bool
     Interval int
-    Complete int
-    Incomplete int
 
     info *common.TorrentInfo
     httpClient *http.Client
@@ -36,8 +34,6 @@ func newTracker(announce string, info *common.TorrentInfo, port uint16) Tracker 
         Announce: announce,
         Working: false,
         Interval: 60,
-        Complete: 0,
-        Incomplete: 0,
 
         info: info,
         httpClient: &http.Client{ Timeout: 20 * time.Second },

@@ -83,8 +83,6 @@ func (tr *Tracker) sendStarted() ([]peer.Peer, error) {
 
     // Update tracker information
     tr.Interval = trResp.Interval
-    tr.Complete = trResp.Complete
-    tr.Incomplete = trResp.Incomplete
 
     peersBytes := []byte(trResp.Peers)
     peersList, err := peer.Unmarshal(peersBytes, tr.info)
@@ -120,8 +118,6 @@ func (tr *Tracker) sendStopped() error {
 
     // Update tracker information
     tr.Interval = trResp.Interval
-    tr.Complete = trResp.Complete
-    tr.Incomplete = trResp.Incomplete
 
     return nil
 }
