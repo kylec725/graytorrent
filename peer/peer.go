@@ -45,10 +45,14 @@ func (peer Peer) String() string {
 
 // New returns a new instantiated peer
 func New(addr string, conn net.Conn, info *common.TorrentInfo) Peer {
+    var peerConn *connect.Conn = nil
+    if conn != nil {
+        peerConn = &connect.Conn{Conn: conn, Timeout: handshakeTimeout}
+    }
     bitfieldSize := int(math.Ceil(float64(info.TotalPieces) / 8))
     return Peer{
         Addr: addr,
-        Conn: &connect.Conn{Conn: conn, Timeout: handshakeTimeout},
+        Conn: peerConn,
         Info: info,
 
         bitfield: make([]byte, bitfieldSize),
