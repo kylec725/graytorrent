@@ -4,6 +4,7 @@ import (
     "bytes"
 
     "github.com/kylec725/graytorrent/peer"
+    "github.com/pkg/errors"
     log "github.com/sirupsen/logrus"
 )
 
@@ -12,7 +13,9 @@ func peerListen() {
     for {
         conn, err := listener.Accept()
         if err != nil {  // Exit if the listener encounters an error
-            log.WithField("error", err.Error()).Debug("Listener shutdown")
+            if errors.Unwrap(err).Error() != "use of closed network connection" {
+                log.WithField("error", err.Error()).Debug("Listener shutdown")
+            }
             return
         }
 
