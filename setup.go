@@ -16,7 +16,7 @@ var (
     homeDir = os.Getenv("HOME")
 )
 
-func setupLog(verbose bool) {
+func setupLog() {
     // Logging file
     logFile, err = os.OpenFile("info.log", os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0644)
     // logFile, err = os.OpenFile(homeDir + "/.config/graytorrent/info.log", os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0644)
@@ -66,7 +66,7 @@ func setupViper() {
 // Binds a socket to some port for peers to contact us
 func setupListen() (net.Listener, uint16) {
     portRange := viper.GetIntSlice("network.portrange")
-    port, err := connect.OpenPort(portRange)
+    port, err = connect.OpenPort(portRange)
     if err != nil {
         log.WithFields(log.Fields{
             "portrange": portRange,
@@ -79,6 +79,7 @@ func setupListen() (net.Listener, uint16) {
     if err != nil {
         panic("Could not bind to any port")
     }
+    // Set global port
     port, err = connect.PortFromAddr(listener.Addr().String())  // Get actual port in case none in portrange were available
     if err != nil {
         panic("Could not find the binded port")

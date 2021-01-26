@@ -17,6 +17,7 @@ var (
     err error
     logFile *os.File
 
+    // Flags
     filename string
     verbose bool
     port uint16
@@ -30,7 +31,7 @@ func init() {
     flag.BoolVarP(&verbose, "verbose", "v", false, "Print events to stdout")
     flag.Parse()
 
-    setupLog(verbose)
+    setupLog()
     log.Info("Graytorrent started")
 
     setupViper()
@@ -42,12 +43,14 @@ func init() {
 func main() {
     defer logFile.Close()
     defer log.Info("Graytorrent stopped")
+    defer listener.Close()
+    defer saveTorrents()
 
-    go peerListen(listener)  // Listen for incoming peer connections
+    go peerListen()  // Listen for incoming peer connections
 
     // Single file torrent then exit
     if filename != "" {
-        to, err := addTorrent(torrentList, filename, port)
+        to, err := addTorrent(filename)
         if err != nil {
             fmt.Println("Single torrent failed:", err)
             log.WithFields(log.Fields{"filename": filename, "error": err.Error()}).Info("Failed to add torrent")
@@ -55,7 +58,7 @@ func main() {
         }
         log.WithField("name", to.Info.Name).Info("Torrent added")
         to.Start()
-        shutdown(torrentList)
+        to.Save()
         fmt.Println("Torrent done:", to.Info.Name)
         return
     }
@@ -64,5 +67,4 @@ func main() {
     // defer g.Close()
 
     // Send torrent stopped messages
-    // Save torrent progresses to history file
 }

@@ -10,7 +10,7 @@ Command provides main with facilities to manage its
 list of torrents.
 */
 
-func addTorrent(torrentList []torrent.Torrent, filename string, port uint16) (torrent.Torrent, error) {
+func addTorrent(filename string) (torrent.Torrent, error) {
     to := torrent.Torrent{Path: filename, Port: port}
     if err := to.Setup(); err != nil {
         return torrent.Torrent{}, errors.Wrap(err, "addTorrent")
@@ -31,7 +31,7 @@ func removeTorrent(to torrent.Torrent) {
     return
 }
 
-func shutdown(torrentList []torrent.Torrent) {
+func saveTorrents() {
     for i := range torrentList {
         torrentList[i].Save()
     }

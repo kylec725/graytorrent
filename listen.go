@@ -1,7 +1,6 @@
 package main
 
 import (
-    "net"
     "bytes"
 
     "github.com/kylec725/graytorrent/peer"
@@ -9,7 +8,7 @@ import (
 )
 
 // Loop to listen on incoming connections for potential new peers
-func peerListen(listener net.Listener) {
+func peerListen() {
     for {
         conn, err := listener.Accept()
         if err != nil {
