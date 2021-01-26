@@ -27,6 +27,7 @@ type Peer struct {
     Addr string
     Conn *connect.Conn  // nil if not connected
     Info *common.TorrentInfo
+    Verified bool  // says whether the infohash matches or not
 
     bitfield bitfield.Bitfield
     amChoking bool
@@ -35,7 +36,6 @@ type Peer struct {
     peerInterested bool
     rate int  // max number of outgoing requests/pieces a peer can queue
     workQueue []workPiece
-    verified bool  // says whether the infohash matches or not
     shutdown bool
 }
 
@@ -87,7 +87,7 @@ func (peer *Peer) Unchoke() error {
 func (peer *Peer) StartWork(work chan int, results chan int, remove chan string, done chan bool) {
     ctxLog := log.WithField("peer", peer.String())
     peer.shutdown = false
-    if !peer.verified {
+    if !peer.Verified {
         err := peer.initHandshake()
         if err != nil {
             ctxLog.WithField("error", err.Error()).Debug("Handshake failed")
@@ -158,7 +158,7 @@ func (peer *Peer) StartWork(work chan int, results chan int, remove chan string,
         work <- peer.workQueue[i].index
     }
     peer.Conn.Quit()  // Tell connection goroutine to exit
-    peer.verified = false  // Make sure we send a handshake when we start again
+    peer.Verified = false  // Make sure we send a handshake when we start again
     ctxLog.Debug("Peer shutdown")
     return
 }
