@@ -108,7 +108,8 @@ func (peer *Peer) AcceptHandshake(torrentList []torrent.Torrent) error {
     for i, to := range torrentList {
         if bytes.Equal(infoHash, to.Info.InfoHash) {
             peer.info = &torrentList[i].Info
-            torrentList[i].IncomingPeers <- *peer
+            torrentList[i].IncomingPeers <- *peer  // Send to torrent session
+            peer.verified = true  // So that StartWork does not send another handshake
             return nil
         }
     }
