@@ -3,6 +3,7 @@ package main
 import (
 	"os"
     "fmt"
+    "net"
 
     "github.com/kylec725/graytorrent/connect"
     "github.com/kylec725/graytorrent/torrent"
@@ -14,11 +15,11 @@ import (
 const logLevel = log.TraceLevel  // InfoLevel || DebugLevel || TraceLevel
 
 var (
-    logFile *os.File
-    port uint16
     err error
+    logFile *os.File
     filename string
     torrentList []torrent.Torrent
+    listener net.Listener
 )
 
 func init() {
@@ -30,18 +31,8 @@ func init() {
 
     setupViper()
     viper.WatchConfig()
-}
 
-func init() {
-    portRange := viper.GetIntSlice("network.portrange")
-    port, err = connect.OpenPort(portRange)
-    if err != nil {
-        log.WithFields(log.Fields{
-            "portrange": portRange,
-            "error": err.Error(),
-        }).Warn("No open port found in portrange, using random port")
-        // TODO get a random port to use for the client
-    }
+    listener = setupListen()
 }
 
 func main() {
@@ -56,6 +47,7 @@ func main() {
             return
         }
         to.Start()
+        fmt.Println("Torrent done:", to.Info.Name)
         return
     }
 
