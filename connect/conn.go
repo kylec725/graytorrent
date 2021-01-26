@@ -27,7 +27,7 @@ var (
 // Conn is a wrapper around net.Conn with a variable timeout for read/write calls
 type Conn struct {
     Conn net.Conn
-    Timeout time.Duration  // TODO remove timeout in favor of goroutine based receiving
+    Timeout time.Duration
 }
 
 // Write sends data over a connection, returns an error if not all of the data is sent
