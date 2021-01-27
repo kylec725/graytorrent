@@ -78,10 +78,6 @@ func (peer *Peer) handleSend(msg message.Message) error {
         peer.amChoking = true
     case message.MsgUnchoke:
         peer.amChoking = false
-    case message.MsgInterested:
-        peer.amInterested = true
-    case message.MsgNotInterested:
-        peer.amInterested = false
     }
     err := peer.Conn.Write(msg.Encode())
     return errors.Wrap(err, "handleSend")
