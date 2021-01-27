@@ -15,6 +15,7 @@ import (
     "github.com/kylec725/graytorrent/metainfo"
     "github.com/kylec725/graytorrent/tracker"
     "github.com/kylec725/graytorrent/peer"
+    "github.com/kylec725/graytorrent/peer/message"
     "github.com/kylec725/graytorrent/write"
     "github.com/pkg/errors"
     log "github.com/sirupsen/logrus"
@@ -143,11 +144,9 @@ func (to *Torrent) Save() {
 }
 
 func (to *Torrent) sendHave(index int) {
-    var err error
+    msg := message.Have(uint32(index))
     for _, peer :=  range to.Peers {
-        if err = peer.Have(index); err != nil {
-            log.WithFields(log.Fields{"peer": peer.String(), "error": err.Error()}).Debug("Error sending have message")
-        }
+        peer.Send(msg)
     }
 }
 

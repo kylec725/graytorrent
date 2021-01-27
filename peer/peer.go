@@ -67,8 +67,8 @@ func New(addr string, conn net.Conn, info *common.TorrentInfo) Peer {
     }
 }
 
-// Send allows outside goroutines to send messages to a peer
-func (peer *Peer) Send(msg message.Message) {  // Main should handle shutting down the peer if we have an error
+// Send allows outside goroutines to send messages to a peer, not used internally
+func (peer *Peer) Send(msg message.Message) {
     peer.send <- msg
 }
 
@@ -111,7 +111,6 @@ func (peer *Peer) StartWork(work chan int, results chan int, remove chan string)
             work <- peer.workQueue[i].index
         }
         peer.Conn.Close()  // Close the connection, results in the goroutine exiting due to error
-        peer.Conn = nil  // Clear the connection for next time
         ctxLog.Debug("Peer shutdown")
     }()
 
@@ -135,9 +134,8 @@ func (peer *Peer) StartWork(work chan int, results chan int, remove chan string)
                 return
             }
         case msg := <-peer.send:
-            ctxLog.WithFields(log.Fields{"type": msg.String()}).Debug("Received message to send")
             if err := peer.handleSend(msg); err != nil {
-                ctxLog.WithFields(log.Fields{"type": msg.String(), "size": len(msg.Payload), "error": err.Error()}).Debug("Error sending message")
+                ctxLog.WithFields(log.Fields{"type": msg.String(), "error": err.Error()}).Debug("Error sending message")
                 remove <- peer.String()
             }
         case <-peer.shutdown:  // Check if the torrent told the peer to shutdown
