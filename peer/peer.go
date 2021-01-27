@@ -22,11 +22,6 @@ const peerTimeout = 120 * time.Second
 const pollTimeout = 5 * time.Second
 const startRate = 2  // Uses adaptive rate after first requests
 
-// Errors
-var (
-    ErrConn = errors.New("Connection is not instantiated")
-)
-
 // Peer stores info about connecting to peers as well as their state
 type Peer struct {
     Addr string
