@@ -76,14 +76,14 @@ func (peer *Peer) handleMessage(msg *message.Message, info common.TorrentInfo, w
 // sendRequest sends a piece request message to a peer
 func (peer *Peer) sendRequest(index, begin, length int) error {
     msg := message.Request(uint32(index), uint32(begin), uint32(length))
-    err := peer.Conn.Write(msg.Encode())
+    _, err := peer.Conn.Write(msg.Encode())
     return errors.Wrap(err, "sendRequest")
 }
 
 func (peer *Peer) handleRequest(msg *message.Message, info common.TorrentInfo) error {
     if peer.amChoking {  // Tell the peer we are choking them and return
         chokeMsg := message.Choke()
-        err := peer.Conn.Write(chokeMsg.Encode())
+        _, err := peer.Conn.Write(chokeMsg.Encode())
         return errors.Wrap(err, "handleRequest")
     }
 
@@ -101,7 +101,7 @@ func (peer *Peer) handleRequest(msg *message.Message, info common.TorrentInfo) e
         return nil
     }
     pieceMsg := message.Piece(index, begin, piece[begin:begin+length])
-    err = peer.Conn.Write(pieceMsg.Encode())
+    _, err = peer.Conn.Write(pieceMsg.Encode())
     return errors.Wrap(err, "handleRequest")
 }
 
@@ -147,7 +147,7 @@ func (peer *Peer) handlePiece(msg *message.Message, info common.TorrentInfo, wor
             // Send not interested if necessary
             if len(peer.workQueue) == 0 {
                 msg := message.NotInterested()
-                if err := peer.Conn.Write(msg.Encode()); err != nil {
+                if _, err := peer.Conn.Write(msg.Encode()); err != nil {
                     return errors.Wrap(err, "downloadPiece")
                 }
                 peer.amInterested = false
@@ -172,15 +172,15 @@ func (peer *Peer) nextBlock(index int) error {
 }
 
 // downloadPiece starts a routine to download a piece from a peer
-func (peer *Peer) downloadPiece(index int) error {
+func (peer *Peer) downloadPiece(info common.TorrentInfo, index int) error {  // TODO make sure we are unchoked before sending requests
     if !peer.amInterested {
         msg := message.Interested()
-        if err := peer.Conn.Write(msg.Encode()); err != nil {
+        if _, err := peer.Conn.Write(msg.Encode()); err != nil {
             return errors.Wrap(err, "downloadPiece")
         }
         peer.amInterested = true
     }
-    peer.addWorkPiece(index)
+    peer.addWorkPiece(info, index)
     err := peer.nextBlock(index)  // First block request
     return errors.Wrap(err, "downloadPiece")
 }

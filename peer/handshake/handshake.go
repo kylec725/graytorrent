@@ -13,7 +13,6 @@ const protocol = "BitTorrent protocol"
 var (
     ErrPstrLen = errors.New("Got bad pstr length")
     ErrPstr = errors.New("Got incorrect pstr")
-    ErrInfoHash = errors.New("Received infohash does not match")
     // ErrPeerID = errors.New("Received peer ID was incorrect")
 )
 

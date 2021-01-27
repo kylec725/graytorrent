@@ -4,6 +4,7 @@ import (
     "time"
     "math/rand"
     "net/http"
+    "context"
 
     "github.com/kylec725/graytorrent/common"
     "github.com/kylec725/graytorrent/metainfo"
@@ -28,27 +29,27 @@ type Tracker struct {
     txID uint32  // Used by UDP trackers
     cnID uint64
 
-    info *common.TorrentInfo
+    // info *common.TorrentInfo
     httpClient *http.Client
-    port uint16
+    // port uint16
     shutdown chan int  // Used by main to shutdown and send how many bytes are left
 }
 
-func newTracker(announce string, info *common.TorrentInfo, port uint16) Tracker {
+func newTracker(announce string) Tracker {
     return Tracker{
         Announce: announce,
         Working: false,
         Interval: 60,
 
-        info: info,
+        // info: info,
         httpClient: &http.Client{ Timeout: 20 * time.Second },
-        port: port,
-        shutdown: make(chan int),
+        // port: port,
+        // shutdown: make(chan int),
     }
 }
 
 // GetTrackers parses metainfo to retrieve a list of trackers
-func GetTrackers(meta metainfo.BencodeMeta, info *common.TorrentInfo, port uint16) ([]Tracker, error) {
+func GetTrackers(meta metainfo.BencodeMeta, port uint16) ([]Tracker, error) {
     // If announce-list is empty, use announce only
     if len(meta.AnnounceList) == 0 {
         // Check if no announce strings exist
@@ -57,7 +58,7 @@ func GetTrackers(meta metainfo.BencodeMeta, info *common.TorrentInfo, port uint1
         }
 
         trackers := make([]Tracker, 1)
-        trackers[0] = newTracker(meta.Announce, info, port)
+        trackers[0] = newTracker(meta.Announce)
         return trackers, nil
     }
 
@@ -67,7 +68,7 @@ func GetTrackers(meta metainfo.BencodeMeta, info *common.TorrentInfo, port uint1
     // Add each announce in announce-list as a tracker
     for _, group := range meta.AnnounceList {
         for _, announce := range group {
-            trackers = append(trackers, newTracker(announce, info, port))
+            trackers = append(trackers, newTracker(announce))
             numAnnounce++
         }
     }
@@ -87,19 +88,27 @@ func (tr *Tracker) Shutdown(left int) {
 }
 
 // Run starts a tracker and gets peers for a torrent
-func (tr *Tracker) Run(startLeft int, peers chan peer.Peer) {
-    ctxLog := log.WithField("tracker", tr.Announce)
-    peerList, err := tr.sendStarted(startLeft)  // hardcoded number of bytes left
+func (tr *Tracker) Run(ctx context.Context, peers chan peer.Peer) {
+    info := common.Info(ctx)
+    port := common.Port(ctx)
+    trackerLog := log.WithField("tracker", tr.Announce)
+    peerList, err := tr.sendStarted(info, port)  // hardcoded number of bytes left
     if err != nil {
         tr.Working = false
-        ctxLog.WithField("error", err.Error()).Debug("Error while sending started message")
+        trackerLog.WithField("error", err.Error()).Debug("Error while sending started message")
     } else {
         tr.Working = true
-        ctxLog.WithField("amount", len(peerList)).Debug("Received list of peers")
+        trackerLog.WithField("amount", len(peerList)).Debug("Received list of peers")
     }
 
     // Cleanup
     defer func() {
+        currInfo := common.Info(ctx)
+        if tr.Working {  // Send stopped message if necessary
+            if err = tr.sendStopped(currInfo, port); err != nil {
+                trackerLog.WithField("error", err.Error()).Debug("Error while sending stopped message")
+            }
+        }
     }()
 
     // Send peers through channel
@@ -109,12 +118,8 @@ func (tr *Tracker) Run(startLeft int, peers chan peer.Peer) {
 
     for {
         select {
-        case left := <-tr.shutdown:
-            if tr.Working {  // Send stopped message if necessary
-                if err = tr.sendStopped(left); err != nil {
-                    ctxLog.WithField("error", err.Error()).Debug("Error while sending stopped message")
-                }
-            }
+        case <-ctx.Done():
+            return
         case <-time.After(time.Duration(tr.Interval) * time.Second):
             // Contact tracker again
         // default:

@@ -4,6 +4,7 @@ import (
     "bytes"
 
     "github.com/kylec725/graytorrent/peer"
+    "github.com/kylec725/graytorrent/peer/handshake"
     "github.com/pkg/errors"
     log "github.com/sirupsen/logrus"
 )
@@ -18,20 +19,21 @@ func peerListen() {
             }
             return
         }
+        addr := conn.RemoteAddr().String()
 
-        newPeer := peer.New(conn.RemoteAddr().String(), conn, nil)
-        infoHash, err := newPeer.RcvHandshake()
+        infoHash, err := handshake.Read(conn)
         if err != nil {
-            log.WithFields(log.Fields{"peer": newPeer.String(), "error": err.Error()}).Debug("Incoming peer handshake sequence failed")
+            log.WithFields(log.Fields{"peer": addr, "error": err.Error()}).Debug("Incoming peer handshake sequence failed")
             continue
         }
 
         // Check if the infohash matches any torrents we are serving
         for i, to := range torrentList {
             if bytes.Equal(infoHash[:], to.Info.InfoHash[:]) {
-                newPeer.Info = &torrentList[i].Info  // Assign correct info before sending handshake
+                newPeer := peer.New(addr, conn, to.Info)
                 // Send back a handshake
-                if err = newPeer.SendHandshake(); err != nil {
+                h := handshake.New(to.Info)
+                if _, err = newPeer.Conn.Write(h.Encode()); err != nil {
                     log.WithFields(log.Fields{"peer": newPeer.String(), "error": err.Error()}).Debug("Incoming peer handshake sequence failed")
                     break
                 }

@@ -5,6 +5,7 @@ import (
     "strconv"
     "fmt"
 
+    "github.com/kylec725/graytorrent/common"
     "github.com/kylec725/graytorrent/peer"
     "github.com/pkg/errors"
     bencode "github.com/jackpal/bencode-go"
@@ -23,33 +24,33 @@ type bencodeTrackerResp struct {
     Incomplete int `bencode:"incomplete"`
 }
 
-func (tr Tracker) buildURL(left int, event string) (string, error) {
+func (tr Tracker) buildURL(event string, info common.TorrentInfo, port uint16) (string, error) {
     base, err := url.Parse(tr.Announce)
     if err != nil {
         return "", errors.Wrap(err, "buildURL")
     }
 
     params := url.Values{
-        "info_hash": []string{string(tr.info.InfoHash[:])},
-        "peer_id": []string{string(tr.info.PeerID[:])},
-        "port": []string{strconv.Itoa(int(tr.port))},
+        "info_hash": []string{string(info.InfoHash[:])},
+        "peer_id": []string{string(info.PeerID[:])},
+        "port": []string{strconv.Itoa(int(port))},
         "uploaded": []string{"0"},
         "downloaded": []string{"0"},
-        "left": []string{strconv.Itoa(left)},
+        "left": []string{strconv.Itoa(info.Left)},
         "compact": []string{"1"},
         "event": []string{event},
     }
 
-    if event == "" {
-        delete(params, "event")
-    }
+    // if event == "" {
+    //     delete(params, "event")
+    // }
 
     base.RawQuery = params.Encode()
     return base.String(), nil
 }
 
-func (tr *Tracker) sendStarted(left int) ([]peer.Peer, error) {
-    req, err := tr.buildURL(left, "started")
+func (tr *Tracker) sendStarted(info common.TorrentInfo, port uint16) ([]peer.Peer, error) {
+    req, err := tr.buildURL("started", info, port)
     if err != nil {
         return nil, errors.Wrap(err, "sendStarted")
     }
@@ -85,7 +86,7 @@ func (tr *Tracker) sendStarted(left int) ([]peer.Peer, error) {
     tr.Interval = trResp.Interval
 
     peersBytes := []byte(trResp.Peers)
-    peersList, err := peer.Unmarshal(peersBytes, tr.info)
+    peersList, err := peer.Unmarshal(peersBytes, info)
     if err != nil {
         return nil, errors.Wrap(err, "sendStarted")
     }
@@ -93,8 +94,8 @@ func (tr *Tracker) sendStarted(left int) ([]peer.Peer, error) {
     return peersList, nil
 }
 
-func (tr *Tracker) sendStopped(left int) error {
-    req, err := tr.buildURL(left, "stopped")
+func (tr *Tracker) sendStopped(info common.TorrentInfo, port uint16) error {
+    req, err := tr.buildURL("stopped", info, port)
     if err != nil {
         return errors.Wrap(err, "sendStopped")
     }

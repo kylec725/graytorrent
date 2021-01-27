@@ -3,7 +3,9 @@ package main
 import (
 	"os"
     "net"
+    "context"
 
+    "github.com/kylec725/graytorrent/common"
     "github.com/kylec725/graytorrent/torrent"
     flag "github.com/spf13/pflag"
     log "github.com/sirupsen/logrus"
@@ -40,16 +42,23 @@ func init() {
 }
 
 func main() {
-    defer logFile.Close()
-    defer log.Info("Graytorrent stopped")
-    defer listener.Close()
-    defer saveTorrents()
+    // Setup our context
+    ctx, cancel := context.WithCancel(context.WithValue(context.Background(), common.KeyPort, port))
+
+    // Cleanup
+    defer func() {
+        listener.Close()
+        cancel()
+        saveTorrents()
+        log.Info("Graytorrent stopped")
+        logFile.Close()
+    }()
 
     go peerListen()  // Listen for incoming peer connections
 
     // Single file torrent then exit
     if filename != "" {
-        singleTorrent()
+        singleTorrent(ctx)
         return
     }
 

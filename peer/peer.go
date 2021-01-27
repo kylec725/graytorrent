@@ -20,8 +20,8 @@ import (
 )
 
 const handshakeTimeout = 20 * time.Second
-const peerTimeout = 120 * time.Second
-const pollTimeout = 5 * time.Second
+const pollTimeout = 5 * time.Second  // So that connection loops don't run too fast or get unstuck to check for more work
+const keepAlive = 120 * time.Second  // How long to wait before removing a peer with no messages
 const startRate = 2  // Uses adaptive rate after first requests
 
 // Peer stores info about connecting to peers as well as their state
@@ -37,6 +37,7 @@ type Peer struct {
     peerInterested bool
     rate int  // max number of outgoing requests/pieces a peer can queue
     workQueue []workPiece
+    lastContact time.Time
     send chan message.Message
     shutdown chan bool
 }
@@ -45,26 +46,8 @@ func (peer Peer) String() string {
     return peer.Addr
 }
 
-// Sends and receives a handshake from the peer
-// func initHandshake() error {
-//     if err := peer.SendHandshake(); err != nil {
-//         return errors.Wrap(err, "initHandshake")
-//     }
-//     infoHash, err := peer.RcvHandshake()
-//     if err != nil {
-//         return errors.Wrap(err, "initHandshake")
-//     } else if !bytes.Equal(peer.Info.InfoHash[:], infoHash[:]) {  // Verify the infohash
-//         return errors.Wrap(ErrInfoHash, "initHandshake")
-//     }
-//     // Send bitfield to the peer
-//     msg := message.Bitfield(peer.Info.Bitfield)
-//     err = peer.Conn.Write(msg.Encode())
-//     return errors.Wrap(err, "initHandshake")
-// }
-
 // New returns a new instantiated peer
-func New(ctx context.Context, addr string, conn net.Conn) Peer {
-    info := common.Info(ctx)
+func New(addr string, conn net.Conn, info common.TorrentInfo) Peer {
     var peerConn *connect.Conn = nil
     if conn != nil {
         peerConn = &connect.Conn{Conn: conn, Timeout: handshakeTimeout}
@@ -87,8 +70,8 @@ func New(ctx context.Context, addr string, conn net.Conn) Peer {
     }
 }
 
-// Send allows outside goroutines to send messages to a peer, not used internally
-func (peer *Peer) Send(msg message.Message) {
+// SendMessage allows outside goroutines to send messages to a peer, not used internally
+func (peer *Peer) SendMessage(msg message.Message) {
     peer.send <- msg
 }
 
@@ -99,7 +82,7 @@ func (peer *Peer) handleSend(msg message.Message) error {
     case message.MsgUnchoke:
         peer.amChoking = false
     }
-    err := peer.Conn.Write(msg.Encode())
+    _, err := peer.Conn.Write(msg.Encode())
     return errors.Wrap(err, "handleSend")
 }
 
@@ -109,31 +92,36 @@ func (peer *Peer) Shutdown() {
 }
 
 // StartWork makes a peer wait for pieces to download
-func (peer *Peer) StartWork(work chan int, results chan int, remove chan string) {
+func (peer *Peer) StartWork(ctx context.Context, work chan int, results chan int, remove chan string) {
+    info := common.Info(ctx)
     peerLog := log.WithField("peer", peer.String())
     if peer.Conn == nil {
-        err := peer.initHandshake()
-        if err != nil {
-            peerLog.WithField("error", err.Error()).Debug("Handshake failed")
+        if err := peer.dial(); err != nil {
+            peerLog.WithField("error", err.Error()).Debug("Dial failed")
             remove <- peer.String()  // Notify main to remove this peer from its list
+            return
+        } else if err := peer.initHandshake(info); err != nil {
+            peerLog.WithField("error", err.Error()).Debug("Handshake failed")
+            remove <- peer.String()
             return
         }
     }
     peerLog.Debug("Handshake successful")
+
+    // Setup peer connection
+    connCtx, connCancel := context.WithCancel(ctx)
+    peer.Conn.Timeout = pollTimeout
+    connection := make(chan []byte, 2)  // Buffer so that connection can exit if we haven't read the data yet
+    go peer.Conn.Poll(connCtx, connection)
 
     // Cleanup
     defer func() {
         for i := range peer.workQueue {
             work <- peer.workQueue[i].index
         }
-        peer.Conn.Close()  // Close the connection, results in the goroutine exiting due to error
+        connCancel()
         peerLog.Debug("Peer shutdown")
     }()
-
-    // Setup peer connection
-    connection := make(chan []byte, 2)  // Buffer so that connection can exit if we haven't read the data yet
-    go peer.Conn.Await(connection)
-    peer.Conn.Timeout = peerTimeout
 
     // Work loop
     for {
@@ -143,8 +131,10 @@ func (peer *Peer) StartWork(work chan int, results chan int, remove chan string)
                 remove <- peer.String()  // Notify main to remove this peer from its list
                 return
             }
+            peer.lastContact = time.Now()
+            currInfo := common.Info(ctx)
             msg := message.Decode(data)
-            if err := peer.handleMessage(msg, work, results); err != nil {
+            if err := peer.handleMessage(msg, currInfo, work, results); err != nil {
                 peerLog.WithFields(log.Fields{"type": msg.String(), "size": len(msg.Payload), "error": err.Error()}).Debug("Error handling message")
                 remove <- peer.String()  // Notify main to remove this peer from its list
                 return
@@ -157,6 +147,10 @@ func (peer *Peer) StartWork(work chan int, results chan int, remove chan string)
         case <-peer.shutdown:  // Check if the torrent told the peer to shutdown
             return
         case <-time.After(pollTimeout):  // Poll to get unstuck if no messages are received
+            if time.Since(peer.lastContact) >= keepAlive {  // Check if peer has passed the keep-alive time
+                remove <- peer.String()
+                return
+            }
         }
 
         // Find new work piece if queue is open
@@ -170,7 +164,7 @@ func (peer *Peer) StartWork(work chan int, results chan int, remove chan string)
                 }
 
                 // Download piece from the peer
-                err := peer.downloadPiece(index)
+                err := peer.downloadPiece(info, index)
                 if err != nil {
                     peerLog.WithFields(log.Fields{"piece index": index, "error": err.Error()}).Debug("Failed to start piece download")
                     work <- index  // Put piece back onto work channel

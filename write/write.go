@@ -21,7 +21,7 @@ var (
 )
 
 // NewWrite sets up the files a torrent needs info write info
-func NewWrite(info *common.TorrentInfo) error {
+func NewWrite(info common.TorrentInfo) error {
     for _, path := range info.Paths {
         // Return an error if the file already exists
         if _, err := os.Stat(path.Path); err == nil {
@@ -46,7 +46,7 @@ func NewWrite(info *common.TorrentInfo) error {
 }
 
 // pieceBounds returns the start and ending indices of a piece (end is exclusive)
-func pieceBounds(info *common.TorrentInfo, index int) (int, int) {
+func pieceBounds(info common.TorrentInfo, index int) (int, int) {
     start := index * info.PieceLength  // start byte index
     end := start + info.PieceLength  // end byte index + 1
     if end > info.TotalLength {
@@ -91,7 +91,7 @@ func readOffset(filename string, size int, offset int) ([]byte, error) {
 }
 
 // AddBlock adds a block info a piece
-func AddBlock(info *common.TorrentInfo, index, begin int, block, piece []byte) error {
+func AddBlock(info common.TorrentInfo, index, begin int, block, piece []byte) error {
     if index < 0 || index >= info.TotalPieces {
         return errors.Wrap(ErrPieceIndex, "AddBlock")
     }
@@ -112,7 +112,7 @@ func AddBlock(info *common.TorrentInfo, index, begin int, block, piece []byte) e
 }
 
 // AddPiece takes a torrent piece, and writes it info the appropriate file
-func AddPiece(info *common.TorrentInfo, index int, piece []byte) error {
+func AddPiece(info common.TorrentInfo, index int, piece []byte) error {
     if index < 0 || index >= info.TotalPieces {
         return errors.Wrap(ErrPieceIndex, "AddPiece")
     }
@@ -148,7 +148,7 @@ func AddPiece(info *common.TorrentInfo, index int, piece []byte) error {
 }
 
 // ReadPiece returns a piece of a torrent from file as a byte slice
-func ReadPiece(info *common.TorrentInfo, index int) ([]byte, error) {
+func ReadPiece(info common.TorrentInfo, index int) ([]byte, error) {
     if index < 0 || index >= info.TotalPieces {
         return nil, errors.Wrap(ErrPieceIndex, "ReadPiece")
     }
@@ -191,7 +191,7 @@ func ReadPiece(info *common.TorrentInfo, index int) ([]byte, error) {
 }
 
 // VerifyPiece checks that a completed piece has the correct hash
-func VerifyPiece(info *common.TorrentInfo, index int, piece []byte) bool {
+func VerifyPiece(info common.TorrentInfo, index int, piece []byte) bool {
     expected := info.PieceHashes[index]
     actual := sha1.Sum(piece)
     return bytes.Equal(expected[:], actual[:])
