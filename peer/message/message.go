@@ -76,7 +76,7 @@ func NotInterested() Message {
 func Have(index uint32) Message {
     payload := make([]byte, 4)
     binary.BigEndian.PutUint32(payload, index)
-    return Message{ID: MsgNotInterested, Payload: payload}
+    return Message{ID: MsgHave, Payload: payload}
 }
 
 // Bitfield returns a bitfield message
