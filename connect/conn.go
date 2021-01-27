@@ -9,7 +9,6 @@ import (
     "time"
     "io"
     "encoding/binary"
-    "fmt"
     
     "github.com/pkg/errors"
 )
@@ -33,58 +32,33 @@ type Conn struct {
 // Write sends data over a connection, returns an error if not all of the data is sent
 func (conn *Conn) Write(buf []byte) error {
     conn.Conn.SetWriteDeadline(time.Time{})  // No deadline for writing
-    var err error
-    for i := 0; i < retry; i++ {
-        _, err = conn.Conn.Write(buf)
-        if err == nil {
-            break
-        }
-        fmt.Println("write error unwrapped:", errors.Unwrap(err))
+    _, err := conn.Conn.Write(buf)
+    if err != nil {
         if netErr, ok := err.(net.Error); ok && netErr.Timeout() {
             return errors.Wrap(ErrTimeout, "Write")
-        } else if errors.Unwrap(err).Error() == "connection reset by peer" {
-            fmt.Println("Write caught: connection reset by peer")
-            continue
-        } else if errors.Unwrap(err).Error() == "use of closed network connection" {
-            fmt.Println("Write caught: use of closed network connection")
-            continue
         }
         return errors.Wrap(err, "Write")
     }
-    return errors.Wrap(err, "Write")
+    return nil
 }
 
 // Read reads in data from a connection, returns an error if the buffer is not filled
 func (conn *Conn) Read(buf []byte) error {
-    err := conn.Conn.SetReadDeadline(time.Now().Add(conn.Timeout))
+    conn.Conn.SetReadDeadline(time.Now().Add(conn.Timeout))
+    _, err := conn.Conn.Read(buf)
     if err != nil {
-        return errors.Wrap(err, "Read")
-    }
-    for i := 0; i < retry; i++ {
-        _, err = conn.Conn.Read(buf)
-        if err == nil {
-            break
-        }
-        fmt.Println("read error unwrapped:", errors.Unwrap(err))
         if netErr, ok := err.(net.Error); ok && netErr.Timeout() {
             return errors.Wrap(ErrTimeout, "Read")
         }
-        // } else if errors.Unwrap(err).Error() == "read: connection reset by peer" {
-        //     fmt.Println("Read caught: connection reset by peer")
-        //     continue
-        // }
         return errors.Wrap(err, "Read")
     }
-    return errors.Wrap(err, "Read")
+    return nil
 }
 
 // ReadFull reads until the buffer is full
 func (conn *Conn) ReadFull(buf []byte) error {
-    err := conn.Conn.SetReadDeadline(time.Now().Add(conn.Timeout))
-    if err != nil {
-        return errors.Wrap(err, "ReadFull")
-    }
-    _, err = io.ReadFull(conn.Conn, buf)
+    conn.Conn.SetReadDeadline(time.Now().Add(conn.Timeout))
+    _, err := io.ReadFull(conn.Conn, buf)
     return errors.Wrap(err, "ReadFull")
 }
 
