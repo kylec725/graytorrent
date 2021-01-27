@@ -197,9 +197,9 @@ func (peer *Peer) adjustRate(wp workPiece) {
     // } else {
     //     peer.rate = int(currRate / 5 + 18)
     // }
-    if currRate > 2 {
-        peer.rate = int(currRate)
+    if currRate < 20 {
+        peer.rate = int(currRate) + 1
     } else {
-        peer.rate = 2
+        peer.rate = int(currRate / 5 + 18)
     }
 }
