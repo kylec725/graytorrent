@@ -43,6 +43,7 @@ func newTracker(announce string, info *common.TorrentInfo, port uint16) Tracker 
         info: info,
         httpClient: &http.Client{ Timeout: 20 * time.Second },
         port: port,
+        shutdown: make(chan int),
     }
 }
 

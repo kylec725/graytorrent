@@ -22,6 +22,11 @@ const peerTimeout = 120 * time.Second
 const pollTimeout = 5 * time.Second
 const startRate = 2  // Uses adaptive rate after first requests
 
+// Errors
+var (
+    ErrConn = errors.New("Connection is not instantiated")
+)
+
 // Peer stores info about connecting to peers as well as their state
 type Peer struct {
     Addr string
@@ -35,6 +40,7 @@ type Peer struct {
     peerInterested bool
     rate int  // max number of outgoing requests/pieces a peer can queue
     workQueue []workPiece
+    send chan message.Message
     shutdown chan bool
 }
 
@@ -61,30 +67,29 @@ func New(addr string, conn net.Conn, info *common.TorrentInfo) Peer {
         peerInterested: false,
         rate: startRate,
         workQueue: []workPiece{},
+        send: make(chan message.Message),
+        shutdown: make(chan bool),
     }
 }
 
-// Choke notifies a peer that we are choking them
-func (peer *Peer) Choke() error {  // Main should handle shutting down the peer if we have an error
-    peer.amChoking = true
-    msg := message.Choke()
+// Send allows outside goroutines to send messages to a peer
+func (peer *Peer) Send(msg message.Message) {  // Main should handle shutting down the peer if we have an error
+    peer.send <- msg
+}
+
+func (peer *Peer) handleSend(msg message.Message) error {
+    switch msg.ID {
+    case message.MsgChoke:
+        peer.amChoking = true
+    case message.MsgUnchoke:
+        peer.amChoking = false
+    case message.MsgInterested:
+        peer.amInterested = true
+    case message.MsgNotInterested:
+        peer.amInterested = false
+    }
     err := peer.Conn.Write(msg.Encode())
     return errors.Wrap(err, "Choke")
-}
-
-// Unchoke notifies a peer that we are not choking them
-func (peer *Peer) Unchoke() error {
-    peer.amChoking = false
-    msg := message.Unchoke()
-    err := peer.Conn.Write(msg.Encode())
-    return errors.Wrap(err, "Unchoke")
-}
-
-// Have notifies a peer that we have a specific piece
-func (peer *Peer) Have(index int) error {
-    msg := message.Have(uint32(index))
-    err := peer.Conn.Write(msg.Encode())
-    return errors.Wrap(err, "Have")
 }
 
 // Shutdown stops a Peer's work process
@@ -123,7 +128,7 @@ func (peer *Peer) StartWork(work chan int, results chan int, remove chan string)
     // Work loop
     for {
         select {
-        case data, ok := <-connection:
+        case data, ok := <-connection:  // Incoming data from peer
             if !ok {  // Connection failed
                 remove <- peer.String()  // Notify main to remove this peer from its list
                 return
@@ -133,6 +138,12 @@ func (peer *Peer) StartWork(work chan int, results chan int, remove chan string)
                 ctxLog.WithFields(log.Fields{"type": msg.String(), "size": len(msg.Payload), "error": err.Error()}).Debug("Error handling message")
                 remove <- peer.String()  // Notify main to remove this peer from its list
                 return
+            }
+        case msg := <-peer.send:
+            ctxLog.WithFields(log.Fields{"type": msg.String()}).Debug("Received message to send")
+            if err := peer.handleSend(msg); err != nil {
+                ctxLog.WithFields(log.Fields{"type": msg.String(), "size": len(msg.Payload), "error": err.Error()}).Debug("Error sending message")
+                remove <- peer.String()
             }
         case <-peer.shutdown:  // Check if the torrent told the peer to shutdown
             return
@@ -154,7 +165,7 @@ func (peer *Peer) StartWork(work chan int, results chan int, remove chan string)
                 if err != nil {
                     ctxLog.WithFields(log.Fields{"piece index": index, "error": err.Error()}).Debug("Failed to start piece download")
                     work <- index  // Put piece back onto work channel
-                    remove <- peer.String()  // Notify main to remove this peer from its list
+                    remove <- peer.String()
                     return
                 }
             default:  // Don't block if we can't find work
