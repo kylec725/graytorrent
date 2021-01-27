@@ -39,10 +39,10 @@ func (peer *Peer) SendHandshake() error {
     if peer.Conn == nil {
         // Start the TCP connection
         conn, err := net.DialTimeout("tcp", peer.String(), 5 * time.Second)  // TODO fix dial issues with certain peers
-        peer.Conn = &connect.Conn{Conn: conn, Timeout: handshakeTimeout}
         if err != nil {
             return errors.Wrap(err, "sendHandshake")
         }
+        peer.Conn = &connect.Conn{Conn: conn, Timeout: handshakeTimeout}
     }
 
     // Send the handshake
