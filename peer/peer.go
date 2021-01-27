@@ -35,6 +35,7 @@ type Peer struct {
     peerInterested bool
     rate int  // max number of outgoing requests/pieces a peer can queue
     workQueue []workPiece
+    shutdown chan bool
 }
 
 func (peer Peer) String() string {
@@ -79,8 +80,13 @@ func (peer *Peer) Unchoke() error {
     return errors.Wrap(err, "Unchoke")
 }
 
+// Shutdown stops a Peer's work process
+func (peer *Peer) Shutdown() {
+    peer.shutdown <- true
+}
+
 // StartWork makes a peer wait for pieces to download
-func (peer *Peer) StartWork(work chan int, results chan int, remove chan string, done chan bool) {
+func (peer *Peer) StartWork(work chan int, results chan int, remove chan string) {
     ctxLog := log.WithField("peer", peer.String())
     if peer.Conn == nil {
         err := peer.initHandshake()
@@ -121,10 +127,8 @@ func (peer *Peer) StartWork(work chan int, results chan int, remove chan string,
                 remove <- peer.String()  // Notify main to remove this peer from its list
                 return
             }
-        case _, ok := <-done:  // Check if the torrent told the peer to shutdown
-            if !ok {
-                return
-            }
+        case <-peer.shutdown:  // Check if the torrent told the peer to shutdown
+            return
         case <-time.After(pollTimeout):  // Poll to get unstuck if no messages are received
         }
 

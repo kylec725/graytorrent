@@ -23,7 +23,7 @@ type bencodeTrackerResp struct {
     Incomplete int `bencode:"incomplete"`
 }
 
-func (tr Tracker) buildURL(event string) (string, error) {
+func (tr Tracker) buildURL(left int, event string) (string, error) {
     base, err := url.Parse(tr.Announce)
     if err != nil {
         return "", errors.Wrap(err, "buildURL")
@@ -35,7 +35,7 @@ func (tr Tracker) buildURL(event string) (string, error) {
         "port": []string{strconv.Itoa(int(tr.port))},
         "uploaded": []string{"0"},
         "downloaded": []string{"0"},
-        "left": []string{strconv.Itoa(tr.info.Left)},
+        "left": []string{strconv.Itoa(left)},
         "compact": []string{"1"},
         "event": []string{event},
     }
@@ -48,8 +48,8 @@ func (tr Tracker) buildURL(event string) (string, error) {
     return base.String(), nil
 }
 
-func (tr *Tracker) sendStarted() ([]peer.Peer, error) {
-    req, err := tr.buildURL("started")
+func (tr *Tracker) sendStarted(left int) ([]peer.Peer, error) {
+    req, err := tr.buildURL(left, "started")
     if err != nil {
         return nil, errors.Wrap(err, "sendStarted")
     }
@@ -93,8 +93,8 @@ func (tr *Tracker) sendStarted() ([]peer.Peer, error) {
     return peersList, nil
 }
 
-func (tr *Tracker) sendStopped() error {
-    req, err := tr.buildURL("stopped")
+func (tr *Tracker) sendStopped(left int) error {
+    req, err := tr.buildURL(left, "stopped")
     if err != nil {
         return errors.Wrap(err, "sendStopped")
     }

@@ -34,7 +34,7 @@ type Torrent struct {
     Trackers []tracker.Tracker
     Peers []peer.Peer
 
-    shutdown chan bool
+    stop chan bool
 }
 
 // Setup gets and sets up necessary properties of a new torrent object
@@ -63,14 +63,14 @@ func (to *Torrent) Setup() error {
     }
 
     // Make the shutdown channel
-    to.shutdown = make(chan bool)
+    to.stop = make(chan bool)
 
     return nil
 }
 
 // Stop signals a torrent to stop downloading
 func (to *Torrent) Stop() {
-    to.shutdown <- true
+    to.stop <- true
 }
 
 // Start initiates a routine to download a torrent from peers
@@ -80,17 +80,21 @@ func (to *Torrent) Start() {
     work := make(chan int, to.Info.TotalPieces)    // Piece indices we need
     results := make(chan int, to.Info.TotalPieces) // Notification that a piece is done
     remove := make(chan string)                    // For peers to notify they should be removed from our list
-    done := make(chan bool)                        // Notify goroutines to quit
 
     // Cleanup
     defer func() {
+        for _, peer := range to.Peers {
+            peer.Shutdown()
+        }
+        for _, tracker := range to.Trackers {
+            tracker.Shutdown(to.Info.Left)
+        }
         to.Peers = nil  // Clear peers
-        close(done)  // Signal peers and trackers to shutdown
     }()
 
     // Start tracker goroutines
     for i := range to.Trackers {
-        go to.Trackers[i].Run(peers, done)
+        go to.Trackers[i].Run(to.Info.Left, peers)
     }
 
     // Populate work queue
@@ -105,10 +109,10 @@ func (to *Torrent) Start() {
         select {
         case newPeer := <-peers:  // Peers from trackers
             to.Peers = append(to.Peers, newPeer)
-            go newPeer.StartWork(work, results, remove, done)
+            go newPeer.StartWork(work, results, remove)
         case newPeer := <-to.IncomingPeers:  // Incoming peers from main
             to.Peers = append(to.Peers, newPeer)
-            go newPeer.StartWork(work, results, remove, done)
+            go newPeer.StartWork(work, results, remove)
         case deadPeer := <-remove:
             to.removePeer(deadPeer)
             if len(to.Peers) == 0 {  // Exit if we don't have anymore peers
@@ -121,7 +125,7 @@ func (to *Torrent) Start() {
             if pieces == to.Info.TotalPieces {
                 log.WithField("name", to.Info.Name).Info("Torrent completed")
             }
-        case <-to.shutdown:
+        case <-to.stop:
             log.WithField("name", to.Info.Name).Info("Torrent stopped")
             return
         }
@@ -135,6 +139,10 @@ func (to *Torrent) Save() {
     // TODO alternative: open history file json maybe, see if we are in it, if not: add ourselves
     //      if we are already, update info
     return
+}
+
+func sendHave(index int) {
+
 }
 
 func (to *Torrent) removePeer(name string) {

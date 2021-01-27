@@ -25,12 +25,13 @@ type Tracker struct {
     Working bool
     Interval int
 
+    txID uint32  // Used by UDP trackers
+    cnID uint64
+
     info *common.TorrentInfo
     httpClient *http.Client
     port uint16
-
-    txID uint32  // Used by UDP trackers
-    cnID uint64
+    shutdown chan int  // Used by main to shutdown and send how many bytes are left
 }
 
 func newTracker(announce string, info *common.TorrentInfo, port uint16) Tracker {
@@ -79,10 +80,15 @@ func GetTrackers(meta metainfo.BencodeMeta, info *common.TorrentInfo, port uint1
     return trackers, nil
 }
 
+// Shutdown notifies a tracker to stop running
+func (tr *Tracker) Shutdown(left int) {
+    tr.shutdown <- left
+}
+
 // Run starts a tracker and gets peers for a torrent
-func (tr *Tracker) Run(peers chan peer.Peer, done chan bool) {
+func (tr *Tracker) Run(startLeft int, peers chan peer.Peer) {
     ctxLog := log.WithField("tracker", tr.Announce)
-    peerList, err := tr.sendStarted()  // hardcoded number of bytes left
+    peerList, err := tr.sendStarted(startLeft)  // hardcoded number of bytes left
     if err != nil {
         tr.Working = false
         ctxLog.WithField("error", err.Error()).Debug("Error while sending started message")
@@ -93,11 +99,6 @@ func (tr *Tracker) Run(peers chan peer.Peer, done chan bool) {
 
     // Cleanup
     defer func() {
-        if tr.Working {  // Send stopped message if necessary
-            if err = tr.sendStopped(); err != nil {
-                ctxLog.WithField("error", err.Error()).Debug("Error while sending stopped message")
-            }
-        }
     }()
 
     // Send peers through channel
@@ -107,9 +108,11 @@ func (tr *Tracker) Run(peers chan peer.Peer, done chan bool) {
 
     for {
         select {
-        case _, ok := <-done:
-            if !ok {
-                return
+        case left := <-tr.shutdown:
+            if tr.Working {  // Send stopped message if necessary
+                if err = tr.sendStopped(left); err != nil {
+                    ctxLog.WithField("error", err.Error()).Debug("Error while sending stopped message")
+                }
             }
         case <-time.After(time.Duration(tr.Interval) * time.Second):
             // Contact tracker again
