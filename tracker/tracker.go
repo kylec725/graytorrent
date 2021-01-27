@@ -12,6 +12,8 @@ import (
     log "github.com/sirupsen/logrus"
 )
 
+// TODO figure out way to get bytes left in torrent to trackers accurately
+
 // Errors
 var (
     ErrNoAnnounce = errors.New("Did not find any annouce urls")

@@ -116,6 +116,7 @@ func (to *Torrent) Start() {
             }
         case index := <-results:  // TODO change states
             to.Info.Bitfield.Set(index)
+            to.Info.Left -= common.PieceSize(&to.Info, index)
             pieces++
             if pieces == to.Info.TotalPieces {
                 log.WithField("name", to.Info.Name).Info("Torrent completed")

@@ -141,7 +141,6 @@ func (peer *Peer) handlePiece(msg *message.Message, work chan int, results chan 
             log.WithFields(log.Fields{"peer": peer.String(), "piece index": index, "rate": peer.rate}).Trace("Wrote piece to file")
 
             // Write was successful
-            peer.Info.Left -= peer.workQueue[i].curr
             peer.removeWorkPiece(int(index))
             results <- int(index)  // Notify main that a piece is done
 
