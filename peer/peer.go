@@ -9,6 +9,7 @@ import (
     "time"
     "math"
     "net"
+    "context"
 
     "github.com/kylec725/graytorrent/common"
     "github.com/kylec725/graytorrent/bitfield"
@@ -18,6 +19,7 @@ import (
     log "github.com/sirupsen/logrus"
 )
 
+const handshakeTimeout = 20 * time.Second
 const peerTimeout = 120 * time.Second
 const pollTimeout = 5 * time.Second
 const startRate = 2  // Uses adaptive rate after first requests
@@ -26,7 +28,7 @@ const startRate = 2  // Uses adaptive rate after first requests
 type Peer struct {
     Addr string
     Conn *connect.Conn  // nil if not connected
-    Info *common.TorrentInfo
+    // Info *common.TorrentInfo
 
     bitfield bitfield.Bitfield
     amChoking bool
@@ -43,8 +45,26 @@ func (peer Peer) String() string {
     return peer.Addr
 }
 
+// Sends and receives a handshake from the peer
+// func initHandshake() error {
+//     if err := peer.SendHandshake(); err != nil {
+//         return errors.Wrap(err, "initHandshake")
+//     }
+//     infoHash, err := peer.RcvHandshake()
+//     if err != nil {
+//         return errors.Wrap(err, "initHandshake")
+//     } else if !bytes.Equal(peer.Info.InfoHash[:], infoHash[:]) {  // Verify the infohash
+//         return errors.Wrap(ErrInfoHash, "initHandshake")
+//     }
+//     // Send bitfield to the peer
+//     msg := message.Bitfield(peer.Info.Bitfield)
+//     err = peer.Conn.Write(msg.Encode())
+//     return errors.Wrap(err, "initHandshake")
+// }
+
 // New returns a new instantiated peer
-func New(addr string, conn net.Conn, info *common.TorrentInfo) Peer {
+func New(ctx context.Context, addr string, conn net.Conn) Peer {
+    info := common.Info(ctx)
     var peerConn *connect.Conn = nil
     if conn != nil {
         peerConn = &connect.Conn{Conn: conn, Timeout: handshakeTimeout}
@@ -53,7 +73,7 @@ func New(addr string, conn net.Conn, info *common.TorrentInfo) Peer {
     return Peer{
         Addr: addr,
         Conn: peerConn,
-        Info: info,
+        // Info: info,
 
         bitfield: make([]byte, bitfieldSize),
         amChoking: true,
@@ -90,16 +110,16 @@ func (peer *Peer) Shutdown() {
 
 // StartWork makes a peer wait for pieces to download
 func (peer *Peer) StartWork(work chan int, results chan int, remove chan string) {
-    ctxLog := log.WithField("peer", peer.String())
+    peerLog := log.WithField("peer", peer.String())
     if peer.Conn == nil {
         err := peer.initHandshake()
         if err != nil {
-            ctxLog.WithField("error", err.Error()).Debug("Handshake failed")
+            peerLog.WithField("error", err.Error()).Debug("Handshake failed")
             remove <- peer.String()  // Notify main to remove this peer from its list
             return
         }
     }
-    ctxLog.Debug("Handshake successful")
+    peerLog.Debug("Handshake successful")
 
     // Cleanup
     defer func() {
@@ -107,7 +127,7 @@ func (peer *Peer) StartWork(work chan int, results chan int, remove chan string)
             work <- peer.workQueue[i].index
         }
         peer.Conn.Close()  // Close the connection, results in the goroutine exiting due to error
-        ctxLog.Debug("Peer shutdown")
+        peerLog.Debug("Peer shutdown")
     }()
 
     // Setup peer connection
@@ -125,13 +145,13 @@ func (peer *Peer) StartWork(work chan int, results chan int, remove chan string)
             }
             msg := message.Decode(data)
             if err := peer.handleMessage(msg, work, results); err != nil {
-                ctxLog.WithFields(log.Fields{"type": msg.String(), "size": len(msg.Payload), "error": err.Error()}).Debug("Error handling message")
+                peerLog.WithFields(log.Fields{"type": msg.String(), "size": len(msg.Payload), "error": err.Error()}).Debug("Error handling message")
                 remove <- peer.String()  // Notify main to remove this peer from its list
                 return
             }
         case msg := <-peer.send:
             if err := peer.handleSend(msg); err != nil {
-                ctxLog.WithFields(log.Fields{"type": msg.String(), "error": err.Error()}).Debug("Error sending message")
+                peerLog.WithFields(log.Fields{"type": msg.String(), "error": err.Error()}).Debug("Error sending message")
                 remove <- peer.String()
             }
         case <-peer.shutdown:  // Check if the torrent told the peer to shutdown
@@ -152,7 +172,7 @@ func (peer *Peer) StartWork(work chan int, results chan int, remove chan string)
                 // Download piece from the peer
                 err := peer.downloadPiece(index)
                 if err != nil {
-                    ctxLog.WithFields(log.Fields{"piece index": index, "error": err.Error()}).Debug("Failed to start piece download")
+                    peerLog.WithFields(log.Fields{"piece index": index, "error": err.Error()}).Debug("Failed to start piece download")
                     work <- index  // Put piece back onto work channel
                     remove <- peer.String()
                     return

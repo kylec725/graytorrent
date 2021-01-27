@@ -22,7 +22,7 @@ var (
     ErrPieceHash = errors.New("Received piece with bad hash")
 )
 
-func (peer *Peer) handleMessage(msg *message.Message, work chan int, results chan int) error {
+func (peer *Peer) handleMessage(msg *message.Message, info common.TorrentInfo, work chan int, results chan int) error {
     if msg == nil {
         return nil  // keep-alive message
     }
@@ -42,7 +42,7 @@ func (peer *Peer) handleMessage(msg *message.Message, work chan int, results cha
         index := binary.BigEndian.Uint32(msg.Payload)
         peer.bitfield.Set(int(index))
     case message.MsgBitfield:
-        expected := int(math.Ceil(float64(peer.Info.TotalPieces) / 8))
+        expected := int(math.Ceil(float64(info.TotalPieces) / 8))
         if len(msg.Payload) != expected {
             return errors.Wrap(ErrBitfield, "handleMessage")
         }
@@ -51,13 +51,13 @@ func (peer *Peer) handleMessage(msg *message.Message, work chan int, results cha
         if len(msg.Payload) != 12 {
             return errors.Wrap(ErrMessage, "handleMessage")
         }
-        err := peer.handleRequest(msg)
+        err := peer.handleRequest(msg, info)
         return errors.Wrap(err, "handleMessage")
     case message.MsgPiece:
         if len(msg.Payload) < 9 {
             return errors.Wrap(ErrMessage, "handleMessage")
         }
-        err := peer.handlePiece(msg, work, results)
+        err := peer.handlePiece(msg, info, work, results)
         return errors.Wrap(err, "handleMessage")
     case message.MsgCancel:
         if len(msg.Payload) != 12 {
@@ -80,7 +80,7 @@ func (peer *Peer) sendRequest(index, begin, length int) error {
     return errors.Wrap(err, "sendRequest")
 }
 
-func (peer *Peer) handleRequest(msg *message.Message) error {
+func (peer *Peer) handleRequest(msg *message.Message, info common.TorrentInfo) error {
     if peer.amChoking {  // Tell the peer we are choking them and return
         chokeMsg := message.Choke()
         err := peer.Conn.Write(chokeMsg.Encode())
@@ -90,11 +90,11 @@ func (peer *Peer) handleRequest(msg *message.Message) error {
     index := binary.BigEndian.Uint32(msg.Payload[0:4])
     begin := binary.BigEndian.Uint32(msg.Payload[4:8])
     length := binary.BigEndian.Uint32(msg.Payload[8:12])
-    if !peer.Info.Bitfield.Has(int(index)) {  // Ignore request if we don't have the piece
+    if !info.Bitfield.Has(int(index)) {  // Ignore request if we don't have the piece
         return nil
     }
 
-    piece, err := write.ReadPiece(peer.Info, int(index))
+    piece, err := write.ReadPiece(info, int(index))
     if err != nil {
         return errors.Wrap(err, "handleRequest")
     } else if len(piece) < int(begin + length) {  // Ignore request if the bounds aren't possible
@@ -106,7 +106,7 @@ func (peer *Peer) handleRequest(msg *message.Message) error {
 }
 
 // handlePiece adds a block to a piece we are getting
-func (peer *Peer) handlePiece(msg *message.Message, work chan int, results chan int) error {
+func (peer *Peer) handlePiece(msg *message.Message, info common.TorrentInfo, work chan int, results chan int) error {
     index := binary.BigEndian.Uint32(msg.Payload[0:4])
     begin := binary.BigEndian.Uint32(msg.Payload[4:8])
     block := msg.Payload[8:]
@@ -115,7 +115,7 @@ func (peer *Peer) handlePiece(msg *message.Message, work chan int, results chan 
     for i := range peer.workQueue {  // We want to operate directly on the workQueue pieces
         if index == uint32(peer.workQueue[i].index) {
             peer.workQueue[i].left -= len(block)
-            err := write.AddBlock(peer.Info, int(index), int(begin), block, peer.workQueue[i].piece)
+            err := write.AddBlock(info, int(index), int(begin), block, peer.workQueue[i].piece)
             if err != nil {
                 errors.Wrap(err, "handlePiece")
             }
@@ -127,12 +127,12 @@ func (peer *Peer) handlePiece(msg *message.Message, work chan int, results chan 
 
             // Piece is done: Verify hash then write
             peer.adjustRate(peer.workQueue[i])  // Change rate regardless whether piece was correct
-            if !write.VerifyPiece(peer.Info, int(index), peer.workQueue[i].piece) {  // Return to work pool if hash is incorrect
+            if !write.VerifyPiece(info, int(index), peer.workQueue[i].piece) {  // Return to work pool if hash is incorrect
                 work <- int(index)
                 peer.removeWorkPiece(int(index))
                 return errors.Wrap(ErrPieceHash, "handlePiece")
             }
-            if err = write.AddPiece(peer.Info, int(index), peer.workQueue[i].piece); err != nil {  // Write piece to file
+            if err = write.AddPiece(info, int(index), peer.workQueue[i].piece); err != nil {  // Write piece to file
                 log.WithFields(log.Fields{"peer": peer.String(), "piece index": index, "error": err.Error()}).Debug("Writing piece to file failed")
                 work <- int(index)
                 peer.removeWorkPiece(int(index))
