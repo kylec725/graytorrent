@@ -10,7 +10,7 @@ import (
     viper "github.com/spf13/viper"
 )
 
-const logLevel = log.DebugLevel  // InfoLevel || DebugLevel || TraceLevel
+const logLevel = log.TraceLevel  // InfoLevel || DebugLevel || TraceLevel
 
 var (
     err error
