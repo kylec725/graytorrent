@@ -27,8 +27,10 @@ type Tracker struct {
 
     info *common.TorrentInfo
     httpClient *http.Client
-    udpID int64
     port uint16
+
+    txID uint32  // Used by UDP trackers
+    cnID uint64
 }
 
 func newTracker(announce string, info *common.TorrentInfo, port uint16) Tracker {
