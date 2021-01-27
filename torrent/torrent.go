@@ -121,6 +121,7 @@ func (to *Torrent) Start() {
         case index := <-results:  // TODO change states
             to.Info.Bitfield.Set(index)
             to.Info.Left -= common.PieceSize(&to.Info, index)
+            go to.sendHave(index)
             pieces++
             if pieces == to.Info.TotalPieces {
                 log.WithField("name", to.Info.Name).Info("Torrent completed")
@@ -141,8 +142,13 @@ func (to *Torrent) Save() {
     return
 }
 
-func sendHave(index int) {
-
+func (to *Torrent) sendHave(index int) {
+    var err error
+    for _, peer :=  range to.Peers {
+        if err = peer.Have(index); err != nil {
+            log.WithFields(log.Fields{"peer": peer.String(), "error": err.Error()}).Debug("Error sending have message")
+        }
+    }
 }
 
 func (to *Torrent) removePeer(name string) {

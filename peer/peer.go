@@ -80,6 +80,13 @@ func (peer *Peer) Unchoke() error {
     return errors.Wrap(err, "Unchoke")
 }
 
+// Have notifies a peer that we have a specific piece
+func (peer *Peer) Have(index int) error {
+    msg := message.Have(uint32(index))
+    err := peer.Conn.Write(msg.Encode())
+    return errors.Wrap(err, "Have")
+}
+
 // Shutdown stops a Peer's work process
 func (peer *Peer) Shutdown() {
     peer.shutdown <- true
