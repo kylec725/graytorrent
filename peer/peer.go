@@ -89,7 +89,7 @@ func (peer *Peer) handleSend(msg message.Message) error {
         peer.amInterested = false
     }
     err := peer.Conn.Write(msg.Encode())
-    return errors.Wrap(err, "Choke")
+    return errors.Wrap(err, "handleSend")
 }
 
 // Shutdown stops a Peer's work process
