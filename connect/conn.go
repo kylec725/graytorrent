@@ -32,12 +32,11 @@ type Conn struct {
 // Write sends data over a connection, returns an error if not all of the data is sent
 func (conn *Conn) Write(buf []byte) error {
     conn.Conn.SetWriteDeadline(time.Time{})  // No deadline for writing
-    _, err := conn.Conn.Write(buf)
+    bytesSent, err := conn.Conn.Write(buf)
     if err != nil {
-        if netErr, ok := err.(net.Error); ok && netErr.Timeout() {
-            return errors.Wrap(ErrTimeout, "Write")
-        }
         return errors.Wrap(err, "Write")
+    } else if bytesSent != len(buf) {
+        return errors.Wrap(ErrSend, "Write")
     }
     return nil
 }
@@ -45,12 +44,14 @@ func (conn *Conn) Write(buf []byte) error {
 // Read reads in data from a connection, returns an error if the buffer is not filled
 func (conn *Conn) Read(buf []byte) error {
     conn.Conn.SetReadDeadline(time.Now().Add(conn.Timeout))
-    _, err := conn.Conn.Read(buf)
+    bytesRead, err := conn.Conn.Read(buf)
     if err != nil {
         if netErr, ok := err.(net.Error); ok && netErr.Timeout() {
             return errors.Wrap(ErrTimeout, "Read")
         }
         return errors.Wrap(err, "Read")
+    } else if bytesRead != len(buf) {
+        return errors.Wrap(ErrRcv, "Read")
     }
     return nil
 }
@@ -58,8 +59,18 @@ func (conn *Conn) Read(buf []byte) error {
 // ReadFull reads until the buffer is full
 func (conn *Conn) ReadFull(buf []byte) error {
     conn.Conn.SetReadDeadline(time.Now().Add(conn.Timeout))
-    _, err := io.ReadFull(conn.Conn, buf)
-    return errors.Wrap(err, "ReadFull")
+    bytesRead, err := io.ReadFull(conn.Conn, buf)
+    if err != nil {
+        if err != nil {
+            if netErr, ok := err.(net.Error); ok && netErr.Timeout() {
+                return errors.Wrap(ErrTimeout, "ReadFull")
+            }
+        } else if bytesRead != len(buf) {
+            return errors.Wrap(ErrRcv, "ReadFull")
+        }
+        return errors.Wrap(err, "ReadFull")
+    }
+    return nil
 }
 
 // Close closes a connection
