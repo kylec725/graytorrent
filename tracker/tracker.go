@@ -27,6 +27,7 @@ type Tracker struct {
 
     info *common.TorrentInfo
     httpClient *http.Client
+    udpID int64
     port uint16
 }
 
@@ -48,7 +49,7 @@ func GetTrackers(meta metainfo.BencodeMeta, info *common.TorrentInfo, port uint1
     if len(meta.AnnounceList) == 0 {
         // Check if no announce strings exist
         if meta.Announce == "" {
-            return nil, errors.Wrap(ErrNoAnnounce, "getTrackers")
+            return nil, errors.Wrap(ErrNoAnnounce, "GetTrackers")
         }
 
         trackers := make([]Tracker, 1)
