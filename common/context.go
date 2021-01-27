@@ -4,7 +4,7 @@ import (
     "context"
 )
 
-type contextKey string
+type contextKey string  // Custom key types are recommended
 
 // Context keys
 var (
