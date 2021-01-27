@@ -4,19 +4,27 @@ import (
     "testing"
     "fmt"
 
+    "github.com/kylec725/graytorrent/common"
+    "github.com/kylec725/graytorrent/metainfo"
     "github.com/stretchr/testify/assert"
+    "github.com/stretchr/testify/require"
 )
 
 const debugRequests = false
 
 func TestTrackerReqs(t *testing.T) {
     assert := assert.New(t)
+    require := require.New(t)
 
-    to := Torrent{Path: "../tmp/batonroad.torrent", Port: 6881}
-    to.Setup()
+    meta, err := metainfo.Meta("../tmp/batonroad.torrent")
+    require.Nil(err, "Error with metainfo.Meta()")
+    info, err := common.GetInfo(meta)
+    require.Nil(err, "GetInfo() error")
+
+    trackers, err := GetTrackers(meta, &info, 6881)
 
     var testTracker Tracker
-    for _, tr := range to.Trackers {
+    for _, tr := range trackers {
         assert.NotNil(tr)
 
         if tr.Announce[0:4] == "http" {
