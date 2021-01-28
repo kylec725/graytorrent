@@ -44,7 +44,6 @@ func init() {
 func main() {
 	// Setup our context
 	ctx, cancel := context.WithCancel(context.WithValue(context.Background(), common.KeyPort, port))
-	go catchInterrupt(ctx, cancel) // Make sure cleanup still happens if interrupt signal is sent
 
 	// Cleanup
 	defer func() {
@@ -59,6 +58,7 @@ func main() {
 
 	// Single file torrent then exit
 	if filename != "" {
+		go catchInterrupt(ctx, cancel) // Make sure cleanup still happens if interrupt signal is sent
 		singleTorrent(ctx)
 		return
 	}
