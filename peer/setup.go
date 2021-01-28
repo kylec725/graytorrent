@@ -38,22 +38,22 @@ func Unmarshal(peersBytes []byte, info common.TorrentInfo) ([]Peer, error) {
 	return peersList, nil
 }
 
-func (peer *Peer) dial() error {
-	conn, err := net.Dial("tcp", peer.String())
+func (p *Peer) dial() error {
+	conn, err := net.Dial("tcp", p.String())
 	if err != nil {
 		return errors.Wrap(err, "dial")
 	}
-	peer.Conn = &connect.Conn{Conn: conn, Timeout: peerTimeout}
+	p.Conn = &connect.Conn{Conn: conn, Timeout: peerTimeout}
 	return nil
 }
 
 // Sends and receives a handshake from the peer
-func (peer *Peer) initHandshake(info common.TorrentInfo) error {
+func (p *Peer) initHandshake(info common.TorrentInfo) error {
 	h := handshake.New(info)
-	if _, err := peer.Conn.Write(h.Encode()); err != nil {
+	if _, err := p.Conn.Write(h.Encode()); err != nil {
 		return errors.Wrap(err, "initHandshake")
 	}
-	infoHash, err := handshake.Read(peer.Conn.Conn)
+	infoHash, err := handshake.Read(p.Conn.Conn)
 	if err != nil {
 		return errors.Wrap(err, "initHandshake")
 	} else if !bytes.Equal(infoHash[:], info.InfoHash[:]) { // Verify the infohash
@@ -61,6 +61,6 @@ func (peer *Peer) initHandshake(info common.TorrentInfo) error {
 	}
 	// Send bitfield to the peer
 	msg := message.Bitfield(info.Bitfield)
-	_, err = peer.Conn.Write(msg.Encode())
+	_, err = p.Conn.Write(msg.Encode())
 	return errors.Wrap(err, "initHandshake")
 }

@@ -42,8 +42,8 @@ type Peer struct {
 	send           chan message.Message // Used for torrent goroutine to send messages
 }
 
-func (peer Peer) String() string {
-	return peer.Addr
+func (p Peer) String() string {
+	return p.Addr
 }
 
 // New returns a new instantiated peer
@@ -71,33 +71,33 @@ func New(addr string, conn net.Conn, info common.TorrentInfo) Peer {
 }
 
 // SendMessage allows outside goroutines to send messages to a peer, not used internally
-func (peer *Peer) SendMessage(msg message.Message) {
-	peer.send <- msg
+func (p *Peer) SendMessage(msg message.Message) {
+	p.send <- msg
 }
 
-func (peer *Peer) handleSend(msg message.Message) error {
+func (p *Peer) handleSend(msg message.Message) error {
 	switch msg.ID {
 	case message.MsgChoke:
-		peer.amChoking = true
+		p.amChoking = true
 	case message.MsgUnchoke:
-		peer.amChoking = false
+		p.amChoking = false
 	}
-	_, err := peer.Conn.Write(msg.Encode())
+	_, err := p.Conn.Write(msg.Encode())
 	return errors.Wrap(err, "handleSend")
 }
 
 // StartWork makes a peer wait for pieces to download
-func (peer *Peer) StartWork(ctx context.Context, work chan int, results chan int, remove chan string) {
+func (p *Peer) StartWork(ctx context.Context, work chan int, results chan int, remove chan string) {
 	info := common.Info(ctx)
-	peerLog := log.WithField("peer", peer.String())
-	if peer.Conn == nil {
-		if err := peer.dial(); err != nil {
+	peerLog := log.WithField("peer", p.String())
+	if p.Conn == nil {
+		if err := p.dial(); err != nil {
 			peerLog.WithField("error", err.Error()).Debug("Dial failed")
-			remove <- peer.String() // Notify main to remove this peer from its list
+			remove <- p.String() // Notify main to remove this peer from its list
 			return
-		} else if err := peer.initHandshake(info); err != nil {
+		} else if err := p.initHandshake(info); err != nil {
 			peerLog.WithField("error", err.Error()).Debug("Handshake failed")
-			remove <- peer.String()
+			remove <- p.String()
 			return
 		}
 	}
@@ -105,13 +105,13 @@ func (peer *Peer) StartWork(ctx context.Context, work chan int, results chan int
 
 	// Setup peer connection
 	connCtx, connCancel := context.WithCancel(ctx)
-	peer.Conn.Timeout = peerTimeout
+	p.Conn.Timeout = peerTimeout
 	connection := make(chan []byte, 2) // Buffer so that connection can exit if we haven't read the data yet
-	go peer.Conn.Poll(connCtx, connection)
+	go p.Conn.Poll(connCtx, connection)
 
 	// Cleanup
 	defer func() {
-		peer.clearWork(work)
+		p.clearWork(work)
 		connCancel()
 		peerLog.Debug("Peer shutdown")
 	}()
@@ -123,47 +123,47 @@ func (peer *Peer) StartWork(ctx context.Context, work chan int, results chan int
 			return
 		case data, ok := <-connection: // Incoming data from peer
 			if !ok { // Connection failed
-				remove <- peer.String()
+				remove <- p.String()
 				return
 			}
-			peer.lastContact = time.Now()
+			p.lastContact = time.Now()
 			currInfo := common.Info(ctx)
 			msg := message.Decode(data)
-			if err := peer.handleMessage(msg, currInfo, work, results); err != nil {
+			if err := p.handleMessage(msg, currInfo, work, results); err != nil {
 				peerLog.WithFields(log.Fields{"type": msg.String(), "size": len(msg.Payload), "error": err.Error()}).Debug("Error handling message")
-				remove <- peer.String() // Notify main to remove this peer from its list
+				remove <- p.String() // Notify main to remove this peer from its list
 				return
 			}
-		case msg := <-peer.send:
-			if err := peer.handleSend(msg); err != nil {
+		case msg := <-p.send:
+			if err := p.handleSend(msg); err != nil {
 				peerLog.WithFields(log.Fields{"type": msg.String(), "error": err.Error()}).Debug("Error sending message")
-				remove <- peer.String()
+				remove <- p.String()
 			}
 		case <-time.After(workTimeout): // Poll to get unstuck if no messages are received
-			if time.Since(peer.lastRequest) >= requestTimeout {
-				peer.clearWork(work)
+			if time.Since(p.lastRequest) >= requestTimeout {
+				p.clearWork(work)
 			}
-			if time.Since(peer.lastContact) >= keepAlive { // Check if peer has passed the keep-alive time
-				remove <- peer.String()
+			if time.Since(p.lastContact) >= keepAlive { // Check if peer has passed the keep-alive time
+				remove <- p.String()
 				return
 			}
 		}
 
 		// Find new work piece if queue is open
-		if len(peer.workQueue) < peer.rate {
+		if len(p.workQueue) < p.rate {
 			select {
 			case index := <-work:
 				// Send the work back if the peer does not have the piece
-				if !peer.bitfield.Has(index) {
+				if !p.bitfield.Has(index) {
 					work <- index
 					continue
 				}
 
 				// Download piece from the peer
-				err := peer.downloadPiece(info, index)
+				err := p.downloadPiece(info, index)
 				if err != nil {
 					peerLog.WithFields(log.Fields{"piece index": index, "error": err.Error()}).Debug("Failed to start piece download")
-					remove <- peer.String()
+					remove <- p.String()
 					return
 				}
 			default: // Don't block if we can't find work

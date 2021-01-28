@@ -14,30 +14,30 @@ type workPiece struct {
 	startTime time.Time
 }
 
-func (peer *Peer) addWorkPiece(info common.TorrentInfo, index int) {
+func (p *Peer) addWorkPiece(info common.TorrentInfo, index int) {
 	pieceSize := common.PieceSize(info, index)
 	piece := make([]byte, pieceSize)
 	newWork := workPiece{index, piece, pieceSize, 0, time.Now()}
-	peer.workQueue = append(peer.workQueue, newWork)
+	p.workQueue = append(p.workQueue, newWork)
 }
 
-func (peer *Peer) removeWorkPiece(index int) {
+func (p *Peer) removeWorkPiece(index int) {
 	removeIndex := -1
-	for i, workPiece := range peer.workQueue {
+	for i, workPiece := range p.workQueue {
 		if index == workPiece.index {
 			removeIndex = i
 		}
 	}
 	if removeIndex != -1 {
-		peer.workQueue[removeIndex] = peer.workQueue[len(peer.workQueue)-1]
-		peer.workQueue = peer.workQueue[:len(peer.workQueue)-1]
+		p.workQueue[removeIndex] = p.workQueue[len(p.workQueue)-1]
+		p.workQueue = p.workQueue[:len(p.workQueue)-1]
 	}
 }
 
 // clearWork sends peer's work back into the work pool
-func (peer *Peer) clearWork(work chan int) {
-	for _, wp := range peer.workQueue {
+func (p *Peer) clearWork(work chan int) {
+	for _, wp := range p.workQueue {
 		work <- wp.index
 	}
-	peer.workQueue = peer.workQueue[:0]
+	p.workQueue = p.workQueue[:0]
 }
