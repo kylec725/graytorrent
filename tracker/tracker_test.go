@@ -18,10 +18,10 @@ func TestGetTrackers(t *testing.T) {
 
     meta, err := metainfo.Meta("../tmp/change.torrent")
     require.Nil(err, "Error with metainfo.Meta()")
-    info, err := common.GetInfo(meta)
-    require.Nil(err, "GetInfo() error")
+    // info, err := common.GetInfo(meta)
+    // require.Nil(err, "GetInfo() error")
 
-    trackers, err := GetTrackers(meta, &info, 6881)
+    trackers, err := GetTrackers(meta, uint16(6881))
 
     if assert.Nil(err) {
         for _, tr := range trackers {
@@ -42,12 +42,12 @@ func TestBuildURL(t *testing.T) {
     info, err := common.GetInfo(meta)
     require.Nil(err, "GetInfo() error")
 
-    trackers, err := GetTrackers(meta, &info, 6881)
+    trackers, err := GetTrackers(meta, uint16(6881))
 
     for _, tr := range trackers {
         assert.NotNil(tr)
         // Build url with each tracker object
-        url, err := tr.buildURL("started")
+        url, err := tr.buildURL("started", info, uint16(6881),)
         if err == nil {
             if debugTracker {
                 fmt.Println("tracker request:", url)

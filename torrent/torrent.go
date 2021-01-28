@@ -31,7 +31,6 @@ var (
 // Torrent stores metainfo and current progress on a torrent
 type Torrent struct {
     Path string
-    // Port uint16
     IncomingPeers chan peer.Peer  // Used by main to forward incoming peers
     Info common.TorrentInfo  // Contains meta data of the torrent
     Trackers []tracker.Tracker

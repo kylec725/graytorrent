@@ -21,7 +21,7 @@ func TestTrackerReqs(t *testing.T) {
     info, err := common.GetInfo(meta)
     require.Nil(err, "GetInfo() error")
 
-    trackers, err := GetTrackers(meta, &info, 6881)
+    trackers, err := GetTrackers(meta, 6881)
 
     var testTracker Tracker
     for _, tr := range trackers {
@@ -36,14 +36,14 @@ func TestTrackerReqs(t *testing.T) {
         fmt.Printf("Tracker%+v\n", testTracker)
     }
 
-    peersList, err := testTracker.sendStarted()
+    peersList, err := testTracker.sendStarted(info, 6881)
     if assert.Nil(err) {
         for _, peer := range peersList {
             if debugRequests {
                 fmt.Println("Peer:", peer)
             }
         }
-        err = testTracker.sendStopped()
+        err = testTracker.sendStopped(info, 6881)
         assert.Nil(err)
 
         if debugRequests {

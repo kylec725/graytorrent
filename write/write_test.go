@@ -31,14 +31,14 @@ func TestNewWriteSingle(t *testing.T) {
         }
     }
 
-    err = NewWrite(&info)
+    err = NewWrite(info)
     if assert.Nil(err) {
         if debugWrite {
             fmt.Println("File created:", info.Name)
         }
 
         // Test that creating an identical file throws an error
-        err = NewWrite(&info)
+        err = NewWrite(info)
         assert.NotNil(err)
     }
 }
@@ -61,14 +61,14 @@ func TestNewWriteMulti(t *testing.T) {
         }
     }
 
-    err = NewWrite(&info)
+    err = NewWrite(info)
     if assert.Nil(err) {
         if debugWrite {
             fmt.Println("File created:", info.Name)
         }
 
         // Test that creating an identical file throws an error
-        err = NewWrite(&info)
+        err = NewWrite(info)
         assert.NotNil(err)
     }
 }
@@ -93,7 +93,7 @@ func TestAddBlock(t *testing.T) {
         fmt.Println("PieceLength:", len(piece))
     }
 
-    err = AddBlock(&info, index, begin, block, piece)
+    err = AddBlock(info, index, begin, block, piece)
     if assert.Nil(err) {
         assert.Equal(block, piece[begin:begin + len(block)])
     }
@@ -122,12 +122,12 @@ func TestAddPiece(t *testing.T) {
             panic("Removing test file failed")
         }
     }
-    err := NewWrite(&info)
+    err := NewWrite(info)
     assert.Nil(err, "NewWrite error")
 
     index := 0
     piece := []byte("00112")
-    err = AddPiece(&info, index, piece)
+    err = AddPiece(info, index, piece)
     assert.Nil(err)
     if debugWrite {
         fmt.Printf("wrote piece %d: %s\n", index, string(piece))
@@ -135,7 +135,7 @@ func TestAddPiece(t *testing.T) {
 
     index = 1
     piece = []byte("33333")
-    err = AddPiece(&info, index, piece)
+    err = AddPiece(info, index, piece)
     assert.Nil(err)
     if debugWrite {
         fmt.Printf("wrote piece %d: %s\n", index, string(piece))
@@ -143,7 +143,7 @@ func TestAddPiece(t *testing.T) {
 
     index = 2
     piece = []byte("44444")
-    err = AddPiece(&info, index, piece)
+    err = AddPiece(info, index, piece)
     assert.Nil(err)
     if debugWrite {
         fmt.Printf("wrote piece %d: %s\n", index, string(piece))
@@ -151,7 +151,7 @@ func TestAddPiece(t *testing.T) {
 
     index = 3
     piece = []byte("4444")
-    err = AddPiece(&info, index, piece)
+    err = AddPiece(info, index, piece)
     assert.Nil(err)
     if debugWrite {
         fmt.Printf("wrote piece %d: %s\n", index, string(piece))
@@ -177,7 +177,7 @@ func TestReadPiece(t *testing.T) {
     }
 
     for index := 0; index < info.TotalPieces; index++ {
-        piece, err := ReadPiece(&info, index)
+        piece, err := ReadPiece(info, index)
         assert.Nil(err)
         if debugWrite {
             fmt.Printf("read piece %d: %s\n", index, string(piece))

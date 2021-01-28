@@ -28,7 +28,6 @@ const startRate = 2  // Uses adaptive rate after first requests
 type Peer struct {
     Addr string
     Conn *connect.Conn  // nil if not connected
-    // Info *common.TorrentInfo
 
     bitfield bitfield.Bitfield
     amChoking bool

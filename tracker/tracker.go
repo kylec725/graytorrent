@@ -29,9 +29,7 @@ type Tracker struct {
     txID uint32  // Used by UDP trackers
     cnID uint64
 
-    // info *common.TorrentInfo
     httpClient *http.Client
-    // port uint16
     shutdown chan int  // Used by main to shutdown and send how many bytes are left
 }
 
