@@ -10,7 +10,6 @@ import (
     "io"
     "encoding/binary"
     "context"
-    "fmt"
     
     "github.com/pkg/errors"
     log "github.com/sirupsen/logrus"
@@ -101,7 +100,6 @@ func (conn *Conn) Poll(ctx context.Context, output chan []byte) {
                 output <- make([]byte, 0)
                 continue
             }
-            fmt.Println("message length:", length)
 
             // Message
             buf = make([]byte, length)
