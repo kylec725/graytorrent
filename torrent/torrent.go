@@ -11,147 +11,146 @@ pieces of the torrent.
 package torrent
 
 import (
-    "context"
+	"context"
 
-    "github.com/kylec725/graytorrent/common"
-    "github.com/kylec725/graytorrent/metainfo"
-    "github.com/kylec725/graytorrent/tracker"
-    "github.com/kylec725/graytorrent/peer"
-    "github.com/kylec725/graytorrent/peer/message"
-    "github.com/kylec725/graytorrent/write"
-    "github.com/pkg/errors"
-    log "github.com/sirupsen/logrus"
+	"github.com/kylec725/graytorrent/common"
+	"github.com/kylec725/graytorrent/metainfo"
+	"github.com/kylec725/graytorrent/peer"
+	"github.com/kylec725/graytorrent/peer/message"
+	"github.com/kylec725/graytorrent/tracker"
+	"github.com/kylec725/graytorrent/write"
+	"github.com/pkg/errors"
+	log "github.com/sirupsen/logrus"
 )
 
 // Errors
 var (
-    ErrPeerNotFound = errors.New("Peer not found")
+	ErrPeerNotFound = errors.New("Peer not found")
 )
 
 // Torrent stores metainfo and current progress on a torrent
 type Torrent struct {
-    Path string
-    IncomingPeers chan peer.Peer  // Used by main to forward incoming peers
-    Info common.TorrentInfo  // Contains meta data of the torrent
-    Trackers []tracker.Tracker
-    Peers []peer.Peer
+	Path          string
+	IncomingPeers chan peer.Peer     // Used by main to forward incoming peers
+	Info          common.TorrentInfo // Contains meta data of the torrent
+	Trackers      []tracker.Tracker
+	Peers         []peer.Peer
 }
 
 // Setup gets and sets up necessary properties of a new torrent object
 func (to *Torrent) Setup(ctx context.Context) error {
-    port := common.Port(ctx)
+	port := common.Port(ctx)
 
-    // Get metainfo
-    meta, err := metainfo.Meta(to.Path)
-    if err != nil {
-        return errors.Wrap(err, "Setup")
-    }
+	// Get metainfo
+	meta, err := metainfo.Meta(to.Path)
+	if err != nil {
+		return errors.Wrap(err, "Setup")
+	}
 
-    // Convert to a TorrentInfo struct
-    to.Info, err = common.GetInfo(meta)
-    if err != nil {
-        return errors.Wrap(err, "Setup")
-    }
+	// Convert to a TorrentInfo struct
+	to.Info, err = common.GetInfo(meta)
+	if err != nil {
+		return errors.Wrap(err, "Setup")
+	}
 
-    // Create trackers list from metainfo announce or announce-list
-    to.Trackers, err = tracker.GetTrackers(meta, port)
-    if err != nil {
-        return errors.Wrap(err, "Setup")
-    }
+	// Create trackers list from metainfo announce or announce-list
+	to.Trackers, err = tracker.GetTrackers(meta, port)
+	if err != nil {
+		return errors.Wrap(err, "Setup")
+	}
 
-    // Initialize files for writing
-    if err := write.NewWrite(to.Info); err != nil {
-        return errors.Wrap(err, "Setup")
-    }
+	// Initialize files for writing
+	if err := write.NewWrite(to.Info); err != nil {
+		return errors.Wrap(err, "Setup")
+	}
 
-    return nil
+	return nil
 }
 
 // Start initiates a routine to download a torrent from peers
 func (to *Torrent) Start(ctx context.Context) {
-    log.WithField("name", to.Info.Name).Info("Torrent started")
-    peers := make(chan peer.Peer)                  // For incoming peers from trackers
-    work := make(chan int, to.Info.TotalPieces)    // Piece indices we need
-    results := make(chan int, to.Info.TotalPieces) // Notification that a piece is done
-    remove := make(chan string)                    // For peers to notify they should be removed from our list
-    complete := make(chan bool)                    // To notify trackers to send the completed message
-    ctx = context.WithValue(ctx, common.KeyInfo, &to.Info)
+	log.WithField("name", to.Info.Name).Info("Torrent started")
+	peers := make(chan peer.Peer)                  // For incoming peers from trackers
+	work := make(chan int, to.Info.TotalPieces)    // Piece indices we need
+	results := make(chan int, to.Info.TotalPieces) // Notification that a piece is done
+	remove := make(chan string)                    // For peers to notify they should be removed from our list
+	complete := make(chan bool)                    // To notify trackers to send the completed message
+	ctx = context.WithValue(ctx, common.KeyInfo, &to.Info)
 
+	// Cleanup
+	defer func() {
+		to.Peers = nil // Clear peers
+	}()
 
-    // Cleanup
-    defer func() {
-        to.Peers = nil  // Clear peers
-    }()
+	// Start tracker goroutines
+	for i := range to.Trackers {
+		go to.Trackers[i].Run(ctx, peers, complete)
+	}
 
-    // Start tracker goroutines
-    for i := range to.Trackers {
-        go to.Trackers[i].Run(ctx, peers, complete)
-    }
+	// Populate work queue
+	for i := 0; i < to.Info.TotalPieces; i++ {
+		if !to.Info.Bitfield.Has(i) {
+			work <- i
+		}
+	}
 
-    // Populate work queue
-    for i := 0; i < to.Info.TotalPieces; i++ {
-        if !to.Info.Bitfield.Has(i) {
-            work <- i
-        }
-    }
-
-    pieces := 0  // Counter of finished pieces
-    for {
-        select {
-        case newPeer := <-peers:  // Peers from trackers
-            to.Peers = append(to.Peers, newPeer)
-            go newPeer.StartWork(ctx, work, results, remove)
-        case newPeer := <-to.IncomingPeers:  // Incoming peers from main
-            to.Peers = append(to.Peers, newPeer)
-            go newPeer.StartWork(ctx, work, results, remove)
-        case deadPeer := <-remove:
-            to.removePeer(deadPeer)
-            if len(to.Peers) == 0 {  // Exit if we don't have anymore peers
-                return
-            }
-        case index := <-results:  // TODO change states
-            to.Info.Bitfield.Set(index)
-            to.Info.Left -= common.PieceSize(to.Info, index)
-            go to.sendHave(index)
-            pieces++
-            if pieces == to.Info.TotalPieces {
-                log.WithField("name", to.Info.Name).Info("Torrent completed")
-                close(complete)  // Notify trackers to send completed message
-            }
-        case <-ctx.Done():
-            log.WithField("name", to.Info.Name).Info("Torrent stopped")
-            return
-        }
-    }
+	pieces := 0 // Counter of finished pieces
+	for {
+		select {
+		case newPeer := <-peers: // Peers from trackers
+			to.Peers = append(to.Peers, newPeer)
+			go newPeer.StartWork(ctx, work, results, remove)
+		case newPeer := <-to.IncomingPeers: // Incoming peers from main
+			to.Peers = append(to.Peers, newPeer)
+			go newPeer.StartWork(ctx, work, results, remove)
+		case deadPeer := <-remove:
+			to.removePeer(deadPeer)
+			if len(to.Peers) == 0 { // Exit if we don't have anymore peers
+				return
+			}
+		case index := <-results: // TODO change states
+			to.Info.Bitfield.Set(index)
+			to.Info.Left -= common.PieceSize(to.Info, index)
+			go to.sendHave(index)
+			pieces++
+			if pieces == to.Info.TotalPieces {
+				log.WithField("name", to.Info.Name).Info("Torrent completed")
+				close(complete) // Notify trackers to send completed message
+			}
+		case <-ctx.Done():
+			log.WithField("name", to.Info.Name).Info("Torrent stopped")
+			return
+		}
+	}
 }
 
 // Save saves data about a managed torrent's state to a file
 func (to *Torrent) Save() {
-    // TODO log results of saving
-    // TODO consider have a directory, with a file for each torrent's state
-    // TODO alternative: open history file json maybe, see if we are in it, if not: add ourselves
-    //      if we are already, update info
-    return
+	// TODO log results of saving
+	// TODO consider have a directory, with a file for each torrent's state
+	// TODO alternative: open history file json maybe, see if we are in it, if not: add ourselves
+	//      if we are already, update info
+	return
 }
 
 func (to *Torrent) sendHave(index int) {
-    msg := message.Have(uint32(index))
-    for _, peer :=  range to.Peers {
-        peer.SendMessage(msg)
-    }
+	msg := message.Have(uint32(index))
+	for _, peer := range to.Peers {
+		peer.SendMessage(msg)
+	}
 }
 
 func (to *Torrent) removePeer(name string) {
-    removeIndex := -1
-    for i, peer := range to.Peers {
-        if name == peer.String() {
-            removeIndex = i
-        }
-    }
-    if removeIndex == -1 {
-        return
-    }
-    // Notify the peer to shutdown if it hasn't already
-    to.Peers[removeIndex] = to.Peers[len(to.Peers) - 1]
-    to.Peers = to.Peers[:len(to.Peers) - 1]
+	removeIndex := -1
+	for i, peer := range to.Peers {
+		if name == peer.String() {
+			removeIndex = i
+		}
+	}
+	if removeIndex == -1 {
+		return
+	}
+	// Notify the peer to shutdown if it hasn't already
+	to.Peers[removeIndex] = to.Peers[len(to.Peers)-1]
+	to.Peers = to.Peers[:len(to.Peers)-1]
 }
