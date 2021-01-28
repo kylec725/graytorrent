@@ -10,10 +10,13 @@ import (
     "io"
     "encoding/binary"
     "context"
+    "fmt"
     
     "github.com/pkg/errors"
     log "github.com/sirupsen/logrus"
 )
+
+const pollTimeout = 3 * time.Second
 
 // Errors
 var (
@@ -61,6 +64,18 @@ func (conn *Conn) Close() error {
     return conn.Conn.Close()
 }
 
+func (conn *Conn) pollRead(buf []byte) (int, error) {
+    defer conn.Conn.SetReadDeadline(time.Time{})  // Reset timeout
+    conn.Conn.SetReadDeadline(time.Now().Add(pollTimeout))
+    bytesRead, err := io.ReadFull(conn.Conn, buf)
+    if err != nil {
+        if netErr, ok := err.(net.Error); ok && netErr.Timeout() {
+            return bytesRead, errors.Wrap(ErrTimeout, "Read")
+        }
+    }
+    return bytesRead, errors.Wrap(err, "Read")
+}
+
 // Poll scans a connection for data and returns it over a channel
 func (conn *Conn) Poll(ctx context.Context, output chan []byte) {
     // Cleanup
@@ -74,7 +89,7 @@ func (conn *Conn) Poll(ctx context.Context, output chan []byte) {
             return
         default:
             buf := make([]byte, 4)  // Expect message length prefix of 4 bytes
-            if _, err := conn.Read(buf); err != nil {
+            if _, err := conn.pollRead(buf); err != nil {
                 if errors.Is(err, ErrTimeout) {  // Don't terminate if we don't receive anything
                     continue
                 }
@@ -86,6 +101,7 @@ func (conn *Conn) Poll(ctx context.Context, output chan []byte) {
                 output <- make([]byte, 0)
                 continue
             }
+            fmt.Println("message length:", length)
 
             // Message
             buf = make([]byte, length)

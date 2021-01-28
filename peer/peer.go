@@ -19,8 +19,8 @@ import (
     log "github.com/sirupsen/logrus"
 )
 
-const handshakeTimeout = 20 * time.Second
-const pollTimeout = 5 * time.Second  // So that connection loops don't run too fast or get unstuck to check for more work
+const peerTimeout = 30 * time.Second  // Time to wait on an expected peer connection operation
+const workTimeout = 5 * time.Second  // To get unstuck if we need to get work
 const keepAlive = 120 * time.Second  // How long to wait before removing a peer with no messages
 const startRate = 2  // Uses adaptive rate after first requests
 
@@ -48,7 +48,7 @@ func (peer Peer) String() string {
 func New(addr string, conn net.Conn, info common.TorrentInfo) Peer {
     var peerConn *connect.Conn = nil
     if conn != nil {
-        peerConn = &connect.Conn{Conn: conn, Timeout: handshakeTimeout}
+        peerConn = &connect.Conn{Conn: conn, Timeout: peerTimeout}
     }
     bitfieldSize := int(math.Ceil(float64(info.TotalPieces) / 8))
     return Peer{
@@ -102,7 +102,7 @@ func (peer *Peer) StartWork(ctx context.Context, work chan int, results chan int
 
     // Setup peer connection
     connCtx, connCancel := context.WithCancel(ctx)
-    peer.Conn.Timeout = pollTimeout
+    peer.Conn.Timeout = peerTimeout
     connection := make(chan []byte, 2)  // Buffer so that connection can exit if we haven't read the data yet
     go peer.Conn.Poll(connCtx, connection)
 
@@ -138,7 +138,7 @@ func (peer *Peer) StartWork(ctx context.Context, work chan int, results chan int
                 peerLog.WithFields(log.Fields{"type": msg.String(), "error": err.Error()}).Debug("Error sending message")
                 remove <- peer.String()
             }
-        case <-time.After(pollTimeout):  // Poll to get unstuck if no messages are received
+        case <-time.After(workTimeout):  // Poll to get unstuck if no messages are received
             if time.Since(peer.lastContact) >= keepAlive {  // Check if peer has passed the keep-alive time
                 remove <- peer.String()
                 return
