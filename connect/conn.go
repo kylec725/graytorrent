@@ -12,6 +12,7 @@ import (
     "context"
     
     "github.com/pkg/errors"
+    log "github.com/sirupsen/logrus"
 )
 
 // Errors
@@ -77,11 +78,19 @@ func (conn *Conn) Poll(ctx context.Context, output chan []byte) {
                 if errors.Is(err, ErrTimeout) {  // Don't terminate if we don't receive anything
                     continue
                 }
+                log.WithFields(log.Fields{"peer": conn.Conn.RemoteAddr().String(), "error": err.Error()}).Debug("Receiving message length failed")
                 return
             }
             length := binary.BigEndian.Uint32(buf)
+            if length == 0 {  // Keep-alive
+                output <- make([]byte, 0)
+                continue
+            }
+
+            // Message
             buf = make([]byte, length)
             if _, err := conn.Read(buf); err != nil {
+                log.WithFields(log.Fields{"peer": conn.Conn.RemoteAddr().String(), "error": err.Error()}).Debug("Receiving message payload failed")
                 return
             }
             output <- buf
