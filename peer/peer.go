@@ -19,10 +19,11 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-const peerTimeout = 30 * time.Second // Time to wait on an expected peer connection operation
-const workTimeout = 5 * time.Second  // To get unstuck if we need to get work
-const keepAlive = 120 * time.Second  // How long to wait before removing a peer with no messages
-const startRate = 2                  // Uses adaptive rate after first requests
+const peerTimeout = 30 * time.Second    // Time to wait on an expected peer connection operation
+const workTimeout = 5 * time.Second     // To get unstuck if we need to get work
+const requestTimeout = 20 * time.Second // How long to wait on requests before sending work back
+const keepAlive = 120 * time.Second     // How long to wait before removing a peer with no messages
+const startRate = 2                     // Uses adaptive rate after first requests
 
 // Peer stores info about connecting to peers as well as their state
 type Peer struct {
@@ -37,6 +38,7 @@ type Peer struct {
 	rate           int // max number of outgoing requests/pieces a peer can queue
 	workQueue      []workPiece
 	lastContact    time.Time
+	lastRequest    time.Time
 	send           chan message.Message // Used for torrent goroutine to send messages
 }
 
@@ -54,7 +56,6 @@ func New(addr string, conn net.Conn, info common.TorrentInfo) Peer {
 	return Peer{
 		Addr: addr,
 		Conn: peerConn,
-		// Info: info,
 
 		bitfield:       make([]byte, bitfieldSize),
 		amChoking:      true,
@@ -62,6 +63,8 @@ func New(addr string, conn net.Conn, info common.TorrentInfo) Peer {
 		peerChoking:    true,
 		peerInterested: false,
 		rate:           startRate,
+		lastContact:    time.Now(),
+		lastRequest:    time.Now(),
 		workQueue:      []workPiece{},
 		send:           make(chan message.Message),
 	}
@@ -108,9 +111,7 @@ func (peer *Peer) StartWork(ctx context.Context, work chan int, results chan int
 
 	// Cleanup
 	defer func() {
-		for i := range peer.workQueue {
-			work <- peer.workQueue[i].index
-		}
+		peer.clearWork(work)
 		connCancel()
 		peerLog.Debug("Peer shutdown")
 	}()
@@ -122,7 +123,7 @@ func (peer *Peer) StartWork(ctx context.Context, work chan int, results chan int
 			return
 		case data, ok := <-connection: // Incoming data from peer
 			if !ok { // Connection failed
-				remove <- peer.String() // Notify main to remove this peer from its list
+				remove <- peer.String()
 				return
 			}
 			peer.lastContact = time.Now()
@@ -139,6 +140,9 @@ func (peer *Peer) StartWork(ctx context.Context, work chan int, results chan int
 				remove <- peer.String()
 			}
 		case <-time.After(workTimeout): // Poll to get unstuck if no messages are received
+			if time.Since(peer.lastRequest) >= requestTimeout {
+				peer.clearWork(work)
+			}
 			if time.Since(peer.lastContact) >= keepAlive { // Check if peer has passed the keep-alive time
 				remove <- peer.String()
 				return
@@ -159,7 +163,6 @@ func (peer *Peer) StartWork(ctx context.Context, work chan int, results chan int
 				err := peer.downloadPiece(info, index)
 				if err != nil {
 					peerLog.WithFields(log.Fields{"piece index": index, "error": err.Error()}).Debug("Failed to start piece download")
-					work <- index // Put piece back onto work channel
 					remove <- peer.String()
 					return
 				}

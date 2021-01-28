@@ -33,3 +33,11 @@ func (peer *Peer) removeWorkPiece(index int) {
 		peer.workQueue = peer.workQueue[:len(peer.workQueue)-1]
 	}
 }
+
+// clearWork sends peer's work back into the work pool
+func (peer *Peer) clearWork(work chan int) {
+	for _, wp := range peer.workQueue {
+		work <- wp.index
+	}
+	peer.workQueue = peer.workQueue[:0]
+}

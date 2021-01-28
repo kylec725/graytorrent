@@ -29,6 +29,7 @@ func (peer *Peer) handleMessage(msg *message.Message, info common.TorrentInfo, w
 	switch msg.ID {
 	case message.MsgChoke:
 		peer.peerChoking = true
+		peer.clearWork(work)
 	case message.MsgUnchoke:
 		peer.peerChoking = false
 	case message.MsgInterested:
@@ -57,7 +58,7 @@ func (peer *Peer) handleMessage(msg *message.Message, info common.TorrentInfo, w
 		if len(msg.Payload) < 9 {
 			return errors.Wrap(ErrMessage, "handleMessage")
 		}
-		err := peer.handlePiece(msg, info, work, results)
+		err := peer.handlePiece(msg, info, results)
 		return errors.Wrap(err, "handleMessage")
 	case message.MsgCancel:
 		if len(msg.Payload) != 12 {
@@ -106,7 +107,7 @@ func (peer *Peer) handleRequest(msg *message.Message, info common.TorrentInfo) e
 }
 
 // handlePiece adds a block to a piece we are getting
-func (peer *Peer) handlePiece(msg *message.Message, info common.TorrentInfo, work chan int, results chan int) error {
+func (peer *Peer) handlePiece(msg *message.Message, info common.TorrentInfo, results chan int) error {
 	index := binary.BigEndian.Uint32(msg.Payload[0:4])
 	begin := binary.BigEndian.Uint32(msg.Payload[4:8])
 	block := msg.Payload[8:]
@@ -115,6 +116,8 @@ func (peer *Peer) handlePiece(msg *message.Message, info common.TorrentInfo, wor
 	for i := range peer.workQueue { // We want to operate directly on the workQueue pieces
 		if index == uint32(peer.workQueue[i].index) {
 			peer.workQueue[i].left -= len(block)
+			peer.lastRequest = time.Now()
+
 			err := write.AddBlock(info, int(index), int(begin), block, peer.workQueue[i].piece)
 			if err != nil {
 				errors.Wrap(err, "handlePiece")
@@ -128,13 +131,11 @@ func (peer *Peer) handlePiece(msg *message.Message, info common.TorrentInfo, wor
 			// Piece is done: Verify hash then write
 			peer.adjustRate(peer.workQueue[i])                                 // Change rate regardless whether piece was correct
 			if !write.VerifyPiece(info, int(index), peer.workQueue[i].piece) { // Return to work pool if hash is incorrect
-				work <- int(index)
 				peer.removeWorkPiece(int(index))
 				return errors.Wrap(ErrPieceHash, "handlePiece")
 			}
 			if err = write.AddPiece(info, int(index), peer.workQueue[i].piece); err != nil { // Write piece to file
 				log.WithFields(log.Fields{"peer": peer.String(), "piece index": index, "error": err.Error()}).Debug("Writing piece to file failed")
-				work <- int(index)
 				peer.removeWorkPiece(int(index))
 				return errors.Wrap(err, "handlePiece")
 			}
@@ -165,6 +166,7 @@ func (peer *Peer) nextBlock(index int) error {
 			length := common.Min(peer.workQueue[i].left, reqSize)
 			err := peer.sendRequest(index, peer.workQueue[i].curr, length)
 			peer.workQueue[i].curr += length
+			peer.lastRequest = time.Now()
 			return errors.Wrap(err, "nextBlock")
 		}
 	}
