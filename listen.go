@@ -9,12 +9,15 @@ import (
     log "github.com/sirupsen/logrus"
 )
 
+// ErrListener is used to close the listener safely
+var ErrListener = errors.New("use of closed network connection")
+
 // Loop to listen on incoming connections for potential new peers
 func peerListen() {
     for {
         conn, err := listener.Accept()
         if err != nil {  // Exit if the listener encounters an error
-            if errors.Unwrap(err).Error() != "use of closed network connection" {
+            if errors.Is(err, ErrListener) {
                 log.WithField("error", err.Error()).Debug("Listener shutdown")
             }
             return
