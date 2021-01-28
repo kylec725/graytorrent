@@ -43,7 +43,7 @@ func (peer *Peer) dial() error {
     if err != nil {
         return errors.Wrap(err, "dial")
     }
-    peer.Conn = &connect.Conn{Conn: conn, Timeout: handshakeTimeout}
+    peer.Conn = &connect.Conn{Conn: conn, Timeout: peerTimeout}
     return nil
 }
 
