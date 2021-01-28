@@ -13,8 +13,6 @@ import (
     log "github.com/sirupsen/logrus"
 )
 
-// TODO figure out way to get bytes left in torrent to trackers accurately
-
 // Errors
 var (
     ErrNoAnnounce = errors.New("Did not find any annouce urls")
@@ -36,7 +34,7 @@ func newTracker(announce string) Tracker {
     return Tracker{
         Announce: announce,
         Working: false,
-        Interval: 60,
+        Interval: 2,
 
         // info: info,
         httpClient: &http.Client{ Timeout: 20 * time.Second },
@@ -95,7 +93,7 @@ func (tr *Tracker) Run(ctx context.Context, peers chan peer.Peer, complete chan 
 
     // Cleanup
     defer func() {
-        currInfo := common.Info(ctx)
+        currInfo := common.Info(ctx)  // Need to get this because original info is a copy
         if tr.Working {  // Send stopped message if necessary
             uploaded := 0
             downloaded := info.Left - currInfo.Left
@@ -114,20 +112,33 @@ func (tr *Tracker) Run(ctx context.Context, peers chan peer.Peer, complete chan 
         select {
         case <-ctx.Done():
             return
-        case <-time.After(time.Duration(tr.Interval) * time.Second):
-            // Contact tracker again
-        // default:
-        //     // TODO try to connect to tracker again after interval
-        //     if !tr.Working {
-        //
-        //     }
-    case _, ok := <-complete:
-        if !ok {
+        case <-time.After(time.Duration(tr.Interval) * time.Second):  // Send announce at intervals
             currInfo := common.Info(ctx)
             uploaded := 0
             downloaded := info.Left - currInfo.Left
-            tr.sendCompleted(currInfo, port, uploaded, downloaded, currInfo.Left)
-        }
+            if err = tr.sendAnnounce(currInfo, port, uploaded, downloaded, currInfo.Left); err != nil {
+                if tr.Working {  // Reset interval if tracker just stopped working
+                    tr.Interval = 2
+                } else {  // Double interval when tracker was not previously working
+                    tr.Interval *= 2
+                }
+                tr.Working = false
+                trackerLog.WithField("error", err.Error()).Debug("Error while sending announce message")
+            } else {
+                tr.Working = false
+            }
+        case _, ok := <-complete:
+            if !ok && tr.Working {
+                currInfo := common.Info(ctx)
+                uploaded := 0
+                downloaded := info.Left - currInfo.Left
+                if err = tr.sendCompleted(currInfo, port, uploaded, downloaded, currInfo.Left); err != nil {
+                    tr.Working = false
+                    trackerLog.WithField("error", err.Error()).Debug("Error while sending completed message")
+                } else {
+                    tr.Working = true
+                }
+            }
         }
     }
 }

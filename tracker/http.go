@@ -41,9 +41,9 @@ func (tr Tracker) buildURL(event string, info common.TorrentInfo, port uint16, u
         "event": []string{event},
     }
 
-    // if event == "" {
-    //     delete(params, "event")
-    // }
+    if event == "" {
+        delete(params, "event")
+    }
 
     base.RawQuery = params.Encode()
     return base.String(), nil
@@ -144,6 +144,35 @@ func (tr *Tracker) sendCompleted(info common.TorrentInfo, port uint16, uploaded,
 
     if resp.StatusCode != 200 {
         return errors.Wrapf(ErrBadStatusCode, "sendCompleted: GET status code %d and reason '%s'", resp.StatusCode, trResp.Failure)
+    }
+
+    // Update tracker information
+    tr.Interval = trResp.Interval
+
+    return nil
+}
+
+func (tr *Tracker) sendAnnounce(info common.TorrentInfo, port uint16, uploaded, downloaded, left int) error {
+    req, err := tr.buildURL("", info, port, uploaded, downloaded, left)
+    if err != nil {
+        return errors.Wrap(err, "sendAnnounce")
+    }
+
+    resp, err := tr.httpClient.Get(req)
+    if err != nil {
+        return errors.Wrap(err, "sendAnnounce")
+    }
+    defer resp.Body.Close()
+
+    // Unmarshal tracker response to get details
+    var trResp bencodeTrackerResp
+    err = bencode.Unmarshal(resp.Body, &trResp)
+    if err != nil {
+        return errors.Wrap(err, "sendAnnounce")
+    }
+
+    if resp.StatusCode != 200 {
+        return errors.Wrapf(ErrBadStatusCode, "sendAnnounce: GET status code %d and reason '%s'", resp.StatusCode, trResp.Failure)
     }
 
     // Update tracker information
