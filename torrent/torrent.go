@@ -74,6 +74,7 @@ func (to *Torrent) Start(ctx context.Context) {
     work := make(chan int, to.Info.TotalPieces)    // Piece indices we need
     results := make(chan int, to.Info.TotalPieces) // Notification that a piece is done
     remove := make(chan string)                    // For peers to notify they should be removed from our list
+    complete := make(chan bool)                    // To notify trackers to send the completed message
     ctx = context.WithValue(ctx, common.KeyInfo, &to.Info)
 
 
@@ -84,7 +85,7 @@ func (to *Torrent) Start(ctx context.Context) {
 
     // Start tracker goroutines
     for i := range to.Trackers {
-        go to.Trackers[i].Run(ctx, peers)
+        go to.Trackers[i].Run(ctx, peers, complete)
     }
 
     // Populate work queue
@@ -115,6 +116,7 @@ func (to *Torrent) Start(ctx context.Context) {
             pieces++
             if pieces == to.Info.TotalPieces {
                 log.WithField("name", to.Info.Name).Info("Torrent completed")
+                close(complete)  // Notify trackers to send completed message
             }
         case <-ctx.Done():
             log.WithField("name", to.Info.Name).Info("Torrent stopped")

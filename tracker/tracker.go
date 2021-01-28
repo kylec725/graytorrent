@@ -80,11 +80,11 @@ func GetTrackers(meta metainfo.BencodeMeta, port uint16) ([]Tracker, error) {
 }
 
 // Run starts a tracker and gets peers for a torrent
-func (tr *Tracker) Run(ctx context.Context, peers chan peer.Peer) {
+func (tr *Tracker) Run(ctx context.Context, peers chan peer.Peer, complete chan bool) {
     info := common.Info(ctx)
     port := common.Port(ctx)
     trackerLog := log.WithField("tracker", tr.Announce)
-    peerList, err := tr.sendStarted(info, port)  // hardcoded number of bytes left
+    peerList, err := tr.sendStarted(info, port, 0, 0, info.Left)
     if err != nil {
         tr.Working = false
         trackerLog.WithField("error", err.Error()).Debug("Error while sending started message")
@@ -97,7 +97,9 @@ func (tr *Tracker) Run(ctx context.Context, peers chan peer.Peer) {
     defer func() {
         currInfo := common.Info(ctx)
         if tr.Working {  // Send stopped message if necessary
-            if err = tr.sendStopped(currInfo, port); err != nil {
+            uploaded := 0
+            downloaded := info.Left - currInfo.Left
+            if err = tr.sendStopped(currInfo, port, uploaded, downloaded, currInfo.Left); err != nil {
                 trackerLog.WithField("error", err.Error()).Debug("Error while sending stopped message")
             }
         }
@@ -119,6 +121,13 @@ func (tr *Tracker) Run(ctx context.Context, peers chan peer.Peer) {
         //     if !tr.Working {
         //
         //     }
+    case _, ok := <-complete:
+        if !ok {
+            currInfo := common.Info(ctx)
+            uploaded := 0
+            downloaded := info.Left - currInfo.Left
+            tr.sendCompleted(currInfo, port, uploaded, downloaded, currInfo.Left)
+        }
         }
     }
 }
