@@ -5,6 +5,7 @@ import (
 
     "github.com/kylec725/graytorrent/peer"
     "github.com/kylec725/graytorrent/peer/handshake"
+    "github.com/kylec725/graytorrent/peer/message"
     "github.com/pkg/errors"
     log "github.com/sirupsen/logrus"
 )
@@ -38,6 +39,13 @@ func peerListen() {
                 h := handshake.New(to.Info)
                 if _, err = newPeer.Conn.Write(h.Encode()); err != nil {
                     log.WithFields(log.Fields{"peer": newPeer.String(), "error": err.Error()}).Debug("Incoming peer handshake sequence failed")
+                    break
+                }
+
+                // Send bitfield to the peer
+                msg := message.Bitfield(to.Info.Bitfield)
+                if _, err = newPeer.Conn.Write(msg.Encode()); err != nil {
+                    log.WithFields(log.Fields{"peer": newPeer.String(), "error": err.Error()}).Debug("Sending bitfield failed")
                     break
                 }
 

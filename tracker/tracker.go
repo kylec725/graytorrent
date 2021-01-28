@@ -30,7 +30,6 @@ type Tracker struct {
     cnID uint64
 
     httpClient *http.Client
-    shutdown chan int  // Used by main to shutdown and send how many bytes are left
 }
 
 func newTracker(announce string) Tracker {
@@ -78,11 +77,6 @@ func GetTrackers(meta metainfo.BencodeMeta, port uint16) ([]Tracker, error) {
     })
 
     return trackers, nil
-}
-
-// Shutdown notifies a tracker to stop running
-func (tr *Tracker) Shutdown(left int) {
-    tr.shutdown <- left
 }
 
 // Run starts a tracker and gets peers for a torrent

@@ -37,8 +37,7 @@ type Peer struct {
     rate int  // max number of outgoing requests/pieces a peer can queue
     workQueue []workPiece
     lastContact time.Time
-    send chan message.Message
-    shutdown chan bool
+    send chan message.Message  // Used for torrent goroutine to send messages
 }
 
 func (peer Peer) String() string {
@@ -65,7 +64,6 @@ func New(addr string, conn net.Conn, info common.TorrentInfo) Peer {
         rate: startRate,
         workQueue: []workPiece{},
         send: make(chan message.Message),
-        shutdown: make(chan bool),
     }
 }
 
@@ -83,11 +81,6 @@ func (peer *Peer) handleSend(msg message.Message) error {
     }
     _, err := peer.Conn.Write(msg.Encode())
     return errors.Wrap(err, "handleSend")
-}
-
-// Shutdown stops a Peer's work process
-func (peer *Peer) Shutdown() {
-    peer.shutdown <- true
 }
 
 // StartWork makes a peer wait for pieces to download
@@ -125,6 +118,8 @@ func (peer *Peer) StartWork(ctx context.Context, work chan int, results chan int
     // Work loop
     for {
         select {
+        case <-ctx.Done():
+            return
         case data, ok := <-connection:  // Incoming data from peer
             if !ok {  // Connection failed
                 remove <- peer.String()  // Notify main to remove this peer from its list
@@ -143,8 +138,6 @@ func (peer *Peer) StartWork(ctx context.Context, work chan int, results chan int
                 peerLog.WithFields(log.Fields{"type": msg.String(), "error": err.Error()}).Debug("Error sending message")
                 remove <- peer.String()
             }
-        case <-peer.shutdown:  // Check if the torrent told the peer to shutdown
-            return
         case <-time.After(pollTimeout):  // Poll to get unstuck if no messages are received
             if time.Since(peer.lastContact) >= keepAlive {  // Check if peer has passed the keep-alive time
                 remove <- peer.String()

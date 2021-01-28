@@ -79,12 +79,6 @@ func (to *Torrent) Start(ctx context.Context) {
 
     // Cleanup
     defer func() {
-        for _, peer := range to.Peers {
-            peer.Shutdown()
-        }
-        for _, tracker := range to.Trackers {
-            tracker.Shutdown(to.Info.Left)
-        }
         to.Peers = nil  // Clear peers
     }()
 
