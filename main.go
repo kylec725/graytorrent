@@ -44,6 +44,7 @@ func init() {
 func main() {
 	// Setup our context
 	ctx, cancel := context.WithCancel(context.WithValue(context.Background(), common.KeyPort, port))
+	go catchInterrupt(ctx, cancel) // Make sure cleanup still happens if interrupt signal is sent
 
 	// Cleanup
 	defer func() {

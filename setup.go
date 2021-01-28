@@ -1,9 +1,11 @@
 package main
 
 import (
+	"context"
 	"io"
 	"net"
 	"os"
+	"os/signal"
 	"strconv"
 
 	"github.com/kylec725/graytorrent/connect"
@@ -84,4 +86,22 @@ func setupListen() {
 	if err != nil {
 		panic("Could not find the binded port")
 	}
+}
+
+func catchInterrupt(ctx context.Context, cancel context.CancelFunc) {
+	signalChan := make(chan os.Signal, 1)
+	signal.Notify(signalChan, os.Interrupt)
+	select {
+	case <-signalChan: // First signal, cleanup
+		signal.Stop(signalChan)
+		listener.Close()
+		cancel()
+		saveTorrents()
+		log.Info("Graytorrent stopped")
+		logFile.Close()
+		os.Exit(1)
+	case <-ctx.Done():
+	}
+	<-signalChan // Second signal, hard exit
+	os.Exit(1)
 }
