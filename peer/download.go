@@ -185,6 +185,10 @@ func (p *Peer) downloadPiece(info common.TorrentInfo, index int) error { // TODO
 		p.amInterested = true
 	}
 	p.addWorkPiece(info, index)
+	if !p.peerChoking {
+		err := p.nextBlock(index)
+		return errors.Wrap(err, "downloadPiece")
+	}
 	return nil
 }
 
