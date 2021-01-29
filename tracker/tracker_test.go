@@ -47,7 +47,7 @@ func TestBuildURL(t *testing.T) {
 	for _, tr := range trackers {
 		assert.NotNil(tr)
 		// Build url with each tracker object
-		url, err := tr.buildURL("started", info, uint16(6881))
+		url, err := tr.buildURL("started", info, uint16(6881), 0, 0, info.Left)
 		if err == nil {
 			if debugTracker {
 				fmt.Println("tracker request:", url)
