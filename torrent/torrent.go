@@ -75,11 +75,12 @@ func (to *Torrent) Start(ctx context.Context) {
 	results := make(chan int, to.Info.TotalPieces) // Notification that a piece is done
 	remove := make(chan string)                    // For peers to notify they should be removed from our list
 	complete := make(chan bool)                    // To notify trackers to send the completed message
-	ctx = context.WithValue(ctx, common.KeyInfo, &to.Info)
+	ctx, cancel := context.WithCancel(context.WithValue(ctx, common.KeyInfo, &to.Info))
 
 	// Cleanup
 	defer func() {
 		to.Peers = nil // Clear peers
+		cancel()       // Close all trackers and peers if the torrent goroutine returns
 	}()
 
 	// Start tracker goroutines
@@ -103,11 +104,8 @@ func (to *Torrent) Start(ctx context.Context) {
 		case newPeer := <-to.IncomingPeers: // Incoming peers from main
 			to.Peers = append(to.Peers, newPeer)
 			go newPeer.StartWork(ctx, work, results, remove)
-		case deadPeer := <-remove:
+		case deadPeer := <-remove: // Don't exit as trackers may find peers
 			to.removePeer(deadPeer)
-			if len(to.Peers) == 0 { // Exit if we don't have anymore peers
-				return
-			}
 		case index := <-results: // TODO change states
 			to.Info.Bitfield.Set(index)
 			to.Info.Left -= common.PieceSize(to.Info, index)
@@ -150,7 +148,6 @@ func (to *Torrent) removePeer(name string) {
 	if removeIndex == -1 {
 		return
 	}
-	// Notify the peer to shutdown if it hasn't already
 	to.Peers[removeIndex] = to.Peers[len(to.Peers)-1]
 	to.Peers = to.Peers[:len(to.Peers)-1]
 }
