@@ -199,9 +199,10 @@ func (p *Peer) adjustRate(wp workPiece) {
 	currRate := float64(numBlocks) / duration.Seconds() // reqSize per second
 
 	// Use aggressive algorithm from rtorrent
-	if currRate < 20 {
-		p.rate = int(currRate) + 2
-	} else {
-		p.rate = int(currRate/5 + 18)
-	}
+	// if currRate < 20 {
+	// 	p.rate = int(currRate) + 2
+	// } else {
+	// 	p.rate = int(currRate/5 + 18)
+	// }
+	p.rate = int(currRate)
 }
