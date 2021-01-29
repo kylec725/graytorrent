@@ -32,6 +32,8 @@ func (p *Peer) handleMessage(msg *message.Message, info common.TorrentInfo, work
 		p.clearWork(work)
 	case message.MsgUnchoke:
 		p.peerChoking = false
+		err := p.requestAll()
+		return errors.Wrap(err, "handleMessage")
 	case message.MsgInterested:
 		p.peerInterested = true
 	case message.MsgNotInterested:
@@ -183,8 +185,7 @@ func (p *Peer) downloadPiece(info common.TorrentInfo, index int) error { // TODO
 		p.amInterested = true
 	}
 	p.addWorkPiece(info, index)
-	err := p.nextBlock(index) // First block request
-	return errors.Wrap(err, "downloadPiece")
+	return nil
 }
 
 // adjustRate changes rate according to the work rate of reqSize per second

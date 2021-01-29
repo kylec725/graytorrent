@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"github.com/kylec725/graytorrent/common"
+	"github.com/pkg/errors"
 )
 
 type workPiece struct {
@@ -32,6 +33,17 @@ func (p *Peer) removeWorkPiece(index int) {
 		p.workQueue[removeIndex] = p.workQueue[len(p.workQueue)-1]
 		p.workQueue = p.workQueue[:len(p.workQueue)-1]
 	}
+}
+
+// requestAll starts requesting pieces for a peer once we are unchoked
+func (p *Peer) requestAll() error {
+	var err error
+	for _, wp := range p.workQueue {
+		if err = p.nextBlock(wp.index); err != nil {
+			return errors.Wrap(err, "requestAll")
+		}
+	}
+	return nil
 }
 
 // clearWork sends peer's work back into the work pool

@@ -111,6 +111,7 @@ func (p *Peer) StartWork(ctx context.Context, work chan int, results chan int, r
 
 	// Cleanup
 	defer func() {
+		remove <- p.String() // Notify main to remove this peer from its list
 		p.clearWork(work)
 		connCancel()
 		peerLog.Debug("Peer shutdown")
@@ -123,7 +124,6 @@ func (p *Peer) StartWork(ctx context.Context, work chan int, results chan int, r
 			return
 		case data, ok := <-connection: // Incoming data from peer
 			if !ok { // Connection failed
-				remove <- p.String()
 				return
 			}
 			p.lastContact = time.Now()
@@ -131,20 +131,18 @@ func (p *Peer) StartWork(ctx context.Context, work chan int, results chan int, r
 			msg := message.Decode(data)
 			if err := p.handleMessage(msg, currInfo, work, results); err != nil {
 				peerLog.WithFields(log.Fields{"type": msg.String(), "size": len(msg.Payload), "error": err.Error()}).Debug("Error handling message")
-				remove <- p.String() // Notify main to remove this peer from its list
 				return
 			}
 		case msg := <-p.send:
 			if err := p.handleSend(msg); err != nil {
 				peerLog.WithFields(log.Fields{"type": msg.String(), "error": err.Error()}).Debug("Error sending message")
-				remove <- p.String()
+				return
 			}
 		case <-time.After(workTimeout): // Poll to get unstuck if no messages are received
 			if time.Since(p.lastRequest) >= requestTimeout {
 				p.clearWork(work)
 			}
 			if time.Since(p.lastContact) >= keepAlive { // Check if peer has passed the keep-alive time
-				remove <- p.String()
 				return
 			}
 		}
@@ -163,7 +161,6 @@ func (p *Peer) StartWork(ctx context.Context, work chan int, results chan int, r
 				err := p.downloadPiece(info, index)
 				if err != nil {
 					peerLog.WithFields(log.Fields{"piece index": index, "error": err.Error()}).Debug("Failed to start piece download")
-					remove <- p.String()
 					return
 				}
 			default: // Don't block if we can't find work
