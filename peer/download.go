@@ -29,7 +29,7 @@ func (p *Peer) handleMessage(msg *message.Message, info common.TorrentInfo, work
 	switch msg.ID {
 	case message.MsgChoke:
 		p.peerChoking = true
-		p.clearWork(work)
+		p.clearWork(work) // Send back our work if we get choked
 	case message.MsgUnchoke:
 		p.peerChoking = false
 		err := p.requestAll() // Request pieces in our queue once we get unchoked
