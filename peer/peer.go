@@ -19,9 +19,9 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-const peerTimeout = 30 * time.Second    // Time to wait on an expected peer connection operation
+const peerTimeout = 20 * time.Second    // Time to wait on an expected peer connection operation
 const workTimeout = 5 * time.Second     // To get unstuck if we need to get work
-const requestTimeout = 20 * time.Second // How long to wait on requests before sending work back
+const requestTimeout = 30 * time.Second // How long to wait on requests before sending work back
 const keepAlive = 120 * time.Second     // How long to wait before removing a peer with no messages
 const startRate = 2                     // Uses adaptive rate after first requests
 
