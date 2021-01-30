@@ -3,6 +3,7 @@ package tracker
 import (
 	"context"
 	"math/rand"
+	"net"
 	"net/http"
 	"time"
 
@@ -24,7 +25,8 @@ type Tracker struct {
 	Working  bool
 	Interval int
 
-	txID uint32 // Used by UDP trackers
+	conn *net.UDPConn // Used by UDP trackers
+	txID uint32
 	cnID uint64
 
 	httpClient *http.Client
@@ -36,10 +38,7 @@ func newTracker(announce string) Tracker {
 		Working:  false,
 		Interval: 2,
 
-		// info: info,
 		httpClient: &http.Client{Timeout: 20 * time.Second},
-		// port: port,
-		// shutdown: make(chan int),
 	}
 }
 
@@ -63,6 +62,11 @@ func GetTrackers(meta metainfo.BencodeMeta, port uint16) ([]Tracker, error) {
 	// Add each announce in announce-list as a tracker
 	for _, group := range meta.AnnounceList {
 		for _, announce := range group {
+			if len(announce) < 4 {
+				continue
+			} else if announce[:4] != "http" && announce[:3] != "udp" {
+				continue
+			}
 			trackers = append(trackers, newTracker(announce))
 			numAnnounce++
 		}
@@ -75,6 +79,45 @@ func GetTrackers(meta metainfo.BencodeMeta, port uint16) ([]Tracker, error) {
 	})
 
 	return trackers, nil
+}
+
+func (tr *Tracker) sendStarted(info common.TorrentInfo, port uint16, uploaded, downloaded, left int) ([]peer.Peer, error) {
+	if tr.Announce[:4] == "http" {
+		peerList, err := tr.httpStarted(info, port, uploaded, downloaded, left)
+		return peerList, errors.Wrap(err, "sendStarted")
+	}
+	if err := tr.udpConnect(); err != nil {
+		return nil, errors.Wrap(err, "sendStarted")
+	}
+	peerList, err := tr.udpStarted(info, port, uploaded, downloaded, left)
+	return peerList, err
+}
+
+func (tr *Tracker) sendStopped(info common.TorrentInfo, port uint16, uploaded, downloaded, left int) error {
+	if tr.Announce[:4] == "http" {
+		err := tr.httpStopped(info, port, uploaded, downloaded, left)
+		return errors.Wrap(err, "sendStarted")
+	}
+	err := tr.udpStopped(info, port, uploaded, downloaded, left)
+	return err
+}
+
+func (tr *Tracker) sendCompleted(info common.TorrentInfo, port uint16, uploaded, downloaded, left int) error {
+	if tr.Announce[:4] == "http" {
+		err := tr.httpCompleted(info, port, uploaded, downloaded, left)
+		return errors.Wrap(err, "sendStarted")
+	}
+	err := tr.udpCompleted(info, port, uploaded, downloaded, left)
+	return err
+}
+
+func (tr *Tracker) sendAnnounce(info common.TorrentInfo, port uint16, uploaded, downloaded, left int) error {
+	if tr.Announce[:4] == "http" {
+		err := tr.httpAnnounce(info, port, uploaded, downloaded, left)
+		return errors.Wrap(err, "sendStarted")
+	}
+	err := tr.udpAnnounce(info, port, uploaded, downloaded, left)
+	return err
 }
 
 // Run starts a tracker and gets peers for a torrent
@@ -100,6 +143,9 @@ func (tr *Tracker) Run(ctx context.Context, peers chan peer.Peer, complete chan 
 			if err = tr.sendStopped(currInfo, port, uploaded, downloaded, currInfo.Left); err != nil {
 				trackerLog.WithField("error", err.Error()).Debug("Error while sending stopped message")
 			}
+		}
+		if tr.conn != nil { // Close connections for UDP trackers
+			tr.conn.Close()
 		}
 	}()
 

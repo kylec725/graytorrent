@@ -10,9 +10,9 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-const debugRequests = false
+const debugHTTP = false
 
-func TestTrackerReqs(t *testing.T) {
+func TestHTTPReqs(t *testing.T) {
 	assert := assert.New(t)
 	require := require.New(t)
 
@@ -32,23 +32,22 @@ func TestTrackerReqs(t *testing.T) {
 		}
 	}
 
-	if debugRequests {
+	if debugHTTP {
 		fmt.Printf("Tracker%+v\n", testTracker)
 	}
 
 	peersList, err := testTracker.sendStarted(info, 6881, 0, 0, info.Left)
 	if assert.Nil(err) {
 		for _, peer := range peersList {
-			if debugRequests {
+			if debugHTTP {
 				fmt.Println("Peer:", peer)
 			}
 		}
 		err = testTracker.sendStopped(info, 6881, 0, 0, info.Left)
 		assert.Nil(err)
 
-		if debugRequests {
+		if debugHTTP {
 			fmt.Printf("Tracker%+v\n", testTracker)
 		}
 	}
-
 }
