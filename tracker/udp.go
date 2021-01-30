@@ -3,46 +3,71 @@ package tracker
 import (
 	"encoding/binary"
 	"math/rand"
+	"net"
 	"time"
 
 	"github.com/kylec725/graytorrent/common"
 	"github.com/kylec725/graytorrent/connect"
 	"github.com/kylec725/graytorrent/peer"
 	"github.com/pkg/errors"
+	log "github.com/sirupsen/logrus"
 )
 
 const udpTimeout = 10 * time.Second
 
 // Errors
 var (
+	ErrSize         = errors.New("Got packet with unexpected size")
 	ErrTransaction  = errors.New("Received incorrect transaction ID")
+	ErrAction       = errors.New("Got wrong action code from the tracker")
 	ErrTrackerError = errors.New("Received an error message from the tracker")
 )
 
-func (tr *Tracker) udpConnect(conn connect.Conn) error {
+func (tr *Tracker) udpConnect() error {
+	// Initialize
+	rand.Seed(time.Now().UnixNano())
+	tr.txID = rand.Uint32()
+
+	addr, err := net.ResolveUDPAddr("udp", tr.Announce)
+	if err != nil {
+		return errors.Wrap(err, "udpConnect")
+	}
+	tr.conn, err = net.DialUDP("udp", nil, addr)
+	if err != nil {
+		return errors.Wrap(err, "udpConnect")
+	}
+
+	// Send connect packet
 	packet := make([]byte, 16)
 	connectionID := uint64(0x41727101980)
 	action := uint32(0)
 	binary.BigEndian.PutUint64(packet[0:8], connectionID) // Protocol ID
 	binary.BigEndian.PutUint32(packet[8:12], action)      // Action: Connection
 	binary.BigEndian.PutUint32(packet[12:16], tr.txID)    // Transaction ID
-	_, err := conn.Write(packet)
+	_, err = tr.conn.Write(packet)
 	if err != nil {
 		return errors.Wrap(err, "udpConnect")
 	}
 
 	// Response
 	packet = make([]byte, 16)
-	_, err = conn.Read(packet)
+	bytesRead, err = tr.conn.Read(packet)
 	if err != nil {
 		return errors.Wrap(err, "udpConnect")
+	} else if bytesRead < 16 {
+		return errors.Wrap(ErrSize, "udpConnect")
 	}
 	action = binary.BigEndian.Uint32(packet[0:4])   // Action
 	txID := binary.BigEndian.Uint32(packet[4:8])    // Transaction ID
 	tr.cnID = binary.BigEndian.Uint64(packet[8:16]) // Connection ID
 
+	// Verify response
 	if action == 3 {
+		errorString := string(packet[8:])
+		log.WithFields(log.Fields{"tracker": tr.Announce, "message": errorString}).Debug("Got error message from tracker")
 		return errors.Wrap(ErrTrackerError, "udpConnect")
+	} else if action != 1 {
+		return errors.Wrap(ErrAction, "udpConnect")
 	} else if txID != tr.txID {
 		return errors.Wrap(ErrTransaction, "udpConnect")
 	}
@@ -74,12 +99,14 @@ func (tr *Tracker) udpStarted(info common.TorrentInfo, port uint16, conn connect
 		return nil, errors.Wrap(err, "udpStarted")
 	}
 
-	return nil, nil
-}
-
-func (tr *Tracker) udpInit() ([]byte, error) {
-	rand.Seed(time.Now().UnixNano())
-	tr.txID = rand.Uint32()
+	// Response
+	packet = make([]byte, 16)
+	bytesRead, err = tr.conn.Read(packet)
+	if err != nil {
+		return errors.Wrap(err, "udpStarted")
+	} else if bytesRead < 20 {
+		return errors.Wrap(ErrSize, "udpStarted")
+	}
 
 	return nil, nil
 }
