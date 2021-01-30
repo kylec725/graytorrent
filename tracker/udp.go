@@ -22,8 +22,8 @@ var (
 	ErrTrackerError = errors.New("Received an error message from the tracker")
 )
 
+// udpConnect initializes a UDP exchange with a tracker
 func (tr *Tracker) udpConnect() error {
-	// Initialize
 	rand.Seed(time.Now().UnixNano())
 	tr.txID = rand.Uint32()
 
