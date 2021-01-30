@@ -49,7 +49,7 @@ func (tr Tracker) buildURL(event string, info common.TorrentInfo, port uint16, u
 	return base.String(), nil
 }
 
-func (tr *Tracker) sendStarted(info common.TorrentInfo, port uint16, uploaded, downloaded, left int) ([]peer.Peer, error) {
+func (tr *Tracker) httpStarted(info common.TorrentInfo, port uint16, uploaded, downloaded, left int) ([]peer.Peer, error) {
 	req, err := tr.buildURL("started", info, port, uploaded, downloaded, left)
 	if err != nil {
 		return nil, errors.Wrap(err, "sendStarted")
@@ -94,7 +94,7 @@ func (tr *Tracker) sendStarted(info common.TorrentInfo, port uint16, uploaded, d
 	return peersList, nil
 }
 
-func (tr *Tracker) sendStopped(info common.TorrentInfo, port uint16, uploaded, downloaded, left int) error {
+func (tr *Tracker) httpStopped(info common.TorrentInfo, port uint16, uploaded, downloaded, left int) error {
 	req, err := tr.buildURL("stopped", info, port, uploaded, downloaded, left)
 	if err != nil {
 		return errors.Wrap(err, "sendStopped")
@@ -123,7 +123,7 @@ func (tr *Tracker) sendStopped(info common.TorrentInfo, port uint16, uploaded, d
 	return nil
 }
 
-func (tr *Tracker) sendCompleted(info common.TorrentInfo, port uint16, uploaded, downloaded, left int) error {
+func (tr *Tracker) httpCompleted(info common.TorrentInfo, port uint16, uploaded, downloaded, left int) error {
 	req, err := tr.buildURL("completed", info, port, uploaded, downloaded, left)
 	if err != nil {
 		return errors.Wrap(err, "sendCompleted")
@@ -152,7 +152,7 @@ func (tr *Tracker) sendCompleted(info common.TorrentInfo, port uint16, uploaded,
 	return nil
 }
 
-func (tr *Tracker) sendAnnounce(info common.TorrentInfo, port uint16, uploaded, downloaded, left int) error {
+func (tr *Tracker) httpAnnounce(info common.TorrentInfo, port uint16, uploaded, downloaded, left int) error {
 	req, err := tr.buildURL("", info, port, uploaded, downloaded, left)
 	if err != nil {
 		return errors.Wrap(err, "sendAnnounce")
