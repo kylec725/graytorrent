@@ -14,6 +14,8 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
+const numWant = 30 // Max peers to receive in tracker response
+
 // Errors
 var (
 	ErrNoAnnounce = errors.New("Did not find any annouce urls")

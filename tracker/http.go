@@ -39,6 +39,7 @@ func (tr Tracker) buildURL(event string, info common.TorrentInfo, port uint16, u
 		"left":       []string{strconv.Itoa(left)},
 		"compact":    []string{"1"},
 		"event":      []string{event},
+		"numwant":    []string{strconv.Itoa(numWant)},
 	}
 
 	if event == "" {
@@ -50,6 +51,7 @@ func (tr Tracker) buildURL(event string, info common.TorrentInfo, port uint16, u
 }
 
 func (tr *Tracker) httpStarted(info common.TorrentInfo, port uint16, uploaded, downloaded, left int) ([]peer.Peer, error) {
+	// Request
 	req, err := tr.buildURL("started", info, port, uploaded, downloaded, left)
 	if err != nil {
 		return nil, errors.Wrap(err, "sendStarted")
@@ -85,6 +87,7 @@ func (tr *Tracker) httpStarted(info common.TorrentInfo, port uint16, uploaded, d
 	// Update tracker information
 	tr.Interval = trResp.Interval
 
+	// Get peer information
 	peersBytes := []byte(trResp.Peers)
 	peersList, err := peer.Unmarshal(peersBytes, info)
 	if err != nil {
@@ -95,6 +98,7 @@ func (tr *Tracker) httpStarted(info common.TorrentInfo, port uint16, uploaded, d
 }
 
 func (tr *Tracker) httpStopped(info common.TorrentInfo, port uint16, uploaded, downloaded, left int) error {
+	// Request
 	req, err := tr.buildURL("stopped", info, port, uploaded, downloaded, left)
 	if err != nil {
 		return errors.Wrap(err, "sendStopped")
@@ -124,6 +128,7 @@ func (tr *Tracker) httpStopped(info common.TorrentInfo, port uint16, uploaded, d
 }
 
 func (tr *Tracker) httpCompleted(info common.TorrentInfo, port uint16, uploaded, downloaded, left int) error {
+	// Request
 	req, err := tr.buildURL("completed", info, port, uploaded, downloaded, left)
 	if err != nil {
 		return errors.Wrap(err, "sendCompleted")
@@ -153,6 +158,7 @@ func (tr *Tracker) httpCompleted(info common.TorrentInfo, port uint16, uploaded,
 }
 
 func (tr *Tracker) httpAnnounce(info common.TorrentInfo, port uint16, uploaded, downloaded, left int) error {
+	// Request
 	req, err := tr.buildURL("", info, port, uploaded, downloaded, left)
 	if err != nil {
 		return errors.Wrap(err, "sendAnnounce")
