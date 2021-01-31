@@ -64,6 +64,9 @@ func (to *Torrent) Setup(ctx context.Context) error {
 		return errors.Wrap(err, "Setup")
 	}
 
+	// Make channel for incoming peers
+	to.IncomingPeers = make(chan peer.Peer)
+
 	return nil
 }
 
