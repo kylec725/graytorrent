@@ -100,6 +100,11 @@ func (tr *Tracker) sendStopped(info common.TorrentInfo, port uint16, uploaded, d
 		err := tr.httpStopped(info, port, uploaded, downloaded, left)
 		return errors.Wrap(err, "sendStopped")
 	}
+	if tr.conn == nil {
+		if err := tr.udpConnect(); err != nil {
+			return errors.Wrap(err, "sendStopped")
+		}
+	}
 	err := tr.udpStopped(info, port, uploaded, downloaded, left)
 	return errors.Wrap(err, "sendStopped")
 }
@@ -109,6 +114,11 @@ func (tr *Tracker) sendCompleted(info common.TorrentInfo, port uint16, uploaded,
 		err := tr.httpCompleted(info, port, uploaded, downloaded, left)
 		return errors.Wrap(err, "sendCompleted")
 	}
+	if tr.conn == nil {
+		if err := tr.udpConnect(); err != nil {
+			return errors.Wrap(err, "sendCompleted")
+		}
+	}
 	err := tr.udpCompleted(info, port, uploaded, downloaded, left)
 	return errors.Wrap(err, "sendCompleted")
 }
@@ -117,6 +127,11 @@ func (tr *Tracker) sendAnnounce(info common.TorrentInfo, port uint16, uploaded, 
 	if tr.Announce[:4] == "http" {
 		peerList, err := tr.httpAnnounce(info, port, uploaded, downloaded, left)
 		return peerList, errors.Wrap(err, "sendAnnounce")
+	}
+	if tr.conn == nil {
+		if err := tr.udpConnect(); err != nil {
+			return nil, errors.Wrap(err, "sendAnnounce")
+		}
 	}
 	peerList, err := tr.udpAnnounce(info, port, uploaded, downloaded, left)
 	return peerList, errors.Wrap(err, "sendAnnounce")
