@@ -99,11 +99,15 @@ func (to *Torrent) Start(ctx context.Context) {
 	for {
 		select {
 		case newPeer := <-peers: // Peers from trackers
-			to.Peers = append(to.Peers, newPeer)
-			go newPeer.StartWork(ctx, work, results, remove)
+			if !to.hasPeer(newPeer) {
+				to.Peers = append(to.Peers, newPeer)
+				go newPeer.StartWork(ctx, work, results, remove)
+			}
 		case newPeer := <-to.IncomingPeers: // Incoming peers from main
-			to.Peers = append(to.Peers, newPeer)
-			go newPeer.StartWork(ctx, work, results, remove)
+			if !to.hasPeer(newPeer) {
+				to.Peers = append(to.Peers, newPeer)
+				go newPeer.StartWork(ctx, work, results, remove)
+			}
 		case deadPeer := <-remove: // Don't exit as trackers may find peers
 			to.removePeer(deadPeer)
 		case index := <-results: // TODO change states
@@ -150,4 +154,13 @@ func (to *Torrent) removePeer(name string) {
 	}
 	to.Peers[removeIndex] = to.Peers[len(to.Peers)-1]
 	to.Peers = to.Peers[:len(to.Peers)-1]
+}
+
+func (to *Torrent) hasPeer(newPeer peer.Peer) bool {
+	for _, peer := range to.Peers {
+		if newPeer.Addr == peer.Addr {
+			return true
+		}
+	}
+	return false
 }
