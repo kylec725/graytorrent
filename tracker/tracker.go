@@ -167,7 +167,7 @@ func (tr *Tracker) Run(ctx context.Context, peers chan peer.Peer, complete chan 
 			if peerList, err = tr.sendAnnounce(currInfo, port, uploaded, downloaded, currInfo.Left); err != nil {
 				if tr.Working { // Reset interval if tracker just stopped working
 					tr.Interval = 2
-				} else { // Double interval when tracker was not previously working
+				} else { // Double interval if tracker was already not working
 					tr.Interval *= 2
 				}
 				tr.Working = false
