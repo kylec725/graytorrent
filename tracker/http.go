@@ -54,7 +54,7 @@ func (tr *Tracker) httpStarted(info common.TorrentInfo, port uint16, uploaded, d
 	// Request
 	req, err := tr.buildURL("started", info, port, uploaded, downloaded, left)
 	if err != nil {
-		return nil, errors.Wrap(err, "sendStarted")
+		return nil, errors.Wrap(err, "httpStarted")
 	}
 
 	resp, err := tr.httpClient.Get(req)
@@ -65,10 +65,10 @@ func (tr *Tracker) httpStarted(info common.TorrentInfo, port uint16, uploaded, d
 			fmt.Println("connection was reset but we good")
 			resp, err = tr.httpClient.Get(req)
 			if err != nil {
-				return nil, errors.Wrap(err, "sendStarted")
+				return nil, errors.Wrap(err, "httpStarted")
 			}
 		} else {
-			return nil, errors.Wrap(err, "sendStarted")
+			return nil, errors.Wrap(err, "httpStarted")
 		}
 	}
 	defer resp.Body.Close()
@@ -77,11 +77,11 @@ func (tr *Tracker) httpStarted(info common.TorrentInfo, port uint16, uploaded, d
 	var trResp bencodeTrackerResp
 	err = bencode.Unmarshal(resp.Body, &trResp)
 	if err != nil {
-		return nil, errors.Wrap(err, "sendStarted")
+		return nil, errors.Wrap(err, "httpStarted")
 	}
 
 	if resp.StatusCode != 200 {
-		return nil, errors.Wrapf(ErrBadStatusCode, "sendStarted: GET status code %d and reason '%s'", resp.StatusCode, trResp.Failure)
+		return nil, errors.Wrapf(ErrBadStatusCode, "httpStarted: GET status code %d and reason '%s'", resp.StatusCode, trResp.Failure)
 	}
 
 	// Update tracker information
@@ -90,23 +90,19 @@ func (tr *Tracker) httpStarted(info common.TorrentInfo, port uint16, uploaded, d
 	// Get peer information
 	peersBytes := []byte(trResp.Peers)
 	peersList, err := peer.Unmarshal(peersBytes, info)
-	if err != nil {
-		return nil, errors.Wrap(err, "sendStarted")
-	}
-
-	return peersList, nil
+	return peersList, errors.Wrap(err, "httpStarted")
 }
 
 func (tr *Tracker) httpStopped(info common.TorrentInfo, port uint16, uploaded, downloaded, left int) error {
 	// Request
 	req, err := tr.buildURL("stopped", info, port, uploaded, downloaded, left)
 	if err != nil {
-		return errors.Wrap(err, "sendStopped")
+		return errors.Wrap(err, "httpStopped")
 	}
 
 	resp, err := tr.httpClient.Get(req)
 	if err != nil {
-		return errors.Wrap(err, "sendStopped")
+		return errors.Wrap(err, "httpStopped")
 	}
 	defer resp.Body.Close()
 
@@ -114,11 +110,11 @@ func (tr *Tracker) httpStopped(info common.TorrentInfo, port uint16, uploaded, d
 	var trResp bencodeTrackerResp
 	err = bencode.Unmarshal(resp.Body, &trResp)
 	if err != nil {
-		return errors.Wrap(err, "sendStopped")
+		return errors.Wrap(err, "httpStopped")
 	}
 
 	if resp.StatusCode != 200 {
-		return errors.Wrapf(ErrBadStatusCode, "sendStopped: GET status code %d and reason '%s'", resp.StatusCode, trResp.Failure)
+		return errors.Wrapf(ErrBadStatusCode, "httpStopped: GET status code %d and reason '%s'", resp.StatusCode, trResp.Failure)
 	}
 
 	// Update tracker information
@@ -131,12 +127,12 @@ func (tr *Tracker) httpCompleted(info common.TorrentInfo, port uint16, uploaded,
 	// Request
 	req, err := tr.buildURL("completed", info, port, uploaded, downloaded, left)
 	if err != nil {
-		return errors.Wrap(err, "sendCompleted")
+		return errors.Wrap(err, "httpCompleted")
 	}
 
 	resp, err := tr.httpClient.Get(req)
 	if err != nil {
-		return errors.Wrap(err, "sendCompleted")
+		return errors.Wrap(err, "httpCompleted")
 	}
 	defer resp.Body.Close()
 
@@ -144,11 +140,11 @@ func (tr *Tracker) httpCompleted(info common.TorrentInfo, port uint16, uploaded,
 	var trResp bencodeTrackerResp
 	err = bencode.Unmarshal(resp.Body, &trResp)
 	if err != nil {
-		return errors.Wrap(err, "sendCompleted")
+		return errors.Wrap(err, "httpCompleted")
 	}
 
 	if resp.StatusCode != 200 {
-		return errors.Wrapf(ErrBadStatusCode, "sendCompleted: GET status code %d and reason '%s'", resp.StatusCode, trResp.Failure)
+		return errors.Wrapf(ErrBadStatusCode, "httpCompleted: GET status code %d and reason '%s'", resp.StatusCode, trResp.Failure)
 	}
 
 	// Update tracker information
@@ -161,12 +157,12 @@ func (tr *Tracker) httpAnnounce(info common.TorrentInfo, port uint16, uploaded, 
 	// Request
 	req, err := tr.buildURL("", info, port, uploaded, downloaded, left)
 	if err != nil {
-		return errors.Wrap(err, "sendAnnounce")
+		return errors.Wrap(err, "httpAnnounce")
 	}
 
 	resp, err := tr.httpClient.Get(req)
 	if err != nil {
-		return errors.Wrap(err, "sendAnnounce")
+		return errors.Wrap(err, "httpAnnounce")
 	}
 	defer resp.Body.Close()
 
@@ -174,11 +170,11 @@ func (tr *Tracker) httpAnnounce(info common.TorrentInfo, port uint16, uploaded, 
 	var trResp bencodeTrackerResp
 	err = bencode.Unmarshal(resp.Body, &trResp)
 	if err != nil {
-		return errors.Wrap(err, "sendAnnounce")
+		return errors.Wrap(err, "httpAnnounce")
 	}
 
 	if resp.StatusCode != 200 {
-		return errors.Wrapf(ErrBadStatusCode, "sendAnnounce: GET status code %d and reason '%s'", resp.StatusCode, trResp.Failure)
+		return errors.Wrapf(ErrBadStatusCode, "httpAnnounce: GET status code %d and reason '%s'", resp.StatusCode, trResp.Failure)
 	}
 
 	// Update tracker information
