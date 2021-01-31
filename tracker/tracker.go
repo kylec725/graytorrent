@@ -186,7 +186,6 @@ func (tr *Tracker) Run(ctx context.Context, peers chan peer.Peer, complete chan 
 					tr.Interval *= 2
 				}
 				tr.Working = false
-				trackerLog.WithField("error", err.Error()).Debug("Error while sending announce message")
 			} else {
 				// Send peers through channel
 				for i := range peerList {
