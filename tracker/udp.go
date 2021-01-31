@@ -26,6 +26,9 @@ var (
 
 func (tr *Tracker) udpAddr() string {
 	splitAddr := strings.Split(tr.Announce, "/")
+	if len(splitAddr) < 3 {
+		return ""
+	}
 	return splitAddr[2]
 }
 
