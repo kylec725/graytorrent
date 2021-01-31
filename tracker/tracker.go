@@ -92,34 +92,34 @@ func (tr *Tracker) sendStarted(info common.TorrentInfo, port uint16, uploaded, d
 		return nil, errors.Wrap(err, "sendStarted")
 	}
 	peerList, err := tr.udpStarted(info, port, uploaded, downloaded, left)
-	return peerList, err
+	return peerList, errors.Wrap(err, "sendStarted")
 }
 
 func (tr *Tracker) sendStopped(info common.TorrentInfo, port uint16, uploaded, downloaded, left int) error {
 	if tr.Announce[:4] == "http" {
 		err := tr.httpStopped(info, port, uploaded, downloaded, left)
-		return errors.Wrap(err, "sendStarted")
+		return errors.Wrap(err, "sendStopped")
 	}
 	err := tr.udpStopped(info, port, uploaded, downloaded, left)
-	return err
+	return errors.Wrap(err, "sendStopped")
 }
 
 func (tr *Tracker) sendCompleted(info common.TorrentInfo, port uint16, uploaded, downloaded, left int) error {
 	if tr.Announce[:4] == "http" {
 		err := tr.httpCompleted(info, port, uploaded, downloaded, left)
-		return errors.Wrap(err, "sendStarted")
+		return errors.Wrap(err, "sendCompleted")
 	}
 	err := tr.udpCompleted(info, port, uploaded, downloaded, left)
-	return err
+	return errors.Wrap(err, "sendCompleted")
 }
 
-func (tr *Tracker) sendAnnounce(info common.TorrentInfo, port uint16, uploaded, downloaded, left int) error {
+func (tr *Tracker) sendAnnounce(info common.TorrentInfo, port uint16, uploaded, downloaded, left int) ([]peer.Peer, error) {
 	if tr.Announce[:4] == "http" {
-		err := tr.httpAnnounce(info, port, uploaded, downloaded, left)
-		return errors.Wrap(err, "sendStarted")
+		peerList, err := tr.httpAnnounce(info, port, uploaded, downloaded, left)
+		return peerList, errors.Wrap(err, "sendAnnounce")
 	}
-	err := tr.udpAnnounce(info, port, uploaded, downloaded, left)
-	return err
+	peerList, err := tr.udpAnnounce(info, port, uploaded, downloaded, left)
+	return peerList, errors.Wrap(err, "sendAnnounce")
 }
 
 // Run starts a tracker and gets peers for a torrent
@@ -164,7 +164,7 @@ func (tr *Tracker) Run(ctx context.Context, peers chan peer.Peer, complete chan 
 			currInfo := common.Info(ctx)
 			uploaded := 0
 			downloaded := info.Left - currInfo.Left
-			if err = tr.sendAnnounce(currInfo, port, uploaded, downloaded, currInfo.Left); err != nil {
+			if peerList, err = tr.sendAnnounce(currInfo, port, uploaded, downloaded, currInfo.Left); err != nil {
 				if tr.Working { // Reset interval if tracker just stopped working
 					tr.Interval = 2
 				} else { // Double interval when tracker was not previously working
@@ -173,7 +173,11 @@ func (tr *Tracker) Run(ctx context.Context, peers chan peer.Peer, complete chan 
 				tr.Working = false
 				trackerLog.WithField("error", err.Error()).Debug("Error while sending announce message")
 			} else {
-				tr.Working = false
+				// Send peers through channel
+				for i := range peerList {
+					peers <- peerList[i]
+				}
+				tr.Working = true
 			}
 		case _, ok := <-complete:
 			if !ok && tr.Working {
