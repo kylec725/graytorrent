@@ -4,6 +4,7 @@ import (
 	"encoding/binary"
 	"math/rand"
 	"net"
+	"strings"
 	"time"
 
 	"github.com/kylec725/graytorrent/common"
@@ -23,16 +24,22 @@ var (
 	ErrEvent        = errors.New("Tried to create packet with invalid event")
 )
 
+func (tr *Tracker) udpAddr() string {
+	splitAddr := strings.Split(tr.Announce, "/")
+	return splitAddr[2]
+}
+
 // udpConnect initializes a UDP exchange with a tracker
 func (tr *Tracker) udpConnect() error {
 	rand.Seed(time.Now().UnixNano())
 	tr.txID = rand.Uint32()
 
-	addr, err := net.ResolveUDPAddr("udp", tr.Announce)
+	addr := tr.udpAddr()
+	udpAddr, err := net.ResolveUDPAddr("udp", addr)
 	if err != nil {
 		return errors.Wrap(err, "udpConnect")
 	}
-	tr.conn, err = net.DialUDP("udp", nil, addr)
+	tr.conn, err = net.DialUDP("udp", nil, udpAddr)
 	if err != nil {
 		return errors.Wrap(err, "udpConnect")
 	}
@@ -66,7 +73,7 @@ func (tr *Tracker) udpConnect() error {
 		errorString := string(resp[8:])
 		log.WithFields(log.Fields{"tracker": tr.Announce, "message": errorString}).Debug("Got error message from tracker")
 		return errors.Wrap(ErrTrackerError, "udpConnect")
-	} else if action != 1 {
+	} else if action != 0 {
 		return errors.Wrap(ErrAction, "udpConnect")
 	} else if txID != tr.txID {
 		return errors.Wrap(ErrTransaction, "udpConnect")
@@ -148,10 +155,10 @@ func (tr *Tracker) udpStarted(info common.TorrentInfo, port uint16, uploaded, do
 	// Update tracker information
 	tr.Interval = int(interval)
 
-	// TODO
 	// Get peer information
-
-	return nil, nil
+	peersBytes := resp[20:]
+	peersList, err := peer.Unmarshal(peersBytes, info)
+	return peersList, errors.Wrap(err, "udpStarted")
 }
 
 func (tr *Tracker) udpStopped(info common.TorrentInfo, port uint16, uploaded, downloaded, left int) error {
