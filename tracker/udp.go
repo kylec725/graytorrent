@@ -246,25 +246,25 @@ func (tr *Tracker) udpCompleted(info common.TorrentInfo, port uint16, uploaded, 
 	return nil
 }
 
-func (tr *Tracker) udpAnnounce(info common.TorrentInfo, port uint16, uploaded, downloaded, left int) error {
+func (tr *Tracker) udpAnnounce(info common.TorrentInfo, port uint16, uploaded, downloaded, left int) ([]peer.Peer, error) {
 	// Request
 	req, err := tr.buildPacket("announce", info, port, uploaded, downloaded, left)
 	if err != nil {
-		return errors.Wrap(err, "udpAnnounce")
+		return nil, errors.Wrap(err, "udpAnnounce")
 	}
 
 	_, err = tr.conn.Write(req)
 	if err != nil {
-		return errors.Wrap(err, "udpAnnounce")
+		return nil, errors.Wrap(err, "udpAnnounce")
 	}
 
 	// Response
 	resp := make([]byte, 20+6*numWant)
 	bytesRead, err := tr.conn.Read(resp)
 	if err != nil {
-		return errors.Wrap(err, "udpAnnounce")
+		return nil, errors.Wrap(err, "udpAnnounce")
 	} else if bytesRead < 20 {
-		return errors.Wrap(ErrSize, "udpAnnounce")
+		return nil, errors.Wrap(ErrSize, "udpAnnounce")
 	}
 	action := binary.BigEndian.Uint32(resp[0:4])    // Action
 	txID := binary.BigEndian.Uint32(resp[4:8])      // Transaction ID
@@ -274,15 +274,18 @@ func (tr *Tracker) udpAnnounce(info common.TorrentInfo, port uint16, uploaded, d
 	if action == 3 {
 		errorString := string(resp[8:])
 		log.WithFields(log.Fields{"tracker": tr.Announce, "message": errorString}).Debug("Got error message from tracker")
-		return errors.Wrap(ErrTrackerError, "udpAnnounce")
+		return nil, errors.Wrap(ErrTrackerError, "udpAnnounce")
 	} else if action != 1 {
-		return errors.Wrap(ErrAction, "udpAnnounce")
+		return nil, errors.Wrap(ErrAction, "udpAnnounce")
 	} else if txID != tr.txID {
-		return errors.Wrap(ErrTransaction, "udpAnnounce")
+		return nil, errors.Wrap(ErrTransaction, "udpAnnounce")
 	}
 
 	// Update tracker information
 	tr.Interval = int(interval)
 
-	return nil
+	// Get peer information
+	peersBytes := resp[20:]
+	peersList, err := peer.Unmarshal(peersBytes, info)
+	return peersList, errors.Wrap(err, "udpStarted")
 }
