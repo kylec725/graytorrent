@@ -10,7 +10,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-const debugUDP = true
+const debugUDP = false
 
 func TestUDPReqs(t *testing.T) {
 	assert := assert.New(t)
