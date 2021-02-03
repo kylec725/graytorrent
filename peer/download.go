@@ -28,16 +28,16 @@ func (p *Peer) handleMessage(msg *message.Message, info common.TorrentInfo, work
 	}
 	switch msg.ID {
 	case message.MsgChoke:
-		p.peerChoking = true
+		p.PeerChoking = true
 		p.clearWork(work) // Send back our work if we get choked
 	case message.MsgUnchoke:
-		p.peerChoking = false
+		p.PeerChoking = false
 		err := p.requestAll() // Request pieces in our queue once we get unchoked
 		return errors.Wrap(err, "handleMessage")
 	case message.MsgInterested:
-		p.peerInterested = true
+		p.PeerInterested = true
 	case message.MsgNotInterested:
-		p.peerInterested = false
+		p.PeerInterested = false
 	case message.MsgHave:
 		if len(msg.Payload) != 4 {
 			return errors.Wrap(ErrMessage, "handleMessage")
@@ -84,7 +84,7 @@ func (p *Peer) sendRequest(index, begin, length int) error {
 }
 
 func (p *Peer) handleRequest(msg *message.Message, info common.TorrentInfo) error {
-	if p.amChoking { // Tell the peer we are choking them and return
+	if p.AmChoking { // Tell the peer we are choking them and return
 		chokeMsg := message.Choke()
 		_, err := p.Conn.Write(chokeMsg.Encode())
 		return errors.Wrap(err, "handleRequest")
@@ -153,7 +153,7 @@ func (p *Peer) handlePiece(msg *message.Message, info common.TorrentInfo, result
 				if _, err := p.Conn.Write(msg.Encode()); err != nil {
 					return errors.Wrap(err, "downloadPiece")
 				}
-				p.amInterested = false
+				p.AmInterested = false
 			}
 			break // Exit loop early on successful write
 		}
@@ -177,15 +177,15 @@ func (p *Peer) nextBlock(index int) error {
 
 // downloadPiece starts a routine to download a piece from a peer
 func (p *Peer) downloadPiece(info common.TorrentInfo, index int) error { // TODO make sure we are unchoked before sending requests
-	if !p.amInterested {
+	if !p.AmInterested {
 		msg := message.Interested()
 		if _, err := p.Conn.Write(msg.Encode()); err != nil {
 			return errors.Wrap(err, "downloadPiece")
 		}
-		p.amInterested = true
+		p.AmInterested = true
 	}
 	p.addWorkPiece(info, index)
-	if !p.peerChoking {
+	if !p.PeerChoking {
 		err := p.nextBlock(index)
 		return errors.Wrap(err, "downloadPiece")
 	}

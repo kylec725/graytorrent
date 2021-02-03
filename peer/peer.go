@@ -27,19 +27,19 @@ const startRate = 2                     // Uses adaptive rate after first reques
 
 // Peer stores info about connecting to peers as well as their state
 type Peer struct {
-	Addr string
-	Conn *connect.Conn // nil if not connected
-	Rate int           // max number of outgoing requests/pieces a peer can queue
+	Addr           string
+	Conn           *connect.Conn // nil if not connected
+	AmChoking      bool
+	AmInterested   bool
+	PeerChoking    bool
+	PeerInterested bool
+	Rate           int // max number of outgoing requests/pieces a peer can queue
 
-	bitfield       bitfield.Bitfield
-	amChoking      bool
-	amInterested   bool
-	peerChoking    bool
-	peerInterested bool
-	workQueue      []workPiece
-	lastContact    time.Time
-	lastRequest    time.Time
-	send           chan message.Message // Used for torrent goroutine to send messages
+	bitfield    bitfield.Bitfield
+	workQueue   []workPiece
+	lastContact time.Time
+	lastRequest time.Time
+	send        chan message.Message // Used for torrent goroutine to send messages
 }
 
 func (p Peer) String() string {
@@ -54,19 +54,19 @@ func New(addr string, conn net.Conn, info common.TorrentInfo) Peer {
 	}
 	bitfieldSize := int(math.Ceil(float64(info.TotalPieces) / 8))
 	return Peer{
-		Addr: addr,
-		Conn: peerConn,
-		Rate: startRate,
+		Addr:           addr,
+		Conn:           peerConn,
+		AmChoking:      true,
+		AmInterested:   false,
+		PeerChoking:    true,
+		PeerInterested: false,
+		Rate:           startRate,
 
-		bitfield:       make([]byte, bitfieldSize),
-		amChoking:      true,
-		amInterested:   false,
-		peerChoking:    true,
-		peerInterested: false,
-		lastContact:    time.Now(),
-		lastRequest:    time.Now(),
-		workQueue:      []workPiece{},
-		send:           make(chan message.Message),
+		bitfield:    make([]byte, bitfieldSize),
+		lastContact: time.Now(),
+		lastRequest: time.Now(),
+		workQueue:   []workPiece{},
+		send:        make(chan message.Message, 4), // Buffer in case this is the only peer
 	}
 }
 
@@ -78,9 +78,15 @@ func (p *Peer) SendMessage(msg message.Message) {
 func (p *Peer) handleSend(msg message.Message) error {
 	switch msg.ID {
 	case message.MsgChoke:
-		p.amChoking = true
+		if p.AmChoking {
+			return nil
+		}
+		p.AmChoking = true
 	case message.MsgUnchoke:
-		p.amChoking = false
+		if !p.AmChoking {
+			return nil
+		}
+		p.AmChoking = false
 	}
 	_, err := p.Conn.Write(msg.Encode())
 	return errors.Wrap(err, "handleSend")
