@@ -66,7 +66,7 @@ func New(addr string, conn net.Conn, info common.TorrentInfo) Peer {
 		lastContact: time.Now(),
 		lastRequest: time.Now(),
 		workQueue:   []workPiece{},
-		send:        make(chan message.Message, 4), // Buffer in case this is the only peer
+		send:        make(chan message.Message),
 	}
 }
 
@@ -78,14 +78,8 @@ func (p *Peer) SendMessage(msg message.Message) {
 func (p *Peer) handleSend(msg message.Message) error {
 	switch msg.ID {
 	case message.MsgChoke:
-		if p.AmChoking {
-			return nil
-		}
 		p.AmChoking = true
 	case message.MsgUnchoke:
-		if !p.AmChoking {
-			return nil
-		}
 		p.AmChoking = false
 	}
 	_, err := p.Conn.Write(msg.Encode())

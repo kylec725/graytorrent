@@ -125,7 +125,9 @@ func (to *Torrent) Start(ctx context.Context) {
 				close(complete) // Notify trackers to send completed message
 			}
 		case <-unchokeTicker.C:
-			to.unchokeAlg()
+			if len(to.Peers) > 0 {
+				to.unchokeAlg()
+			}
 		case <-ctx.Done():
 			log.WithField("name", to.Info.Name).Info("Torrent stopped")
 			return
@@ -183,10 +185,12 @@ func (to *Torrent) unchokeAlg() {
 	highRates := to.bestRates()
 	msgChoke := message.Choke()
 	// Unchoke the peers with the top 4 rates
+	prevIndex := highRates[0]
 	for _, index := range highRates {
-		if to.Peers[index].AmChoking {
+		if index != prevIndex { // Make sure we don't unchoke the same peer again
 			to.Peers[index].SendMessage(msgChoke)
 		}
+		prevIndex = index
 	}
 }
 
