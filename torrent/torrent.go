@@ -183,9 +183,9 @@ func (to *Torrent) unchokeAlg() {
 	highRates := to.bestRates()
 	msgChoke := message.Choke()
 	// Unchoke the peers with the top 4 rates
-	for i := range highRates {
-		if to.Peers[i].AmChoking {
-			to.Peers[i].SendMessage(msgChoke)
+	for _, index := range highRates {
+		if to.Peers[index].AmChoking {
+			to.Peers[index].SendMessage(msgChoke)
 		}
 	}
 }
