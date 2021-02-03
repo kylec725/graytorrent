@@ -141,7 +141,7 @@ func (p *Peer) handlePiece(msg *message.Message, info common.TorrentInfo, result
 				p.removeWorkPiece(int(index))
 				return errors.Wrap(err, "handlePiece")
 			}
-			log.WithFields(log.Fields{"peer": p.String(), "piece index": index, "rate": p.rate}).Trace("Wrote piece to file")
+			log.WithFields(log.Fields{"peer": p.String(), "piece index": index, "rate": p.Rate}).Trace("Wrote piece to file")
 
 			// Write was successful
 			p.removeWorkPiece(int(index))
@@ -204,11 +204,11 @@ func (p *Peer) adjustRate(wp workPiece) {
 	// } else {
 	// 	p.rate = int(currRate/5 + 18)
 	// }
-	if currRate > float64(p.rate) {
-		p.rate = p.rate + 2
+	if currRate > float64(p.Rate) {
+		p.Rate = p.Rate + 2
 	} else if currRate < 2 {
-		p.rate = 2
+		p.Rate = 2
 	} else {
-		p.rate = int(currRate)
+		p.Rate = int(currRate)
 	}
 }

@@ -29,13 +29,13 @@ const startRate = 2                     // Uses adaptive rate after first reques
 type Peer struct {
 	Addr string
 	Conn *connect.Conn // nil if not connected
+	Rate int           // max number of outgoing requests/pieces a peer can queue
 
 	bitfield       bitfield.Bitfield
 	amChoking      bool
 	amInterested   bool
 	peerChoking    bool
 	peerInterested bool
-	rate           int // max number of outgoing requests/pieces a peer can queue
 	workQueue      []workPiece
 	lastContact    time.Time
 	lastRequest    time.Time
@@ -56,13 +56,13 @@ func New(addr string, conn net.Conn, info common.TorrentInfo) Peer {
 	return Peer{
 		Addr: addr,
 		Conn: peerConn,
+		Rate: startRate,
 
 		bitfield:       make([]byte, bitfieldSize),
 		amChoking:      true,
 		amInterested:   false,
 		peerChoking:    true,
 		peerInterested: false,
-		rate:           startRate,
 		lastContact:    time.Now(),
 		lastRequest:    time.Now(),
 		workQueue:      []workPiece{},
@@ -148,7 +148,7 @@ func (p *Peer) StartWork(ctx context.Context, work chan int, results chan int, r
 		}
 
 		// Find new work piece if queue is open
-		if len(p.workQueue) < p.rate {
+		if len(p.workQueue) < p.Rate {
 			select {
 			case index := <-work:
 				// Send the work back if the peer does not have the piece
