@@ -84,10 +84,8 @@ func (p *Peer) sendRequest(index, begin, length int) error {
 }
 
 func (p *Peer) handleRequest(msg *message.Message, info common.TorrentInfo) error {
-	if p.AmChoking { // Tell the peer we are choking them and return
-		chokeMsg := message.Choke()
-		_, err := p.Conn.Write(chokeMsg.Encode())
-		return errors.Wrap(err, "handleRequest")
+	if p.AmChoking { // Ignore requests if we are choking
+		return nil
 	}
 
 	index := binary.BigEndian.Uint32(msg.Payload[0:4])
