@@ -12,6 +12,7 @@ package torrent
 
 import (
 	"context"
+	"time"
 
 	"github.com/kylec725/graytorrent/common"
 	"github.com/kylec725/graytorrent/metainfo"
@@ -73,11 +74,12 @@ func (to *Torrent) Setup(ctx context.Context) error {
 // Start initiates a routine to download a torrent from peers
 func (to *Torrent) Start(ctx context.Context) {
 	log.WithField("name", to.Info.Name).Info("Torrent started")
-	peers := make(chan peer.Peer)                  // For incoming peers from trackers
-	work := make(chan int, to.Info.TotalPieces)    // Piece indices we need
-	results := make(chan int, to.Info.TotalPieces) // Notification that a piece is done
-	remove := make(chan string)                    // For peers to notify they should be removed from our list
-	complete := make(chan bool)                    // To notify trackers to send the completed message
+	peers := make(chan peer.Peer)                     // For incoming peers from trackers
+	work := make(chan int, to.Info.TotalPieces)       // Piece indices we need
+	results := make(chan int, to.Info.TotalPieces)    // Notification that a piece is done
+	remove := make(chan string)                       // For peers to notify they should be removed from our list
+	complete := make(chan bool)                       // To notify trackers to send the completed message
+	unchokeTicker := time.NewTicker(10 * time.Second) // Change who is unchoked after a period of time
 	ctx, cancel := context.WithCancel(context.WithValue(ctx, common.KeyInfo, &to.Info))
 
 	// Cleanup
@@ -122,6 +124,8 @@ func (to *Torrent) Start(ctx context.Context) {
 				log.WithField("name", to.Info.Name).Info("Torrent completed")
 				close(complete) // Notify trackers to send completed message
 			}
+		case <-unchokeTicker.C:
+			to.unchokeAlg()
 		case <-ctx.Done():
 			log.WithField("name", to.Info.Name).Info("Torrent stopped")
 			return
@@ -166,4 +170,45 @@ func (to *Torrent) hasPeer(newPeer peer.Peer) bool {
 		}
 	}
 	return false
+}
+
+func (to *Torrent) unchokeAlg() {
+	msgUnchoke := message.Unchoke()
+	// Choke all peers
+	for i := range to.Peers {
+		if !to.Peers[i].AmChoking {
+			to.Peers[i].SendMessage(msgUnchoke)
+		}
+	}
+	highRates := to.bestRates()
+	msgChoke := message.Choke()
+	// Unchoke the peers with the top 4 rates
+	for i := range highRates {
+		if to.Peers[i].AmChoking {
+			to.Peers[i].SendMessage(msgChoke)
+		}
+	}
+}
+
+func (to *Torrent) bestRates() [4]int {
+	var highRates [4]int
+	// Find peers with top 4 download rates
+	for i, peer := range to.Peers {
+		if peer.Rate > to.Peers[highRates[0]].Rate {
+			highRates[3] = highRates[2]
+			highRates[2] = highRates[1]
+			highRates[1] = highRates[0]
+			highRates[0] = i
+		} else if peer.Rate > to.Peers[highRates[1]].Rate {
+			highRates[3] = highRates[2]
+			highRates[2] = highRates[1]
+			highRates[1] = i
+		} else if peer.Rate > to.Peers[highRates[2]].Rate {
+			highRates[3] = highRates[1]
+			highRates[2] = i
+		} else if peer.Rate > to.Peers[highRates[3]].Rate {
+			highRates[3] = i
+		}
+	}
+	return highRates
 }
