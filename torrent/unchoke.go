@@ -1,6 +1,8 @@
 package torrent
 
-import "github.com/kylec725/graytorrent/peer/message"
+import (
+	"github.com/kylec725/graytorrent/peer/message"
+)
 
 func (to *Torrent) unchokeAlg() {
 	// Unchoke the peers with the top 4 rates
