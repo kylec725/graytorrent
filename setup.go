@@ -92,7 +92,7 @@ func catchInterrupt(ctx context.Context, cancel context.CancelFunc) {
 	signalChan := make(chan os.Signal, 1)
 	signal.Notify(signalChan, os.Interrupt)
 	select {
-	case <-signalChan: // First signal, cleanup
+	case <-signalChan: // Cleanup on interrupt signal
 		signal.Stop(signalChan)
 		listener.Close()
 		cancel()
@@ -102,6 +102,4 @@ func catchInterrupt(ctx context.Context, cancel context.CancelFunc) {
 		os.Exit(1)
 	case <-ctx.Done():
 	}
-	<-signalChan // Second signal, hard exit
-	os.Exit(1)
 }
