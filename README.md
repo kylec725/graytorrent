@@ -2,7 +2,6 @@
 BitTorrent client implemented in golang
 
 ## In Progress...
-- Manage multiple torrents
 - Optimistic Unchoking
 - Save the progress of managed torrents
 - Fine-tune the adaptive download rate
