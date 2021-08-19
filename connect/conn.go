@@ -69,10 +69,10 @@ func (conn *Conn) pollRead(buf []byte) (int, error) {
 	bytesRead, err := io.ReadFull(conn.Conn, buf)
 	if err != nil {
 		if netErr, ok := err.(net.Error); ok && netErr.Timeout() {
-			return bytesRead, errors.Wrap(ErrTimeout, "Read")
+			return bytesRead, errors.Wrap(ErrTimeout, "pollRead")
 		}
 	}
-	return bytesRead, errors.Wrap(err, "Read")
+	return bytesRead, errors.Wrap(err, "pollRead")
 }
 
 // Poll scans a connection for data and returns it over a channel
