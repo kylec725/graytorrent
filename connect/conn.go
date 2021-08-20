@@ -67,8 +67,8 @@ func (conn *Conn) pollRead(buf []byte) (int, error) {
 	defer conn.Conn.SetReadDeadline(time.Time{}) // Reset timeout
 	conn.Conn.SetReadDeadline(time.Now().Add(pollTimeout))
 	bytesRead, err := io.ReadFull(conn.Conn, buf)
-	if err != nil { // TODO: some connections are still dropped at this stage (not getting 4 bytes when we are expecting the msg prefix)
-		if netErr, ok := err.(net.Error); ok && netErr.Timeout() {
+	if err != nil { // WARNING: not sure if connections may be dropped here unnecessarily
+		if netErr, ok := err.(net.Error); ok && netErr.Timeout() || err == io.EOF { // Account for timeout and EOF error
 			return bytesRead, errors.Wrap(ErrTimeout, "pollRead")
 		}
 	}
