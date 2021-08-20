@@ -115,7 +115,7 @@ func (to *Torrent) Start(ctx context.Context) {
 			}
 		case deadPeer := <-remove: // Don't exit as trackers may find peers
 			to.removePeer(deadPeer)
-		case index := <-results: // TODO change states
+		case index := <-results: // TODO: change states
 			to.Info.Bitfield.Set(index)
 			to.Info.Left -= common.PieceSize(to.Info, index)
 			go to.sendHave(index)
