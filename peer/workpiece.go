@@ -23,15 +23,12 @@ func (p *Peer) addWorkPiece(info common.TorrentInfo, index int) {
 }
 
 func (p *Peer) removeWorkPiece(index int) {
-	removeIndex := -1
 	for i, workPiece := range p.workQueue {
 		if index == workPiece.index {
-			removeIndex = i
+			p.workQueue[i] = p.workQueue[len(p.workQueue)-1]
+			p.workQueue = p.workQueue[:len(p.workQueue)-1]
+			break
 		}
-	}
-	if removeIndex != -1 {
-		p.workQueue[removeIndex] = p.workQueue[len(p.workQueue)-1]
-		p.workQueue = p.workQueue[:len(p.workQueue)-1]
 	}
 }
 
