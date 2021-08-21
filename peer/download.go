@@ -174,7 +174,7 @@ func (p *Peer) nextBlock(index int) error {
 }
 
 // downloadPiece starts a routine to download a piece from a peer
-func (p *Peer) downloadPiece(info common.TorrentInfo, index int) error { // TODO: make sure we are unchoked before sending requests
+func (p *Peer) downloadPiece(info common.TorrentInfo, index int) error {
 	if !p.AmInterested {
 		msg := message.Interested()
 		if _, err := p.Conn.Write(msg.Encode()); err != nil {
