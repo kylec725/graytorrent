@@ -10,7 +10,7 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-// Command provides main with facilities to manage its torrents
+// Manager provides main with facilities to manage its torrents
 
 func addTorrent(ctx context.Context, filename string) (torrent.Torrent, error) {
 	to := torrent.Torrent{Path: filename}
