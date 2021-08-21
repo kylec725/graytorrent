@@ -183,7 +183,7 @@ func (p *Peer) downloadPiece(info common.TorrentInfo, index int) error { // TODO
 		p.AmInterested = true
 	}
 	p.addWorkPiece(info, index)
-	if !p.PeerChoking {
+	if !p.PeerChoking { // If peer is choking, we call nextBlock when we receive an unchoke
 		err := p.nextBlock(index)
 		return errors.Wrap(err, "downloadPiece")
 	}
