@@ -19,11 +19,12 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-const peerTimeout = 20 * time.Second    // Time to wait on an expected peer connection operation
-const workTimeout = 5 * time.Second     // To get unstuck if we need to get work
-const requestTimeout = 30 * time.Second // How long to wait on requests before sending work back
-const keepAlive = 120 * time.Second     // How long to wait before removing a peer with no messages
-const startRate = 2                     // Uses adaptive rate after first requests
+const peerTimeout = 20 * time.Second       // Time to wait on an expected peer connection operation
+const workTimeout = 5 * time.Second        // To get unstuck if we need to get work
+const requestTimeout = 30 * time.Second    // How long to wait on requests before sending work back
+const receiveKeepAlive = 120 * time.Second // How long to wait before removing a peer with no messages
+const sendKeepAlive = 90 * time.Second     // How long to wait before sending a keep alive message
+const startRate = 2                        // Uses adaptive rate after first requests
 
 // Peer stores info about connecting to peers as well as their state
 type Peer struct {
@@ -35,11 +36,12 @@ type Peer struct {
 	PeerInterested bool
 	Rate           int // max number of outgoing requests/pieces a peer can queue
 
-	bitfield    bitfield.Bitfield
-	workQueue   []workPiece
-	lastContact time.Time
-	lastRequest time.Time
-	send        chan message.Message // Used for torrent goroutine to send messages
+	bitfield            bitfield.Bitfield
+	workQueue           []workPiece
+	lastMessageReceived time.Time
+	lastMessageSent     time.Time
+	lastRequest         time.Time
+	send                chan message.Message // Used for torrent goroutine to send messages
 }
 
 func (p Peer) String() string {
@@ -62,11 +64,12 @@ func New(addr string, conn net.Conn, info common.TorrentInfo) Peer {
 		PeerInterested: false,
 		Rate:           startRate,
 
-		bitfield:    make([]byte, bitfieldSize),
-		lastContact: time.Now(),
-		lastRequest: time.Now(),
-		workQueue:   []workPiece{},
-		send:        make(chan message.Message),
+		bitfield:            make([]byte, bitfieldSize),
+		lastMessageReceived: time.Now(),
+		lastMessageSent:     time.Now(),
+		lastRequest:         time.Now(),
+		workQueue:           []workPiece{},
+		send:                make(chan message.Message),
 	}
 }
 
@@ -75,7 +78,7 @@ func (p *Peer) SendMessage(msg message.Message) {
 	p.send <- msg
 }
 
-func (p *Peer) handleSend(msg message.Message) error {
+func (p *Peer) handleSend(msg *message.Message) error {
 	switch msg.ID {
 	case message.MsgChoke:
 		p.AmChoking = true
@@ -126,7 +129,7 @@ func (p *Peer) StartWork(ctx context.Context, work chan int, results chan int, r
 			if !ok { // Connection failed
 				return
 			}
-			p.lastContact = time.Now()
+			p.lastMessageReceived = time.Now()
 			currInfo := common.Info(ctx)
 			msg := message.Decode(data)
 			if err := p.handleMessage(msg, currInfo, work, results); err != nil {
@@ -134,7 +137,7 @@ func (p *Peer) StartWork(ctx context.Context, work chan int, results chan int, r
 				return
 			}
 		case msg := <-p.send:
-			if err := p.handleSend(msg); err != nil {
+			if err := p.handleSend(&msg); err != nil {
 				peerLog.WithFields(log.Fields{"type": msg.String(), "error": err.Error()}).Debug("Error sending message")
 				return
 			}
@@ -142,7 +145,10 @@ func (p *Peer) StartWork(ctx context.Context, work chan int, results chan int, r
 			if time.Since(p.lastRequest) >= requestTimeout {
 				p.clearWork(work)
 			}
-			if time.Since(p.lastContact) >= keepAlive { // Check if peer has passed the keep-alive time
+			if time.Since(p.lastMessageSent) >= sendKeepAlive {
+				p.handleSend(nil)
+			}
+			if time.Since(p.lastMessageReceived) >= receiveKeepAlive { // Check if peer has passed the keep-alive time
 				return
 			}
 		}
