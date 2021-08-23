@@ -79,7 +79,8 @@ func (p *Peer) handleMessage(msg *message.Message, info common.TorrentInfo, work
 // sendRequest sends a piece request message to a peer
 func (p *Peer) sendRequest(index, begin, length int) error {
 	msg := message.Request(uint32(index), uint32(begin), uint32(length))
-	_, err := p.Conn.Write(msg.Encode())
+	err := p.handleSend(&msg)
+	p.lastMessageSent = time.Now()
 	return errors.Wrap(err, "sendRequest")
 }
 
@@ -164,7 +165,8 @@ func (p *Peer) nextBlock(index int) error {
 	for i := range p.workQueue {
 		if index == p.workQueue[i].index {
 			length := common.Min(p.workQueue[i].left, reqSize)
-			err := p.sendRequest(index, p.workQueue[i].curr, length)
+			msg := message.Request(uint32(index), uint32(p.workQueue[i].curr), uint32(length))
+			err := p.handleSend(&msg)
 			p.workQueue[i].curr += length
 			p.lastRequest = time.Now()
 			return errors.Wrap(err, "nextBlock")
