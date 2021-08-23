@@ -70,7 +70,7 @@ func Read(reader io.Reader) ([20]byte, error) {
 	var infoHash [20]byte
 	// var infoHash, peerID [20]byte
 	copy(infoHash[:], buf[pstrLen+8:pstrLen+28])
-	// copy(peerID[:], buf[ pstrLen+28 : pstrLen+48 ])  // TODO: need to check for the current peer ID
+	// copy(peerID[:], buf[ pstrLen+28 : pstrLen+48 ])  // TODO: need to verify the received peerID
 
 	return infoHash, nil
 }
