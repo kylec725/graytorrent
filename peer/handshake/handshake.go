@@ -57,7 +57,7 @@ func Read(reader io.Reader) ([20]byte, error) {
 		return [20]byte{}, errors.Wrap(ErrPstrLen, "rcvHandshake")
 	}
 
-	buf = make([]byte, 48+pstrLen) // NOTE: some peers may not send a peerID
+	buf = make([]byte, 48+pstrLen)
 	if _, err := io.ReadFull(reader, buf); err != nil {
 		return [20]byte{}, errors.Wrap(err, "rcvHandshake")
 	}
