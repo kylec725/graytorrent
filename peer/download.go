@@ -38,7 +38,7 @@ func (p *Peer) handleMessage(msg *message.Message, info common.TorrentInfo, work
 		p.PeerInterested = true
 	case message.MsgNotInterested:
 		p.PeerInterested = false
-	case message.MsgHave:
+	case message.MsgHave: // TODO: use one case for checking for expected payload size
 		if len(msg.Payload) != 4 {
 			return errors.Wrap(ErrMessage, "handleMessage")
 		}
