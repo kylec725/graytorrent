@@ -34,6 +34,8 @@ type Tracker struct {
 	httpClient *http.Client
 }
 
+// NOTE: consider structuring trackers as an interface and separate http vs udp trackers
+
 func newTracker(announce string) Tracker {
 	return Tracker{
 		Announce: announce,
