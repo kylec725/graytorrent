@@ -15,7 +15,6 @@ import (
 	"github.com/kylec725/graytorrent/common"
 	"github.com/kylec725/graytorrent/connect"
 	"github.com/kylec725/graytorrent/peer/message"
-	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -78,17 +77,6 @@ func (p *Peer) SendMessage(msg message.Message) {
 	p.send <- msg
 }
 
-func (p *Peer) handleSend(msg *message.Message) error {
-	switch msg.ID {
-	case message.MsgChoke:
-		p.AmChoking = true
-	case message.MsgUnchoke:
-		p.AmChoking = false
-	}
-	_, err := p.Conn.Write(msg.Encode())
-	return errors.Wrap(err, "handleSend")
-}
-
 // StartWork makes a peer wait for pieces to download
 func (p *Peer) StartWork(ctx context.Context, work chan int, results chan int, remove chan string) {
 	info := common.Info(ctx)
@@ -137,7 +125,7 @@ func (p *Peer) StartWork(ctx context.Context, work chan int, results chan int, r
 				return
 			}
 		case msg := <-p.send:
-			if err := p.handleSend(&msg); err != nil {
+			if err := p.sendMessage(&msg); err != nil {
 				peerLog.WithFields(log.Fields{"type": msg.String(), "error": err.Error()}).Debug("Error sending message")
 				return
 			}
@@ -146,7 +134,7 @@ func (p *Peer) StartWork(ctx context.Context, work chan int, results chan int, r
 				p.clearWork(work)
 			}
 			if time.Since(p.lastMessageSent) >= sendKeepAlive {
-				p.handleSend(nil)
+				p.sendMessage(nil)
 			}
 			if time.Since(p.lastMessageReceived) >= receiveKeepAlive { // Check if peer has passed the keep-alive time
 				return

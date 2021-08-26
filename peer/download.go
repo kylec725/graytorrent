@@ -22,6 +22,18 @@ var (
 	ErrPieceHash = errors.New("Received piece with bad hash")
 )
 
+func (p *Peer) sendMessage(msg *message.Message) error {
+	switch msg.ID {
+	case message.MsgChoke:
+		p.AmChoking = true
+	case message.MsgUnchoke:
+		p.AmChoking = false
+	}
+	_, err := p.Conn.Write(msg.Encode())
+	p.lastMessageSent = time.Now()
+	return errors.Wrap(err, "sendMessage")
+}
+
 func (p *Peer) handleMessage(msg *message.Message, info common.TorrentInfo, work chan int, results chan int) error {
 	if msg == nil {
 		return nil // keep-alive message
@@ -74,14 +86,6 @@ func (p *Peer) handleMessage(msg *message.Message, info common.TorrentInfo, work
 		fmt.Println("MsgPort not yet implemented")
 	}
 	return nil
-}
-
-// sendRequest sends a piece request message to a peer
-func (p *Peer) sendRequest(index, begin, length int) error {
-	msg := message.Request(uint32(index), uint32(begin), uint32(length))
-	err := p.handleSend(&msg)
-	p.lastMessageSent = time.Now()
-	return errors.Wrap(err, "sendRequest")
 }
 
 func (p *Peer) handleRequest(msg *message.Message, info common.TorrentInfo) error {
@@ -166,7 +170,7 @@ func (p *Peer) nextBlock(index int) error {
 		if index == p.workQueue[i].index {
 			length := common.Min(p.workQueue[i].left, reqSize)
 			msg := message.Request(uint32(index), uint32(p.workQueue[i].curr), uint32(length))
-			err := p.handleSend(&msg)
+			err := p.sendMessage(&msg)
 			p.workQueue[i].curr += length
 			p.lastRequest = time.Now()
 			return errors.Wrap(err, "nextBlock")
