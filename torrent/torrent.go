@@ -36,6 +36,7 @@ type Torrent struct {
 	Info          common.TorrentInfo // Contains meta data of the torrent
 	Trackers      []tracker.Tracker
 	Peers         []peer.Peer
+	deadPeers     []string
 }
 
 // Setup gets and sets up necessary properties of a new torrent object
@@ -84,8 +85,9 @@ func (to *Torrent) Start(ctx context.Context) {
 
 	// Cleanup
 	defer func() {
-		to.Peers = nil // Clear peers
-		cancel()       // Close all trackers and peers if the torrent goroutine returns
+		to.Peers = nil     // Clear peers
+		to.deadPeers = nil // Clear dead peers
+		cancel()           // Close all trackers and peers if the torrent goroutine returns
 	}()
 
 	// Start tracker goroutines
@@ -94,7 +96,7 @@ func (to *Torrent) Start(ctx context.Context) {
 	}
 
 	// Populate work queue
-	for i := 0; i < to.Info.TotalPieces; i++ {
+	for i := 0; i < to.Info.TotalPieces; i++ { // TODO: change to random order
 		if !to.Info.Bitfield.Has(i) {
 			work <- i
 		}
@@ -104,18 +106,21 @@ func (to *Torrent) Start(ctx context.Context) {
 	pieces := 0 // Counter of finished pieces
 	for {
 		select {
+		case deadPeer := <-remove: // Don't exit as trackers may find peers
+			to.removePeer(deadPeer)
 		case newPeer := <-peers: // Peers from trackers
-			if !to.hasPeer(newPeer) {
+			if !to.hasPeer(newPeer) && !to.isDeadPeer(newPeer) {
 				to.Peers = append(to.Peers, newPeer)
 				go newPeer.StartWork(ctx, work, results, remove)
 			}
 		case newPeer := <-to.IncomingPeers: // Incoming peers from main
 			if !to.hasPeer(newPeer) {
+				if to.isDeadPeer(newPeer) {
+					to.removeDeadPeer(newPeer.Addr)
+				}
 				to.Peers = append(to.Peers, newPeer)
 				go newPeer.StartWork(ctx, work, results, remove)
 			}
-		case deadPeer := <-remove: // Don't exit as trackers may find peers
-			to.removePeer(deadPeer)
 		case index := <-results: // TODO: change states
 			to.Info.Bitfield.Set(index)
 			to.Info.Left -= common.PieceSize(to.Info, index)
@@ -138,14 +143,17 @@ func (to *Torrent) Start(ctx context.Context) {
 
 func (to *Torrent) sendHave(index int) {
 	msg := message.Have(uint32(index))
-	for _, peer := range to.Peers {
-		peer.SendMessage(msg)
+	for i := range to.Peers {
+		to.Peers[i].SendMessage(msg)
 	}
 }
 
+// TODO: change to move dead peers into a separate list so that we do not recontact, allow them to init connection with us though
 func (to *Torrent) removePeer(name string) {
-	for i, peer := range to.Peers {
-		if name == peer.String() {
+	for i := range to.Peers {
+		if name == to.Peers[i].String() {
+			to.deadPeers = append(to.deadPeers, to.Peers[i].String())
+
 			to.Peers[i] = to.Peers[len(to.Peers)-1]
 			to.Peers = to.Peers[:len(to.Peers)-1]
 			return
@@ -153,9 +161,28 @@ func (to *Torrent) removePeer(name string) {
 	}
 }
 
-func (to *Torrent) hasPeer(newPeer peer.Peer) bool {
-	for _, peer := range to.Peers {
-		if newPeer.Addr == peer.Addr {
+func (to *Torrent) hasPeer(peer peer.Peer) bool {
+	for i := range to.Peers {
+		if peer.Addr == to.Peers[i].Addr {
+			return true
+		}
+	}
+	return false
+}
+
+func (to *Torrent) removeDeadPeer(addr string) {
+	for i := range to.deadPeers {
+		if addr == to.deadPeers[i] {
+			to.deadPeers[i] = to.deadPeers[len(to.deadPeers)-1]
+			to.deadPeers = to.deadPeers[:len(to.deadPeers)-1]
+			return
+		}
+	}
+}
+
+func (to *Torrent) isDeadPeer(peer peer.Peer) bool {
+	for i := range to.deadPeers {
+		if peer.Addr == to.deadPeers[i] {
 			return true
 		}
 	}
