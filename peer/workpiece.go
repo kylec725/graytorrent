@@ -27,7 +27,7 @@ func (p *Peer) removeWorkPiece(index int) {
 		if index == workPiece.index {
 			p.workQueue[i] = p.workQueue[len(p.workQueue)-1]
 			p.workQueue = p.workQueue[:len(p.workQueue)-1]
-			break
+			return
 		}
 	}
 }

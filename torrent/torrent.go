@@ -99,6 +99,7 @@ func (to *Torrent) Start(ctx context.Context) {
 			work <- i
 		}
 	}
+	// NOTE: changing to stop state should kill all peer goroutines
 
 	pieces := 0 // Counter of finished pieces
 	for {
@@ -143,17 +144,13 @@ func (to *Torrent) sendHave(index int) {
 }
 
 func (to *Torrent) removePeer(name string) {
-	removeIndex := -1
 	for i, peer := range to.Peers {
 		if name == peer.String() {
-			removeIndex = i
+			to.Peers[i] = to.Peers[len(to.Peers)-1]
+			to.Peers = to.Peers[:len(to.Peers)-1]
+			return
 		}
 	}
-	if removeIndex == -1 {
-		return
-	}
-	to.Peers[removeIndex] = to.Peers[len(to.Peers)-1]
-	to.Peers = to.Peers[:len(to.Peers)-1]
 }
 
 func (to *Torrent) hasPeer(newPeer peer.Peer) bool {
