@@ -1,7 +1,7 @@
 package common
 
 // State indicates the state and thus behavior of a torrent goroutine
-type State int
+type State uint8
 
 const (
 	// Started torrent state
