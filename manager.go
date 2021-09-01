@@ -21,16 +21,23 @@ func addTorrent(ctx context.Context, filename string) (torrent.Torrent, error) {
 	return to, nil
 }
 
+func removeTorrent(to torrent.Torrent) {
+	to.Cancel()
+	for i := range torrentList {
+		if to.Path == torrentList[i].Path {
+			torrentList[i] = torrentList[len(torrentList)-1]
+			torrentList = torrentList[:len(torrentList)-1]
+			return
+		}
+	}
+}
+
 func startTorrent(to torrent.Torrent) {
-	return
+	go to.Start()
 }
 
 func stopTorrent(to torrent.Torrent) {
-	return
-}
-
-func removeTorrent(to torrent.Torrent) {
-	return
+	to.Cancel()
 }
 
 func saveTorrents() {
@@ -47,7 +54,7 @@ func singleTorrent(ctx context.Context) {
 		return
 	}
 	log.WithField("name", to.Info.Name).Info("Torrent added")
-	go to.Start(ctx)
+	go to.Start()
 	for to.Info.Left > 0 { // Go compiler marks this as data race, not a big deal, we're just polling the value
 		time.Sleep(time.Second)
 	}

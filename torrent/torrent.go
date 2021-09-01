@@ -37,6 +37,8 @@ type Torrent struct {
 	Trackers      []tracker.Tracker
 	Peers         []peer.Peer
 	deadPeers     []string
+	Ctx           context.Context
+	Cancel        context.CancelFunc
 }
 
 // Setup gets and sets up necessary properties of a new torrent object
@@ -69,11 +71,13 @@ func (to *Torrent) Setup(ctx context.Context) error {
 	// Make channel for incoming peers
 	to.IncomingPeers = make(chan peer.Peer)
 
+	to.Ctx = ctx
+
 	return nil
 }
 
 // Start initiates a routine to download a torrent from peers
-func (to *Torrent) Start(ctx context.Context) {
+func (to *Torrent) Start() {
 	log.WithField("name", to.Info.Name).Info("Torrent started")
 	peers := make(chan peer.Peer)                     // For incoming peers from trackers
 	work := make(chan int, to.Info.TotalPieces)       // Piece indices we need
@@ -81,7 +85,8 @@ func (to *Torrent) Start(ctx context.Context) {
 	remove := make(chan string)                       // For peers to notify they should be removed from our list
 	complete := make(chan bool)                       // To notify trackers to send the completed message
 	unchokeTicker := time.NewTicker(10 * time.Second) // Change who is unchoked after a period of time
-	ctx, cancel := context.WithCancel(context.WithValue(ctx, common.KeyInfo, &to.Info))
+	ctx, cancel := context.WithCancel(context.WithValue(to.Ctx, common.KeyInfo, &to.Info))
+	to.Cancel = cancel
 
 	// Cleanup
 	defer func() {
