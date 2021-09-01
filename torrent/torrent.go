@@ -39,6 +39,7 @@ type Torrent struct {
 	deadPeers     []string
 	Ctx           context.Context
 	Cancel        context.CancelFunc
+	State         State
 }
 
 // Setup gets and sets up necessary properties of a new torrent object
