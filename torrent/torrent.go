@@ -74,6 +74,9 @@ func (to *Torrent) Setup(ctx context.Context) error {
 
 	to.Ctx = ctx
 
+	to.State = Stopped
+	// TODO: set state as Complete based off save data
+
 	return nil
 }
 
@@ -89,11 +92,23 @@ func (to *Torrent) Start() {
 	ctx, cancel := context.WithCancel(context.WithValue(to.Ctx, common.KeyInfo, &to.Info))
 	to.Cancel = cancel
 
+	// Change state
+	if to.State == Stopped {
+		to.State = Started
+	} else if to.State == Complete {
+		to.State = Seeding
+	}
+
 	// Cleanup
 	defer func() {
 		to.Peers = nil     // Clear peers
 		to.deadPeers = nil // Clear dead peers
 		cancel()           // Close all trackers and peers if the torrent goroutine returns
+		if to.State == Started {
+			to.State = Stopped
+		} else if to.State == Seeding {
+			to.State = Complete
+		}
 	}()
 
 	// Start tracker goroutines
@@ -107,7 +122,6 @@ func (to *Torrent) Start() {
 			work <- i
 		}
 	}
-	// NOTE: changing to stop state should kill all peer goroutines
 
 	pieces := 0 // Counter of finished pieces
 	for {
@@ -127,7 +141,7 @@ func (to *Torrent) Start() {
 				to.Peers = append(to.Peers, newPeer)
 				go newPeer.StartWork(ctx, work, results, remove)
 			}
-		case index := <-results: // TODO: change states
+		case index := <-results:
 			to.Info.Bitfield.Set(index)
 			to.Info.Left -= common.PieceSize(to.Info, index)
 			go to.sendHave(index)
@@ -135,6 +149,7 @@ func (to *Torrent) Start() {
 			if pieces == to.Info.TotalPieces {
 				log.WithField("name", to.Info.Name).Info("Torrent completed")
 				close(complete) // Notify trackers to send completed message
+				to.State = Seeding
 			}
 		case <-unchokeTicker.C:
 			if len(to.Peers) > 0 {
@@ -143,6 +158,12 @@ func (to *Torrent) Start() {
 		case <-ctx.Done():
 			log.WithField("name", to.Info.Name).Info("Torrent stopped")
 			return
+		}
+		// Adjust download state based off number of peers
+		if to.State == Started && len(to.Peers) == 0 {
+			to.State = Stalled
+		} else if to.State == Stalled && len(to.Peers) > 0 {
+			to.State = Started
 		}
 	}
 }
