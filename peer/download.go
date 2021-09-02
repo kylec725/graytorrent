@@ -13,7 +13,7 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-const reqSize = 16384 // kilobyte
+const reqSize = 16384 // 16 kilobytes
 
 // Errors
 var (
