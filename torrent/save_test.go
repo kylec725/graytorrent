@@ -28,6 +28,11 @@ func TestSave(t *testing.T) {
 func TestLoadAll(t *testing.T) {
 	assert := assert.New(t)
 
+	ctx := context.WithValue(context.Background(), common.KeyPort, uint16(6881))
+	var to Torrent = Torrent{Path: "../tmp/change.torrent"}
+	err := to.Setup(ctx)
+	os.Remove(to.Info.Name)
+
 	torrentList, err := LoadAll()
 	if assert.Nil(err) {
 		assert.NotEmpty(torrentList)
@@ -41,4 +46,5 @@ func TestLoadAll(t *testing.T) {
 			}
 		}
 	}
+	os.Remove(to.dataFile())
 }
