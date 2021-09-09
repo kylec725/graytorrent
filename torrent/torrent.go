@@ -12,6 +12,7 @@ package torrent
 
 import (
 	"context"
+	"os"
 	"time"
 
 	"github.com/kylec725/graytorrent/common"
@@ -26,7 +27,8 @@ import (
 
 // Errors
 var (
-	ErrPeerNotFound = errors.New("Peer not found")
+	ErrPeerNotFound  = errors.New("Peer not found")
+	ErrTorrentExists = errors.New("Torrent is already being managed")
 )
 
 // Torrent stores metainfo and current progress on a torrent
@@ -76,6 +78,10 @@ func (to *Torrent) Setup(ctx context.Context) error {
 
 	to.State = Stopped
 	// TODO: set state as Complete based off save data
+
+	if _, err = os.Stat(to.dataFile()); err == nil {
+		return errors.Wrap(ErrTorrentExists, "Setup")
+	}
 
 	return nil
 }
