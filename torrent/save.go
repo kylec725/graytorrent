@@ -20,16 +20,25 @@ func init() {
 	}
 }
 
-// Save saves data about a managed torrent's state to a file NOTE: may want to add a directory parameter
+// dataFile returns a path to the torrent's GrayTorrent data file
+func (to *Torrent) dataFile() string {
+	return filepath.Join(torrentDataPath, to.Info.Name+".json")
+}
+
+// Save saves data about a managed torrent's state to a file
 func (to *Torrent) Save() error {
-	// NOTE: have directory and save each torrent as a separate json
-	// NOTE: alternative: open history file json maybe, see if we are in it then update info or add ourselves
+	// NOTE: alternative: open history file json, see if we are in it, then update info or add ourselves
 	jsonStream, err := json.Marshal(to)
 	if err != nil {
 		return errors.Wrap(err, "Save")
 	}
 
-	err = os.WriteFile(filepath.Join(torrentDataPath, to.Info.Name+".json"), jsonStream, 0644)
+	file, err := os.Create(to.dataFile()) // os.Create creates or truncates the named file
+	if err != nil {
+		return errors.Wrap(err, "Save")
+	}
+
+	_, err = file.Write(jsonStream)
 	if err != nil {
 		return errors.Wrap(err, "Save")
 	}
