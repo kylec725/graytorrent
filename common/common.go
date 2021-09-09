@@ -19,22 +19,22 @@ const peerID = "-GT0100-"
 
 // TorrentInfo contains information about a torrent
 type TorrentInfo struct {
-	Name        string
-	Paths       []Path
-	Bitfield    bitfield.Bitfield // bitfield of current pieces
-	PieceLength int               // number of bytes per piece
-	TotalPieces int               // total pieces in the torrent
-	TotalLength int               // total length of the torrent
-	Left        int               // number of bytes left to torrent
-	InfoHash    [20]byte
-	PieceHashes [][20]byte
-	PeerID      [20]byte
+	Name        string            `json:"Name"`
+	Paths       []Path            `json:"Paths"`
+	Bitfield    bitfield.Bitfield `json:"Bitfield"`    // bitfield of current pieces
+	PieceLength int               `json:"PieceLength"` // number of bytes per piece
+	TotalPieces int               `json:"TotalPieces"` // total pieces in the torrent
+	TotalLength int               `json:"TotalLength"` // total length of the torrent
+	Left        int               `json:"Left"`        // number of bytes left to torrent
+	InfoHash    [20]byte          `json:"InfoHash"`
+	PieceHashes [][20]byte        `json:"PieceHashes"`
+	PeerID      [20]byte          `json:"PeerID"`
 }
 
 // Path stores info about each file in a torrent
 type Path struct {
-	Length int
-	Path   string
+	Length int    `json:"Length"`
+	Path   string `json:"Path"`
 }
 
 // Min returns the minimum of two integers

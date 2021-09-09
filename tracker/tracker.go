@@ -23,15 +23,15 @@ var (
 
 // Tracker stores information about a torrent tracker
 type Tracker struct {
-	Announce string
-	Working  bool
-	Interval int
+	Announce string `json:"Announce"`
+	Working  bool   `json:"-"`
+	Interval int    `json:"-"`
 
-	conn *net.UDPConn // Used by UDP trackers
-	txID uint32
-	cnID uint64
+	conn *net.UDPConn `json:"-"` // Used by UDP trackers
+	txID uint32       `json:"-"`
+	cnID uint64       `json:"-"`
 
-	httpClient *http.Client
+	httpClient *http.Client `json:"-"`
 }
 
 // NOTE: consider structuring trackers as an interface and separate http vs udp trackers
@@ -145,6 +145,7 @@ func (tr *Tracker) Run(ctx context.Context, peers chan peer.Peer, complete chan 
 	port := common.Port(ctx)
 	trackerLog := log.WithField("tracker", tr.Announce)
 	peerList, err := tr.sendStarted(info, port, 0, 0, info.Left)
+	tr.Interval = 2
 	if err != nil {
 		tr.Working = false
 		trackerLog.WithField("error", err.Error()).Debug("Error while sending started message")

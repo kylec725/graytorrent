@@ -31,15 +31,15 @@ var (
 
 // Torrent stores metainfo and current progress on a torrent
 type Torrent struct {
-	Path          string
-	IncomingPeers chan peer.Peer     // Used by main to forward incoming peers
-	Info          common.TorrentInfo // Contains meta data of the torrent
-	Trackers      []tracker.Tracker
-	Peers         []peer.Peer
-	deadPeers     []string
-	Ctx           context.Context
-	Cancel        context.CancelFunc
-	State         State
+	Path          string             `json:"Path"`
+	IncomingPeers chan peer.Peer     `json:"-"`    // Used by main to forward incoming peers
+	Info          common.TorrentInfo `json:"Info"` // Contains meta data of the torrent
+	Trackers      []tracker.Tracker  `json:"Trackers"`
+	Peers         []peer.Peer        `json:"-"`
+	deadPeers     []string           `json:"-"`
+	Ctx           context.Context    `json:"-"`
+	Cancel        context.CancelFunc `json:"-"`
+	State         State              `json:"-"`
 }
 
 // Setup gets and sets up necessary properties of a new torrent object
