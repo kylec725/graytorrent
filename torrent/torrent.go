@@ -46,8 +46,6 @@ type Torrent struct {
 
 // Setup gets and sets up necessary properties of a new torrent object
 func (to *Torrent) Setup(ctx context.Context) error {
-	port := common.Port(ctx)
-
 	// Get metainfo
 	meta, err := metainfo.Meta(to.Path)
 	if err != nil {
@@ -61,7 +59,7 @@ func (to *Torrent) Setup(ctx context.Context) error {
 	}
 
 	// Create trackers list from metainfo announce or announce-list
-	to.Trackers, err = tracker.GetTrackers(meta, port)
+	to.Trackers, err = tracker.GetTrackers(meta)
 	if err != nil {
 		return errors.Wrap(err, "Setup")
 	}

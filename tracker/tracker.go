@@ -47,7 +47,7 @@ func newTracker(announce string) Tracker {
 }
 
 // GetTrackers parses metainfo to retrieve a list of trackers
-func GetTrackers(meta metainfo.BencodeMeta, port uint16) ([]Tracker, error) {
+func GetTrackers(meta metainfo.BencodeMeta) ([]Tracker, error) {
 	// If announce-list is empty, use announce only
 	if len(meta.AnnounceList) == 0 {
 		// Check if no announce strings exist
