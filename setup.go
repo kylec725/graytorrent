@@ -19,7 +19,7 @@ func setupLog() {
 	logFile, err = os.OpenFile("info.log", os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0644)
 	// logFile, err = os.OpenFile(filepath.Join(grayTorrentPath, "info.log"), os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0644)
 	if err != nil {
-		log.Fatal("Could not open log file info.log")
+		log.WithField("error", err.Error()).Fatal("Could not open log file")
 	}
 
 	// Set logging settings

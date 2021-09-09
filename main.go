@@ -37,7 +37,7 @@ func init() {
 
 	err = os.MkdirAll(grayTorrentPath, os.ModePerm)
 	if err != nil {
-		log.Fatal("Could not create necessary directories")
+		log.WithField("error", err.Error()).Fatal("Could not create necessary directories")
 	}
 
 	setupLog()
