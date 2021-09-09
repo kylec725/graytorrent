@@ -23,6 +23,7 @@ func addTorrent(ctx context.Context, filename string) (torrent.Torrent, error) {
 
 func removeTorrent(to torrent.Torrent) {
 	to.Cancel()
+	// TODO: remove the torrent data file
 	for i := range torrentList {
 		if to.Path == torrentList[i].Path {
 			torrentList[i] = torrentList[len(torrentList)-1]
