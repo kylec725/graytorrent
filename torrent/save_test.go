@@ -19,9 +19,7 @@ func TestSave(t *testing.T) {
 	err := to.Setup(ctx)
 	if assert.Nil(err) {
 		err = to.Save()
-		if assert.Nil(err) {
-			os.Remove(to.Info.Name + ".json")
-		}
+		assert.Nil(err)
 		os.Remove(to.Info.Name)
 	}
 }

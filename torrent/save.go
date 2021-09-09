@@ -10,12 +10,11 @@ import (
 )
 
 var (
-	grayTorrentPath = filepath.Join(os.Getenv("HOME"), ".config/graytorrent")
+	torrentDataPath = filepath.Join(os.Getenv("HOME"), ".config/graytorrent", ".torrents")
 )
 
 func init() {
-	newPath := filepath.Join(grayTorrentPath, ".torrents")
-	err := os.MkdirAll(newPath, os.ModePerm)
+	err := os.MkdirAll(torrentDataPath, os.ModePerm)
 	if err != nil {
 		log.Fatal("Error creating directory for torrent save data")
 	}
@@ -30,7 +29,7 @@ func (to *Torrent) Save() error {
 		return errors.Wrap(err, "Save")
 	}
 
-	err = os.WriteFile(to.Info.Name+".json", jsonStream, 0644)
+	err = os.WriteFile(filepath.Join(torrentDataPath, to.Info.Name+".json"), jsonStream, 0644)
 	if err != nil {
 		return errors.Wrap(err, "Save")
 	}
