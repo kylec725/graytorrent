@@ -130,6 +130,9 @@ func (to *Torrent) Start() {
 	pieces := 0 // Counter of finished pieces
 	for {
 		select {
+		case <-ctx.Done():
+			log.WithField("name", to.Info.Name).Info("Torrent stopped")
+			return
 		case deadPeer := <-remove: // Don't exit as trackers may find peers
 			to.removePeer(deadPeer)
 		case newPeer := <-peers: // Peers from trackers
@@ -159,9 +162,6 @@ func (to *Torrent) Start() {
 			if len(to.Peers) > 0 {
 				to.unchokeAlg()
 			}
-		case <-ctx.Done():
-			log.WithField("name", to.Info.Name).Info("Torrent stopped")
-			return
 		}
 		// Adjust download state based off number of peers
 		if to.State == Started && len(to.Peers) == 0 {
