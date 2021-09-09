@@ -1,7 +1,9 @@
 package torrent
 
 import (
+	"os"
 	"testing"
+
 	// "fmt"
 	"context"
 
@@ -19,7 +21,8 @@ func TestSetup(t *testing.T) {
 	err := to.Setup(ctx)
 	if assert.Nil(err) {
 		assert.Equal("[Nipponsei] BLEACH OP12 Single - chAngE [miwa].zip", to.Info.Name, "Name is incorrect")
-		assert.Equal(262144, to.Info.PieceLength, "Name is incorrect")
-		assert.Equal(150, to.Info.TotalPieces, "Name is incorrect")
+		assert.Equal(262144, to.Info.PieceLength, "PieceLength is incorrect")
+		assert.Equal(150, to.Info.TotalPieces, "TotalPieces is incorrect")
+		os.Remove(to.Info.Name)
 	}
 }
