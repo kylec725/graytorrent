@@ -3,9 +3,23 @@ package torrent
 import (
 	"encoding/json"
 	"os"
+	"path/filepath"
 
 	"github.com/pkg/errors"
+	log "github.com/sirupsen/logrus"
 )
+
+var (
+	grayTorrentPath = filepath.Join(os.Getenv("HOME"), ".config/graytorrent")
+)
+
+func init() {
+	newPath := filepath.Join(grayTorrentPath, ".torrents")
+	err := os.MkdirAll(newPath, os.ModePerm)
+	if err != nil {
+		log.Fatal("Error creating directory for torrent save data")
+	}
+}
 
 // Save saves data about a managed torrent's state to a file NOTE: may want to add a directory parameter
 func (to *Torrent) Save() error {

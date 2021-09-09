@@ -4,6 +4,7 @@ import (
 	"context"
 	"net"
 	"os"
+	"path/filepath"
 
 	"github.com/kylec725/graytorrent/common"
 	"github.com/kylec725/graytorrent/torrent"
@@ -25,12 +26,19 @@ var (
 
 	torrentList []torrent.Torrent
 	listener    net.Listener
+
+	grayTorrentPath = filepath.Join(os.Getenv("HOME"), ".config/graytorrent")
 )
 
 func init() {
 	flag.StringVarP(&filename, "file", "f", "", "Filename of torrent file")
 	flag.BoolVarP(&verbose, "verbose", "v", false, "Print events to stdout")
 	flag.Parse()
+
+	err = os.MkdirAll(grayTorrentPath, os.ModePerm)
+	if err != nil {
+		log.Fatal("Could not create necessary directories")
+	}
 
 	setupLog()
 	log.Info("Graytorrent started")

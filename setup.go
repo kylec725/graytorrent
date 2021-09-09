@@ -14,14 +14,10 @@ import (
 	prefixed "github.com/x-cray/logrus-prefixed-formatter"
 )
 
-var (
-	homeDir = os.Getenv("HOME")
-)
-
 func setupLog() {
 	// Logging file
 	logFile, err = os.OpenFile("info.log", os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0644)
-	// logFile, err = os.OpenFile(homeDir + "/.config/graytorrent/info.log", os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0644)
+	// logFile, err = os.OpenFile(filepath.Join(grayTorrentPath, "info.log"), os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0644)
 	if err != nil {
 		log.Fatal("Could not open log file info.log")
 	}
@@ -50,7 +46,7 @@ func setupViper() {
 	viper.SetConfigName("config")
 	viper.SetConfigType("toml")
 	viper.AddConfigPath(".") // Remove in the future
-	viper.AddConfigPath(homeDir + "/.config/graytorrent")
+	viper.AddConfigPath(grayTorrentPath)
 	viper.AddConfigPath("/etc/graytorrent")
 
 	if err = viper.ReadInConfig(); err != nil {
