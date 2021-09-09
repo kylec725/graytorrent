@@ -133,7 +133,7 @@ func (to *Torrent) Start() {
 		case <-ctx.Done():
 			log.WithField("name", to.Info.Name).Info("Torrent stopped")
 			return
-		case deadPeer := <-remove: // Don't exit as trackers may find peers
+		case deadPeer := <-remove: // Don't exit since trackers may find peers
 			to.removePeer(deadPeer)
 		case newPeer := <-peers: // Peers from trackers
 			if !to.hasPeer(newPeer) && !to.isDeadPeer(newPeer) {
