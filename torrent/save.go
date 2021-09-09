@@ -93,3 +93,5 @@ func LoadAll() ([]Torrent, error) {
 
 	return torrentList, nil
 }
+
+// TODO: verify existing file's present pieces
