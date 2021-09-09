@@ -27,7 +27,7 @@ var (
 	torrentList []torrent.Torrent
 	listener    net.Listener
 
-	grayTorrentPath = filepath.Join(os.Getenv("HOME"), ".config/graytorrent")
+	grayTorrentPath = filepath.Join(os.Getenv("HOME"), ".config", "graytorrent")
 )
 
 func init() {

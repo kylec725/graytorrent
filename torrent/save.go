@@ -10,7 +10,7 @@ import (
 )
 
 var (
-	torrentDataPath = filepath.Join(os.Getenv("HOME"), ".config/graytorrent", ".torrents")
+	torrentDataPath = filepath.Join(os.Getenv("HOME"), ".config", "graytorrent", ".torrents")
 )
 
 func init() {
