@@ -9,10 +9,8 @@ import (
 
 // Save saves data about a managed torrent's state to a file
 func (to *Torrent) Save() error {
-	// TODO: log results of saving
-	// TODO: consider have a directory, with a file for each torrent's state
-	// TODO: alternative: open history file json maybe, see if we are in it, if not: add ourselves
-	//      if we are already, update info
+	// NOTE: have directory and save each torrent as a separate json
+	// NOTE: alternative: open history file json maybe, see if we are in it then update info or add ourselves
 	jsonStream, err := json.Marshal(to)
 	if err != nil {
 		return errors.Wrap(err, "Save")
@@ -25,3 +23,5 @@ func (to *Torrent) Save() error {
 
 	return nil
 }
+
+// TODO: Load torrents in dir
