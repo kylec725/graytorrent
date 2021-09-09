@@ -2,6 +2,8 @@ package torrent
 
 import (
 	"encoding/json"
+	"io/fs"
+	"io/ioutil"
 	"os"
 	"path/filepath"
 
@@ -25,6 +27,8 @@ func (to *Torrent) dataFile() string {
 	return filepath.Join(torrentDataPath, to.Info.Name+".json")
 }
 
+// TODO: compress data files when storing them
+
 // Save saves data about a managed torrent's state to a file
 func (to *Torrent) Save() error {
 	// NOTE: alternative: open history file json, see if we are in it, then update info or add ourselves
@@ -37,6 +41,7 @@ func (to *Torrent) Save() error {
 	if err != nil {
 		return errors.Wrap(err, "Save")
 	}
+	defer file.Close()
 
 	_, err = file.Write(jsonStream)
 	if err != nil {
@@ -46,4 +51,29 @@ func (to *Torrent) Save() error {
 	return nil
 }
 
-// TODO: Load torrents in dir
+// LoadAll returns a list of all managed torrents
+func LoadAll() ([]Torrent, error) {
+	var torrentList []Torrent
+
+	err := filepath.WalkDir(torrentDataPath, func(path string, dirEntry fs.DirEntry, dirErr error) error {
+		if dirErr != nil {
+			return dirErr
+		}
+		if filepath.Ext(path) == ".json" {
+			var savedTorrent Torrent
+			fileBytes, readErr := ioutil.ReadFile(path)
+			if readErr != nil {
+				return readErr
+			}
+			json.Unmarshal(fileBytes, &savedTorrent)
+
+			torrentList = append(torrentList, savedTorrent)
+		}
+		return nil
+	})
+	if err != nil {
+		return torrentList, errors.Wrap(err, "LoadAll")
+	}
+
+	return torrentList, nil
+}

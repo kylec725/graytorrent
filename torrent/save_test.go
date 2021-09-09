@@ -2,6 +2,7 @@ package torrent
 
 import (
 	"context"
+	"fmt"
 	"os"
 	"testing"
 
@@ -21,5 +22,23 @@ func TestSave(t *testing.T) {
 		err = to.Save()
 		assert.Nil(err)
 		os.Remove(to.Info.Name)
+	}
+}
+
+func TestLoadAll(t *testing.T) {
+	assert := assert.New(t)
+
+	torrentList, err := LoadAll()
+	if assert.Nil(err) {
+		assert.NotEmpty(torrentList)
+		if debugSave {
+			for _, to := range torrentList {
+				fmt.Println("Name:", to.Info.Name)
+				fmt.Println("PieceLength:", to.Info.PieceLength)
+				fmt.Println("TotalPieces:", to.Info.TotalPieces)
+				fmt.Println("TotalLength:", to.Info.TotalLength)
+				fmt.Println("Left:", to.Info.Left)
+			}
+		}
 	}
 }
