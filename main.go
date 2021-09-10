@@ -47,6 +47,11 @@ func init() {
 	viper.WatchConfig()
 
 	setupListen()
+
+	torrentList, err = torrent.LoadAll()
+	if err != nil {
+		log.WithField("error", err).Debug("Could not retrieve torrent management data")
+	}
 }
 
 func main() {
@@ -59,7 +64,7 @@ func main() {
 		cancel()
 		err = torrent.SaveAll(torrentList)
 		if err != nil {
-			log.WithField("error", err).Info("Problem occurred while saving torrent management data")
+			log.WithField("error", err).Debug("Problem occurred while saving torrent management data")
 		}
 		log.Info("Graytorrent stopped")
 		logFile.Close()
