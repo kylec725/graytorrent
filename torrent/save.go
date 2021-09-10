@@ -45,8 +45,8 @@ func LoadAll() ([]Torrent, error) {
 	var torrentList []Torrent
 
 	file, err := os.Open(saveDataPath)
-	if err != nil {
-		return nil, errors.Wrap(err, "LoadAll")
+	if err != nil { // If the save data file doesn't exist, return an empty list
+		return torrentList, errors.Wrap(err, "LoadAll")
 	}
 	defer file.Close()
 
