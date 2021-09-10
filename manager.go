@@ -47,9 +47,10 @@ func singleTorrent(ctx context.Context) {
 		log.WithFields(log.Fields{"filename": filename, "error": err.Error()}).Info("Failed to add torrent")
 		return
 	}
+	toPointer := &torrentList[len(torrentList)-1] // NOTE: it's important to reference the torrent in the slice directly
 	log.WithField("name", to.Info.Name).Info("Torrent added")
-	go to.Start()
-	for to.Info.Left > 0 { // Go compiler marks this as data race, not a big deal, we're just polling the value
+	go toPointer.Start()
+	for toPointer.Info.Left > 0 { // Go compiler marks this as data race, not a big deal, we're just polling the value
 		time.Sleep(time.Second)
 	}
 	torrent.SaveAll(torrentList)
