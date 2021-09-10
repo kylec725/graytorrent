@@ -57,7 +57,10 @@ func main() {
 	defer func() {
 		listener.Close()
 		cancel()
-		saveTorrents()
+		err = torrent.SaveAll(torrentList)
+		if err != nil {
+			log.WithField("error", err).Info("Problem occurred while saving torrent management data")
+		}
 		log.Info("Graytorrent stopped")
 		logFile.Close()
 	}()
