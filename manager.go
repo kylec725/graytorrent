@@ -32,13 +32,13 @@ func removeTorrent(to torrent.Torrent) {
 	}
 }
 
-func startTorrent(to torrent.Torrent) {
-	go to.Start()
-}
-
-func stopTorrent(to torrent.Torrent) {
-	to.Cancel()
-}
+// func startTorrent(to torrent.Torrent) {
+// 	go to.Start()
+// }
+//
+// func stopTorrent(to torrent.Torrent) {
+// 	to.Cancel()
+// }
 
 func singleTorrent(ctx context.Context) {
 	to, err := addTorrent(ctx, filename)
