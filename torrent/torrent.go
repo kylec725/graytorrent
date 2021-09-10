@@ -12,7 +12,6 @@ package torrent
 
 import (
 	"context"
-	"os"
 	"time"
 
 	"github.com/kylec725/graytorrent/common"
@@ -65,7 +64,7 @@ func (to *Torrent) Setup(ctx context.Context) error {
 	}
 
 	// Initialize files for writing
-	if err := write.NewWrite(to.Info); err != nil {
+	if err := write.NewWrite(to.Info); err != nil { // Should fail if torrent already is being managed
 		return errors.Wrap(err, "Setup")
 	}
 
@@ -76,10 +75,6 @@ func (to *Torrent) Setup(ctx context.Context) error {
 
 	to.State = Stopped
 	// TODO: set state as Complete based off save data
-
-	if _, err = os.Stat(to.dataFile()); err == nil {
-		return errors.Wrap(ErrTorrentExists, "Setup")
-	}
 
 	return nil
 }

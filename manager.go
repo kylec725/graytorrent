@@ -41,12 +41,6 @@ func stopTorrent(to torrent.Torrent) {
 	to.Cancel()
 }
 
-func saveTorrents() {
-	for i := range torrentList {
-		torrentList[i].Save()
-	}
-}
-
 func singleTorrent(ctx context.Context) {
 	to, err := addTorrent(ctx, filename)
 	if err != nil {
@@ -59,6 +53,6 @@ func singleTorrent(ctx context.Context) {
 	for to.Info.Left > 0 { // Go compiler marks this as data race, not a big deal, we're just polling the value
 		time.Sleep(time.Second)
 	}
-	to.Save()
+	torrent.SaveAll(torrentList)
 	fmt.Println("Torrent done:", to.Info.Name)
 }

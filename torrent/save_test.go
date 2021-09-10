@@ -12,26 +12,26 @@ import (
 
 const debugSave = false
 
-func TestSave(t *testing.T) {
+func TestSaveAll(t *testing.T) {
 	assert := assert.New(t)
 
 	ctx := context.WithValue(context.Background(), common.KeyPort, uint16(6881))
-	var to Torrent = Torrent{Path: "../tmp/change.torrent"}
-	err := to.Setup(ctx)
-	if assert.Nil(err) {
-		err = to.Save()
+	torrentList := make([]Torrent, 0)
+	torrentList = append(torrentList, Torrent{Path: "../tmp/change.torrent"})
+	torrentList = append(torrentList, Torrent{Path: "../tmp/1056.txt.utf-8.torrent"})
+	torrentList = append(torrentList, Torrent{Path: "../tmp/1184-0.txt.torrent"})
+
+	for i := range torrentList {
+		err := torrentList[i].Setup(ctx)
 		assert.Nil(err)
-		os.Remove(to.Info.Name)
+		os.Remove(torrentList[i].Info.Name)
 	}
+
+	SaveAll(torrentList)
 }
 
 func TestLoadAll(t *testing.T) {
 	assert := assert.New(t)
-
-	ctx := context.WithValue(context.Background(), common.KeyPort, uint16(6881))
-	var to Torrent = Torrent{Path: "../tmp/change.torrent"}
-	err := to.Setup(ctx)
-	os.Remove(to.Info.Name)
 
 	torrentList, err := LoadAll()
 	if assert.Nil(err) {
@@ -46,5 +46,4 @@ func TestLoadAll(t *testing.T) {
 			}
 		}
 	}
-	os.Remove(to.dataFile())
 }
