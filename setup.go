@@ -9,6 +9,7 @@ import (
 	"strconv"
 
 	"github.com/kylec725/graytorrent/connect"
+	"github.com/kylec725/graytorrent/torrent"
 	log "github.com/sirupsen/logrus"
 	viper "github.com/spf13/viper"
 	prefixed "github.com/x-cray/logrus-prefixed-formatter"
@@ -92,7 +93,10 @@ func catchInterrupt(ctx context.Context, cancel context.CancelFunc) {
 		signal.Stop(signalChan)
 		listener.Close()
 		cancel()
-		saveTorrents()
+		err = torrent.SaveAll(torrentList)
+		if err != nil {
+			log.WithField("error", err).Debug("Problem occurred while saving torrent management data")
+		}
 		log.Info("Graytorrent stopped")
 		logFile.Close()
 		os.Exit(1)
