@@ -21,7 +21,7 @@ func TestBuildURL(t *testing.T) {
 	info, err := common.GetInfo(meta)
 	require.Nil(err, "GetInfo() error")
 
-	trackers, err := GetTrackers(meta, uint16(6881))
+	trackers, err := GetTrackers(meta)
 
 	for _, tr := range trackers {
 		assert.NotNil(tr)
@@ -45,7 +45,7 @@ func TestHTTPReqs(t *testing.T) {
 	info, err := common.GetInfo(meta)
 	require.Nil(err, "GetInfo() error")
 
-	trackers, err := GetTrackers(meta, 6881)
+	trackers, err := GetTrackers(meta)
 
 	var testTracker Tracker
 	for _, tr := range trackers {

@@ -21,7 +21,7 @@ func TestUDPReqs(t *testing.T) {
 	info, err := common.GetInfo(meta)
 	require.Nil(err, "GetInfo() error")
 
-	trackers, err := GetTrackers(meta, 6881)
+	trackers, err := GetTrackers(meta)
 
 	var testTracker Tracker
 	for _, tr := range trackers {

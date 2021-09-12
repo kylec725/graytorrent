@@ -20,7 +20,7 @@ func TestGetTrackers(t *testing.T) {
 	// info, err := common.GetInfo(meta)
 	// require.Nil(err, "GetInfo() error")
 
-	trackers, err := GetTrackers(meta, uint16(6881))
+	trackers, err := GetTrackers(meta)
 
 	if assert.Nil(err) {
 		for _, tr := range trackers {
