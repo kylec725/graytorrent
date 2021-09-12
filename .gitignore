@@ -14,7 +14,7 @@
 # Graytorrent binary
 graytorrent
 
-# Logging file
+# Log file
 info.log
 
 # Config file
