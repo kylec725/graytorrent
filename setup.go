@@ -8,6 +8,7 @@ import (
 	"os/signal"
 	"strconv"
 
+	"github.com/kylec725/graytorrent/common"
 	"github.com/kylec725/graytorrent/connect"
 	"github.com/kylec725/graytorrent/torrent"
 	log "github.com/sirupsen/logrus"
@@ -43,6 +44,7 @@ func setupViper() {
 	viper.SetDefault("network.portrange", [2]int{6881, 6889})
 	viper.SetDefault("network.connections.globalMax", 300)
 	viper.SetDefault("network.connections.torrentMax", 30)
+	viper.SetDefault("server.key", common.GenKey())
 
 	viper.SetConfigName("config")
 	viper.SetConfigType("toml")
