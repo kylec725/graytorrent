@@ -1,0 +1,16 @@
+syntax = "proto3";
+
+package graytorrent;
+
+// Send credentials to login
+service Connect {
+  rpc Connect (ConnectRequest) returns (ConnectResponse) {}
+}
+
+message ConnectRequest {
+  string key = 1;
+}
+
+message ConnectResponse {
+  bool response = 1;
+}
