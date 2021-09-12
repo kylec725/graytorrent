@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"context"
 	"io"
 	"net"
@@ -10,11 +11,18 @@ import (
 
 	"github.com/kylec725/graytorrent/common"
 	"github.com/kylec725/graytorrent/connect"
+	"github.com/kylec725/graytorrent/peer"
+	"github.com/kylec725/graytorrent/peer/handshake"
+	"github.com/kylec725/graytorrent/peer/message"
 	"github.com/kylec725/graytorrent/torrent"
+	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 	viper "github.com/spf13/viper"
 	prefixed "github.com/x-cray/logrus-prefixed-formatter"
 )
+
+// ErrListener is used to close the listener safely
+var ErrListener = errors.New("use of closed network connection")
 
 func setupLog() {
 	// Logging file
@@ -103,5 +111,48 @@ func catchInterrupt(ctx context.Context, cancel context.CancelFunc) {
 		logFile.Close()
 		os.Exit(1)
 	case <-ctx.Done():
+	}
+}
+
+// peerListen loops to listen for incoming connections of peers
+func peerListen() {
+	for {
+		conn, err := listener.Accept()
+		if err != nil { // Exit if the listener encounters an error
+			if errors.Is(err, ErrListener) {
+				log.WithField("error", err.Error()).Debug("Listener shutdown")
+			}
+			return
+		}
+		addr := conn.RemoteAddr().String()
+
+		infoHash, err := handshake.Read(conn)
+		if err != nil {
+			log.WithFields(log.Fields{"peer": addr, "error": err.Error()}).Debug("Incoming peer handshake sequence failed")
+			continue
+		}
+
+		// Check if the infohash matches any torrents we are serving
+		for i := range torrentList {
+			if bytes.Equal(infoHash[:], torrentList[i].Info.InfoHash[:]) {
+				newPeer := peer.New(addr, conn, torrentList[i].Info)
+				// Send back a handshake
+				h := handshake.New(torrentList[i].Info)
+				if _, err = newPeer.Conn.Write(h.Encode()); err != nil {
+					log.WithFields(log.Fields{"peer": newPeer.String(), "error": err.Error()}).Debug("Incoming peer handshake sequence failed")
+					break
+				}
+
+				// Send bitfield to the peer
+				msg := message.Bitfield(torrentList[i].Info.Bitfield)
+				if _, err = newPeer.Conn.Write(msg.Encode()); err != nil {
+					log.WithFields(log.Fields{"peer": newPeer.String(), "error": err.Error()}).Debug("Sending bitfield failed")
+					break
+				}
+
+				torrentList[i].IncomingPeers <- newPeer // Send to torrent session
+				log.WithField("peer", newPeer.String()).Debug("Incoming peer was accepted")
+			}
+		}
 	}
 }
