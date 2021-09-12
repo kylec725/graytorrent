@@ -2,6 +2,8 @@ syntax = "proto3";
 
 package graytorrent;
 
+option go_package = "github.com/kylec725/graytorrent/grpc";
+
 // Send credentials to login
 service Connect {
   rpc Connect (ConnectRequest) returns (ConnectResponse) {}
