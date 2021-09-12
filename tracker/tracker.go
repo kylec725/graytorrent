@@ -144,8 +144,10 @@ func (tr *Tracker) Run(ctx context.Context, peers chan peer.Peer, complete chan 
 	info := common.Info(ctx)
 	port := common.Port(ctx)
 	trackerLog := log.WithField("tracker", tr.Announce)
+	tr.Interval = 2 // Initialize values that can't be saved
+	tr.httpClient = &http.Client{Timeout: 20 * time.Second}
+
 	peerList, err := tr.sendStarted(info, port, 0, 0, info.Left)
-	tr.Interval = 2
 	if err != nil {
 		tr.Working = false
 		trackerLog.WithField("error", err.Error()).Debug("Error while sending started message")
