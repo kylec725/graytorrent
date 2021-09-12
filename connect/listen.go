@@ -1,11 +1,13 @@
-package main
+package connect
 
 import (
 	"bytes"
+	"net"
 
 	"github.com/kylec725/graytorrent/peer"
 	"github.com/kylec725/graytorrent/peer/handshake"
 	"github.com/kylec725/graytorrent/peer/message"
+	"github.com/kylec725/graytorrent/torrent"
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 )
@@ -14,7 +16,7 @@ import (
 var ErrListener = errors.New("use of closed network connection")
 
 // Loop to listen on incoming connections for potential new peers
-func peerListen() {
+func peerListen(listener net.Listener, torrentList []torrent.Torrent) {
 	for {
 		conn, err := listener.Accept()
 		if err != nil { // Exit if the listener encounters an error
