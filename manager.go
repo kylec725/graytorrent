@@ -12,13 +12,13 @@ import (
 
 // Manager provides main with facilities to manage its torrents
 
-func addTorrent(ctx context.Context, filename string) (torrent.Torrent, error) {
+func addTorrent(ctx context.Context, filename string) (*torrent.Torrent, error) {
 	to := torrent.Torrent{Path: filename}
 	if err := to.Setup(ctx); err != nil {
-		return torrent.Torrent{}, errors.Wrap(err, "addTorrent")
+		return nil, errors.Wrap(err, "addTorrent")
 	}
 	torrentList = append(torrentList, to)
-	return to, nil
+	return &torrentList[len(torrentList)-1], nil
 }
 
 func removeTorrent(to torrent.Torrent) {
@@ -47,10 +47,9 @@ func singleTorrent(ctx context.Context) {
 		log.WithFields(log.Fields{"filename": filename, "error": err.Error()}).Info("Failed to add torrent")
 		return
 	}
-	toPointer := &torrentList[len(torrentList)-1] // It's important to reference the torrent in the slice directly since saving relies on the torrentList
 	log.WithField("name", to.Info.Name).Info("Torrent added")
-	go toPointer.Start(ctx)
-	for toPointer.Info.Left > 0 { // Go compiler marks this as data race, not a big deal, we're just polling the value
+	go to.Start(ctx)
+	for to.Info.Left > 0 { // Go compiler marks this as data race, not a big deal, we're just polling the value
 		time.Sleep(time.Second)
 	}
 	torrent.SaveAll(torrentList)
