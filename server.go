@@ -8,9 +8,5 @@ import (
 )
 
 func (server *torrentServer) Connect(ctx context.Context, in *pb.ConnectRequest) (*pb.ConnectReply, error) {
-	if in.GetKey() == viper.GetString("server.key") {
-
-	}
-
-	return nil, nil
+	return &pb.ConnectReply{Correct: in.GetKey() == viper.GetString("server.key")}, nil
 }
