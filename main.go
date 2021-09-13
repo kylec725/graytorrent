@@ -7,13 +7,18 @@ import (
 	"path/filepath"
 
 	"github.com/kylec725/graytorrent/common"
+	pb "github.com/kylec725/graytorrent/rpc"
 	"github.com/kylec725/graytorrent/torrent"
 	log "github.com/sirupsen/logrus"
 	flag "github.com/spf13/pflag"
 	viper "github.com/spf13/viper"
+	"google.golang.org/grpc"
 )
 
-const logLevel = log.TraceLevel // InfoLevel || DebugLevel || TraceLevel
+const (
+	logLevel   = log.TraceLevel // InfoLevel || DebugLevel || TraceLevel
+	serverPort = ":7001"
+)
 
 var (
 	err     error
@@ -24,11 +29,15 @@ var (
 	verbose  bool
 	port     uint16
 
-	torrentList []torrent.Torrent
-	listener    net.Listener
+	torrentList  []torrent.Torrent
+	peerListener net.Listener
 
 	grayTorrentPath = filepath.Join(os.Getenv("HOME"), ".config", "graytorrent")
 )
+
+type torrentServer struct {
+	pb.UnimplementedTorrentServer
+}
 
 func init() {
 	flag.StringVarP(&filename, "file", "f", "", "Filename of torrent file")
@@ -60,7 +69,7 @@ func main() {
 
 	// Cleanup
 	defer func() {
-		listener.Close()
+		peerListener.Close()
 		cancel()
 		err = torrent.SaveAll(torrentList)
 		if err != nil {
@@ -80,5 +89,13 @@ func main() {
 	}
 
 	// Setup grpc server
-
+	serverListener, err := net.Listen("tcp", serverPort)
+	if err != nil {
+		log.WithFields(log.Fields{"error": err, "port": serverPort[1:]}).Fatal("Failed to listen for rpc")
+	}
+	s := grpc.NewServer()
+	pb.RegisterTorrentServer(s, &torrentServer{})
+	if err = s.Serve(serverListener); err != nil {
+		log.WithField("error", err).Debug("Issue with serving rpc client")
+	}
 }

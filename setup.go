@@ -21,7 +21,7 @@ import (
 	prefixed "github.com/x-cray/logrus-prefixed-formatter"
 )
 
-// ErrListener is used to close the listener safely
+// ErrListener is used to close the peerListener safely
 var ErrListener = errors.New("use of closed network connection")
 
 func setupLog() {
@@ -84,12 +84,12 @@ func setupListen() {
 	}
 
 	service := ":" + strconv.Itoa(int(port))
-	listener, err = net.Listen("tcp", service)
+	peerListener, err = net.Listen("tcp", service)
 	if err != nil {
 		panic("Could not bind to any port")
 	}
 	// Set global port
-	port, err = connect.PortFromAddr(listener.Addr().String()) // Get actual port in case none in portrange were available
+	port, err = connect.PortFromAddr(peerListener.Addr().String()) // Get actual port in case none in portrange were available
 	if err != nil {
 		panic("Could not find the binded port")
 	}
@@ -101,7 +101,7 @@ func catchInterrupt(ctx context.Context, cancel context.CancelFunc) {
 	select {
 	case <-signalChan: // Cleanup on interrupt signal
 		signal.Stop(signalChan)
-		listener.Close()
+		peerListener.Close()
 		cancel()
 		err = torrent.SaveAll(torrentList)
 		if err != nil {
@@ -117,8 +117,8 @@ func catchInterrupt(ctx context.Context, cancel context.CancelFunc) {
 // peerListen loops to listen for incoming connections of peers
 func peerListen() {
 	for {
-		conn, err := listener.Accept()
-		if err != nil { // Exit if the listener encounters an error
+		conn, err := peerListener.Accept()
+		if err != nil { // Exit if the peerListener encounters an error
 			if errors.Is(err, ErrListener) {
 				log.WithField("error", err.Error()).Debug("Listener shutdown")
 			}
