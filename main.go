@@ -93,9 +93,9 @@ func main() {
 	if err != nil {
 		log.WithFields(log.Fields{"error": err, "port": serverPort[1:]}).Fatal("Failed to listen for rpc")
 	}
-	s := grpc.NewServer()
-	pb.RegisterTorrentServer(s, &torrentServer{})
-	if err = s.Serve(serverListener); err != nil {
+	server := grpc.NewServer()
+	pb.RegisterTorrentServer(server, &torrentServer{})
+	if err = server.Serve(serverListener); err != nil {
 		log.WithField("error", err).Debug("Issue with serving rpc client")
 	}
 }
