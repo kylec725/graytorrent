@@ -29,10 +29,10 @@ var (
 	verbose  bool
 	port     uint16
 
-	torrentList  []torrent.Torrent
-	peerListener net.Listener
-
+	torrentList     []torrent.Torrent
+	peerListener    net.Listener
 	grayTorrentPath = filepath.Join(os.Getenv("HOME"), ".config", "graytorrent")
+	server          *grpc.Server
 )
 
 type torrentServer struct {
@@ -94,7 +94,7 @@ func main() {
 	if err != nil {
 		log.WithFields(log.Fields{"error": err, "port": serverPort[1:]}).Fatal("Failed to listen for rpc")
 	}
-	server := grpc.NewServer()
+	server = grpc.NewServer()
 	pb.RegisterTorrentServer(server, &torrentServer{})
 	if err = server.Serve(serverListener); err != nil {
 		log.WithField("error", err).Debug("Issue with serving rpc client")
