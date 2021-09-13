@@ -125,15 +125,3 @@ func PieceSize(info TorrentInfo, index int) int {
 	}
 	return info.PieceLength
 }
-
-// GenKey generates a random key for server authentication
-func GenKey() string {
-	rand.Seed(time.Now().UnixNano())
-	const chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
-	key := ""
-	for i := 0; i < 14; i++ {
-		pos := rand.Intn(len(chars))
-		key += string(chars[pos])
-	}
-	return key
-}

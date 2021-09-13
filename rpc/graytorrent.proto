@@ -5,14 +5,50 @@ package graytorrent;
 option go_package = "github.com/kylec725/graytorrent/rpc";
 
 service Torrent {
-  // Sends an authorization key to the server to start the session
-  rpc Connect (ConnectRequest) returns (ConnectReply) {}
+  // Requests a list of all managed torrents
+  rpc List (ListRequest) returns (ListReply) {}
+
+  // Adds another torrent to be managed
+  rpc Add (AddRequest) returns (AddReply) {}
+
+  // Removes a torrent from being managed
+  rpc Remove (RemoveRequest) returns (RemoveReply) {}
+
+  // Starts a torrent's download
+  rpc Start (StartRequest) returns (StartReply) {}
+
+  // Stops a torrent's download
+  rpc Stop (StopRequest) returns (StopReply) {}
 }
 
-message ConnectRequest {
+message ListRequest {
   string key = 1;
 }
 
-message ConnectReply {
+message ListReply {
   bool correct = 1;
+}
+
+message AddRequest {
+}
+
+message AddReply {
+}
+
+message RemoveRequest {
+}
+
+message RemoveReply {
+}
+
+message StartRequest {
+}
+
+message StartReply {
+}
+
+message StopRequest {
+}
+
+message StopReply {
 }
