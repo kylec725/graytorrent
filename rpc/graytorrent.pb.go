@@ -20,16 +20,14 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
-type ConnectRequest struct {
+type QuitRequest struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
-
-	Key string `protobuf:"bytes,1,opt,name=key,proto3" json:"key,omitempty"`
 }
 
-func (x *ConnectRequest) Reset() {
-	*x = ConnectRequest{}
+func (x *QuitRequest) Reset() {
+	*x = QuitRequest{}
 	if protoimpl.UnsafeEnabled {
 		mi := &file_graytorrent_proto_msgTypes[0]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -37,13 +35,13 @@ func (x *ConnectRequest) Reset() {
 	}
 }
 
-func (x *ConnectRequest) String() string {
+func (x *QuitRequest) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*ConnectRequest) ProtoMessage() {}
+func (*QuitRequest) ProtoMessage() {}
 
-func (x *ConnectRequest) ProtoReflect() protoreflect.Message {
+func (x *QuitRequest) ProtoReflect() protoreflect.Message {
 	mi := &file_graytorrent_proto_msgTypes[0]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -55,28 +53,21 @@ func (x *ConnectRequest) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use ConnectRequest.ProtoReflect.Descriptor instead.
-func (*ConnectRequest) Descriptor() ([]byte, []int) {
+// Deprecated: Use QuitRequest.ProtoReflect.Descriptor instead.
+func (*QuitRequest) Descriptor() ([]byte, []int) {
 	return file_graytorrent_proto_rawDescGZIP(), []int{0}
 }
 
-func (x *ConnectRequest) GetKey() string {
-	if x != nil {
-		return x.Key
-	}
-	return ""
-}
-
-type ConnectReply struct {
+type QuitReply struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Correct bool `protobuf:"varint,1,opt,name=correct,proto3" json:"correct,omitempty"`
+	Reply bool `protobuf:"varint,1,opt,name=reply,proto3" json:"reply,omitempty"`
 }
 
-func (x *ConnectReply) Reset() {
-	*x = ConnectReply{}
+func (x *QuitReply) Reset() {
+	*x = QuitReply{}
 	if protoimpl.UnsafeEnabled {
 		mi := &file_graytorrent_proto_msgTypes[1]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -84,13 +75,13 @@ func (x *ConnectReply) Reset() {
 	}
 }
 
-func (x *ConnectReply) String() string {
+func (x *QuitReply) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*ConnectReply) ProtoMessage() {}
+func (*QuitReply) ProtoMessage() {}
 
-func (x *ConnectReply) ProtoReflect() protoreflect.Message {
+func (x *QuitReply) ProtoReflect() protoreflect.Message {
 	mi := &file_graytorrent_proto_msgTypes[1]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -102,16 +93,414 @@ func (x *ConnectReply) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use ConnectReply.ProtoReflect.Descriptor instead.
-func (*ConnectReply) Descriptor() ([]byte, []int) {
+// Deprecated: Use QuitReply.ProtoReflect.Descriptor instead.
+func (*QuitReply) Descriptor() ([]byte, []int) {
 	return file_graytorrent_proto_rawDescGZIP(), []int{1}
 }
 
-func (x *ConnectReply) GetCorrect() bool {
+func (x *QuitReply) GetReply() bool {
+	if x != nil {
+		return x.Reply
+	}
+	return false
+}
+
+type ListRequest struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	Key string `protobuf:"bytes,1,opt,name=key,proto3" json:"key,omitempty"`
+}
+
+func (x *ListRequest) Reset() {
+	*x = ListRequest{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_graytorrent_proto_msgTypes[2]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *ListRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ListRequest) ProtoMessage() {}
+
+func (x *ListRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_graytorrent_proto_msgTypes[2]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ListRequest.ProtoReflect.Descriptor instead.
+func (*ListRequest) Descriptor() ([]byte, []int) {
+	return file_graytorrent_proto_rawDescGZIP(), []int{2}
+}
+
+func (x *ListRequest) GetKey() string {
+	if x != nil {
+		return x.Key
+	}
+	return ""
+}
+
+type ListReply struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	Correct bool `protobuf:"varint,1,opt,name=correct,proto3" json:"correct,omitempty"`
+}
+
+func (x *ListReply) Reset() {
+	*x = ListReply{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_graytorrent_proto_msgTypes[3]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *ListReply) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ListReply) ProtoMessage() {}
+
+func (x *ListReply) ProtoReflect() protoreflect.Message {
+	mi := &file_graytorrent_proto_msgTypes[3]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ListReply.ProtoReflect.Descriptor instead.
+func (*ListReply) Descriptor() ([]byte, []int) {
+	return file_graytorrent_proto_rawDescGZIP(), []int{3}
+}
+
+func (x *ListReply) GetCorrect() bool {
 	if x != nil {
 		return x.Correct
 	}
 	return false
+}
+
+type AddRequest struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+}
+
+func (x *AddRequest) Reset() {
+	*x = AddRequest{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_graytorrent_proto_msgTypes[4]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *AddRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*AddRequest) ProtoMessage() {}
+
+func (x *AddRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_graytorrent_proto_msgTypes[4]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use AddRequest.ProtoReflect.Descriptor instead.
+func (*AddRequest) Descriptor() ([]byte, []int) {
+	return file_graytorrent_proto_rawDescGZIP(), []int{4}
+}
+
+type AddReply struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+}
+
+func (x *AddReply) Reset() {
+	*x = AddReply{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_graytorrent_proto_msgTypes[5]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *AddReply) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*AddReply) ProtoMessage() {}
+
+func (x *AddReply) ProtoReflect() protoreflect.Message {
+	mi := &file_graytorrent_proto_msgTypes[5]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use AddReply.ProtoReflect.Descriptor instead.
+func (*AddReply) Descriptor() ([]byte, []int) {
+	return file_graytorrent_proto_rawDescGZIP(), []int{5}
+}
+
+type RemoveRequest struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+}
+
+func (x *RemoveRequest) Reset() {
+	*x = RemoveRequest{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_graytorrent_proto_msgTypes[6]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *RemoveRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*RemoveRequest) ProtoMessage() {}
+
+func (x *RemoveRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_graytorrent_proto_msgTypes[6]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use RemoveRequest.ProtoReflect.Descriptor instead.
+func (*RemoveRequest) Descriptor() ([]byte, []int) {
+	return file_graytorrent_proto_rawDescGZIP(), []int{6}
+}
+
+type RemoveReply struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+}
+
+func (x *RemoveReply) Reset() {
+	*x = RemoveReply{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_graytorrent_proto_msgTypes[7]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *RemoveReply) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*RemoveReply) ProtoMessage() {}
+
+func (x *RemoveReply) ProtoReflect() protoreflect.Message {
+	mi := &file_graytorrent_proto_msgTypes[7]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use RemoveReply.ProtoReflect.Descriptor instead.
+func (*RemoveReply) Descriptor() ([]byte, []int) {
+	return file_graytorrent_proto_rawDescGZIP(), []int{7}
+}
+
+type StartRequest struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+}
+
+func (x *StartRequest) Reset() {
+	*x = StartRequest{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_graytorrent_proto_msgTypes[8]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *StartRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*StartRequest) ProtoMessage() {}
+
+func (x *StartRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_graytorrent_proto_msgTypes[8]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use StartRequest.ProtoReflect.Descriptor instead.
+func (*StartRequest) Descriptor() ([]byte, []int) {
+	return file_graytorrent_proto_rawDescGZIP(), []int{8}
+}
+
+type StartReply struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+}
+
+func (x *StartReply) Reset() {
+	*x = StartReply{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_graytorrent_proto_msgTypes[9]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *StartReply) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*StartReply) ProtoMessage() {}
+
+func (x *StartReply) ProtoReflect() protoreflect.Message {
+	mi := &file_graytorrent_proto_msgTypes[9]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use StartReply.ProtoReflect.Descriptor instead.
+func (*StartReply) Descriptor() ([]byte, []int) {
+	return file_graytorrent_proto_rawDescGZIP(), []int{9}
+}
+
+type StopRequest struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+}
+
+func (x *StopRequest) Reset() {
+	*x = StopRequest{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_graytorrent_proto_msgTypes[10]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *StopRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*StopRequest) ProtoMessage() {}
+
+func (x *StopRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_graytorrent_proto_msgTypes[10]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use StopRequest.ProtoReflect.Descriptor instead.
+func (*StopRequest) Descriptor() ([]byte, []int) {
+	return file_graytorrent_proto_rawDescGZIP(), []int{10}
+}
+
+type StopReply struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+}
+
+func (x *StopReply) Reset() {
+	*x = StopReply{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_graytorrent_proto_msgTypes[11]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *StopReply) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*StopReply) ProtoMessage() {}
+
+func (x *StopReply) ProtoReflect() protoreflect.Message {
+	mi := &file_graytorrent_proto_msgTypes[11]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use StopReply.ProtoReflect.Descriptor instead.
+func (*StopReply) Descriptor() ([]byte, []int) {
+	return file_graytorrent_proto_rawDescGZIP(), []int{11}
 }
 
 var File_graytorrent_proto protoreflect.FileDescriptor
@@ -119,19 +508,48 @@ var File_graytorrent_proto protoreflect.FileDescriptor
 var file_graytorrent_proto_rawDesc = []byte{
 	0x0a, 0x11, 0x67, 0x72, 0x61, 0x79, 0x74, 0x6f, 0x72, 0x72, 0x65, 0x6e, 0x74, 0x2e, 0x70, 0x72,
 	0x6f, 0x74, 0x6f, 0x12, 0x0b, 0x67, 0x72, 0x61, 0x79, 0x74, 0x6f, 0x72, 0x72, 0x65, 0x6e, 0x74,
-	0x22, 0x22, 0x0a, 0x0e, 0x43, 0x6f, 0x6e, 0x6e, 0x65, 0x63, 0x74, 0x52, 0x65, 0x71, 0x75, 0x65,
-	0x73, 0x74, 0x12, 0x10, 0x0a, 0x03, 0x6b, 0x65, 0x79, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52,
-	0x03, 0x6b, 0x65, 0x79, 0x22, 0x28, 0x0a, 0x0c, 0x43, 0x6f, 0x6e, 0x6e, 0x65, 0x63, 0x74, 0x52,
-	0x65, 0x70, 0x6c, 0x79, 0x12, 0x18, 0x0a, 0x07, 0x63, 0x6f, 0x72, 0x72, 0x65, 0x63, 0x74, 0x18,
-	0x01, 0x20, 0x01, 0x28, 0x08, 0x52, 0x07, 0x63, 0x6f, 0x72, 0x72, 0x65, 0x63, 0x74, 0x32, 0x4e,
-	0x0a, 0x07, 0x54, 0x6f, 0x72, 0x72, 0x65, 0x6e, 0x74, 0x12, 0x43, 0x0a, 0x07, 0x43, 0x6f, 0x6e,
-	0x6e, 0x65, 0x63, 0x74, 0x12, 0x1b, 0x2e, 0x67, 0x72, 0x61, 0x79, 0x74, 0x6f, 0x72, 0x72, 0x65,
-	0x6e, 0x74, 0x2e, 0x43, 0x6f, 0x6e, 0x6e, 0x65, 0x63, 0x74, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73,
-	0x74, 0x1a, 0x19, 0x2e, 0x67, 0x72, 0x61, 0x79, 0x74, 0x6f, 0x72, 0x72, 0x65, 0x6e, 0x74, 0x2e,
-	0x43, 0x6f, 0x6e, 0x6e, 0x65, 0x63, 0x74, 0x52, 0x65, 0x70, 0x6c, 0x79, 0x22, 0x00, 0x42, 0x25,
-	0x5a, 0x23, 0x67, 0x69, 0x74, 0x68, 0x75, 0x62, 0x2e, 0x63, 0x6f, 0x6d, 0x2f, 0x6b, 0x79, 0x6c,
-	0x65, 0x63, 0x37, 0x32, 0x35, 0x2f, 0x67, 0x72, 0x61, 0x79, 0x74, 0x6f, 0x72, 0x72, 0x65, 0x6e,
-	0x74, 0x2f, 0x72, 0x70, 0x63, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
+	0x22, 0x0d, 0x0a, 0x0b, 0x51, 0x75, 0x69, 0x74, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x22,
+	0x21, 0x0a, 0x09, 0x51, 0x75, 0x69, 0x74, 0x52, 0x65, 0x70, 0x6c, 0x79, 0x12, 0x14, 0x0a, 0x05,
+	0x72, 0x65, 0x70, 0x6c, 0x79, 0x18, 0x01, 0x20, 0x01, 0x28, 0x08, 0x52, 0x05, 0x72, 0x65, 0x70,
+	0x6c, 0x79, 0x22, 0x1f, 0x0a, 0x0b, 0x4c, 0x69, 0x73, 0x74, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73,
+	0x74, 0x12, 0x10, 0x0a, 0x03, 0x6b, 0x65, 0x79, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x03,
+	0x6b, 0x65, 0x79, 0x22, 0x25, 0x0a, 0x09, 0x4c, 0x69, 0x73, 0x74, 0x52, 0x65, 0x70, 0x6c, 0x79,
+	0x12, 0x18, 0x0a, 0x07, 0x63, 0x6f, 0x72, 0x72, 0x65, 0x63, 0x74, 0x18, 0x01, 0x20, 0x01, 0x28,
+	0x08, 0x52, 0x07, 0x63, 0x6f, 0x72, 0x72, 0x65, 0x63, 0x74, 0x22, 0x0c, 0x0a, 0x0a, 0x41, 0x64,
+	0x64, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x22, 0x0a, 0x0a, 0x08, 0x41, 0x64, 0x64, 0x52,
+	0x65, 0x70, 0x6c, 0x79, 0x22, 0x0f, 0x0a, 0x0d, 0x52, 0x65, 0x6d, 0x6f, 0x76, 0x65, 0x52, 0x65,
+	0x71, 0x75, 0x65, 0x73, 0x74, 0x22, 0x0d, 0x0a, 0x0b, 0x52, 0x65, 0x6d, 0x6f, 0x76, 0x65, 0x52,
+	0x65, 0x70, 0x6c, 0x79, 0x22, 0x0e, 0x0a, 0x0c, 0x53, 0x74, 0x61, 0x72, 0x74, 0x52, 0x65, 0x71,
+	0x75, 0x65, 0x73, 0x74, 0x22, 0x0c, 0x0a, 0x0a, 0x53, 0x74, 0x61, 0x72, 0x74, 0x52, 0x65, 0x70,
+	0x6c, 0x79, 0x22, 0x0d, 0x0a, 0x0b, 0x53, 0x74, 0x6f, 0x70, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73,
+	0x74, 0x22, 0x0b, 0x0a, 0x09, 0x53, 0x74, 0x6f, 0x70, 0x52, 0x65, 0x70, 0x6c, 0x79, 0x32, 0xf7,
+	0x02, 0x0a, 0x07, 0x54, 0x6f, 0x72, 0x72, 0x65, 0x6e, 0x74, 0x12, 0x3a, 0x0a, 0x04, 0x51, 0x75,
+	0x69, 0x74, 0x12, 0x18, 0x2e, 0x67, 0x72, 0x61, 0x79, 0x74, 0x6f, 0x72, 0x72, 0x65, 0x6e, 0x74,
+	0x2e, 0x51, 0x75, 0x69, 0x74, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x16, 0x2e, 0x67,
+	0x72, 0x61, 0x79, 0x74, 0x6f, 0x72, 0x72, 0x65, 0x6e, 0x74, 0x2e, 0x51, 0x75, 0x69, 0x74, 0x52,
+	0x65, 0x70, 0x6c, 0x79, 0x22, 0x00, 0x12, 0x3a, 0x0a, 0x04, 0x4c, 0x69, 0x73, 0x74, 0x12, 0x18,
+	0x2e, 0x67, 0x72, 0x61, 0x79, 0x74, 0x6f, 0x72, 0x72, 0x65, 0x6e, 0x74, 0x2e, 0x4c, 0x69, 0x73,
+	0x74, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x16, 0x2e, 0x67, 0x72, 0x61, 0x79, 0x74,
+	0x6f, 0x72, 0x72, 0x65, 0x6e, 0x74, 0x2e, 0x4c, 0x69, 0x73, 0x74, 0x52, 0x65, 0x70, 0x6c, 0x79,
+	0x22, 0x00, 0x12, 0x37, 0x0a, 0x03, 0x41, 0x64, 0x64, 0x12, 0x17, 0x2e, 0x67, 0x72, 0x61, 0x79,
+	0x74, 0x6f, 0x72, 0x72, 0x65, 0x6e, 0x74, 0x2e, 0x41, 0x64, 0x64, 0x52, 0x65, 0x71, 0x75, 0x65,
+	0x73, 0x74, 0x1a, 0x15, 0x2e, 0x67, 0x72, 0x61, 0x79, 0x74, 0x6f, 0x72, 0x72, 0x65, 0x6e, 0x74,
+	0x2e, 0x41, 0x64, 0x64, 0x52, 0x65, 0x70, 0x6c, 0x79, 0x22, 0x00, 0x12, 0x40, 0x0a, 0x06, 0x52,
+	0x65, 0x6d, 0x6f, 0x76, 0x65, 0x12, 0x1a, 0x2e, 0x67, 0x72, 0x61, 0x79, 0x74, 0x6f, 0x72, 0x72,
+	0x65, 0x6e, 0x74, 0x2e, 0x52, 0x65, 0x6d, 0x6f, 0x76, 0x65, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73,
+	0x74, 0x1a, 0x18, 0x2e, 0x67, 0x72, 0x61, 0x79, 0x74, 0x6f, 0x72, 0x72, 0x65, 0x6e, 0x74, 0x2e,
+	0x52, 0x65, 0x6d, 0x6f, 0x76, 0x65, 0x52, 0x65, 0x70, 0x6c, 0x79, 0x22, 0x00, 0x12, 0x3d, 0x0a,
+	0x05, 0x53, 0x74, 0x61, 0x72, 0x74, 0x12, 0x19, 0x2e, 0x67, 0x72, 0x61, 0x79, 0x74, 0x6f, 0x72,
+	0x72, 0x65, 0x6e, 0x74, 0x2e, 0x53, 0x74, 0x61, 0x72, 0x74, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73,
+	0x74, 0x1a, 0x17, 0x2e, 0x67, 0x72, 0x61, 0x79, 0x74, 0x6f, 0x72, 0x72, 0x65, 0x6e, 0x74, 0x2e,
+	0x53, 0x74, 0x61, 0x72, 0x74, 0x52, 0x65, 0x70, 0x6c, 0x79, 0x22, 0x00, 0x12, 0x3a, 0x0a, 0x04,
+	0x53, 0x74, 0x6f, 0x70, 0x12, 0x18, 0x2e, 0x67, 0x72, 0x61, 0x79, 0x74, 0x6f, 0x72, 0x72, 0x65,
+	0x6e, 0x74, 0x2e, 0x53, 0x74, 0x6f, 0x70, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x16,
+	0x2e, 0x67, 0x72, 0x61, 0x79, 0x74, 0x6f, 0x72, 0x72, 0x65, 0x6e, 0x74, 0x2e, 0x53, 0x74, 0x6f,
+	0x70, 0x52, 0x65, 0x70, 0x6c, 0x79, 0x22, 0x00, 0x42, 0x25, 0x5a, 0x23, 0x67, 0x69, 0x74, 0x68,
+	0x75, 0x62, 0x2e, 0x63, 0x6f, 0x6d, 0x2f, 0x6b, 0x79, 0x6c, 0x65, 0x63, 0x37, 0x32, 0x35, 0x2f,
+	0x67, 0x72, 0x61, 0x79, 0x74, 0x6f, 0x72, 0x72, 0x65, 0x6e, 0x74, 0x2f, 0x72, 0x70, 0x63, 0x62,
+	0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
 }
 
 var (
@@ -146,19 +564,39 @@ func file_graytorrent_proto_rawDescGZIP() []byte {
 	return file_graytorrent_proto_rawDescData
 }
 
-var file_graytorrent_proto_msgTypes = make([]protoimpl.MessageInfo, 2)
+var file_graytorrent_proto_msgTypes = make([]protoimpl.MessageInfo, 12)
 var file_graytorrent_proto_goTypes = []interface{}{
-	(*ConnectRequest)(nil), // 0: graytorrent.ConnectRequest
-	(*ConnectReply)(nil),   // 1: graytorrent.ConnectReply
+	(*QuitRequest)(nil),   // 0: graytorrent.QuitRequest
+	(*QuitReply)(nil),     // 1: graytorrent.QuitReply
+	(*ListRequest)(nil),   // 2: graytorrent.ListRequest
+	(*ListReply)(nil),     // 3: graytorrent.ListReply
+	(*AddRequest)(nil),    // 4: graytorrent.AddRequest
+	(*AddReply)(nil),      // 5: graytorrent.AddReply
+	(*RemoveRequest)(nil), // 6: graytorrent.RemoveRequest
+	(*RemoveReply)(nil),   // 7: graytorrent.RemoveReply
+	(*StartRequest)(nil),  // 8: graytorrent.StartRequest
+	(*StartReply)(nil),    // 9: graytorrent.StartReply
+	(*StopRequest)(nil),   // 10: graytorrent.StopRequest
+	(*StopReply)(nil),     // 11: graytorrent.StopReply
 }
 var file_graytorrent_proto_depIdxs = []int32{
-	0, // 0: graytorrent.Torrent.Connect:input_type -> graytorrent.ConnectRequest
-	1, // 1: graytorrent.Torrent.Connect:output_type -> graytorrent.ConnectReply
-	1, // [1:2] is the sub-list for method output_type
-	0, // [0:1] is the sub-list for method input_type
-	0, // [0:0] is the sub-list for extension type_name
-	0, // [0:0] is the sub-list for extension extendee
-	0, // [0:0] is the sub-list for field type_name
+	0,  // 0: graytorrent.Torrent.Quit:input_type -> graytorrent.QuitRequest
+	2,  // 1: graytorrent.Torrent.List:input_type -> graytorrent.ListRequest
+	4,  // 2: graytorrent.Torrent.Add:input_type -> graytorrent.AddRequest
+	6,  // 3: graytorrent.Torrent.Remove:input_type -> graytorrent.RemoveRequest
+	8,  // 4: graytorrent.Torrent.Start:input_type -> graytorrent.StartRequest
+	10, // 5: graytorrent.Torrent.Stop:input_type -> graytorrent.StopRequest
+	1,  // 6: graytorrent.Torrent.Quit:output_type -> graytorrent.QuitReply
+	3,  // 7: graytorrent.Torrent.List:output_type -> graytorrent.ListReply
+	5,  // 8: graytorrent.Torrent.Add:output_type -> graytorrent.AddReply
+	7,  // 9: graytorrent.Torrent.Remove:output_type -> graytorrent.RemoveReply
+	9,  // 10: graytorrent.Torrent.Start:output_type -> graytorrent.StartReply
+	11, // 11: graytorrent.Torrent.Stop:output_type -> graytorrent.StopReply
+	6,  // [6:12] is the sub-list for method output_type
+	0,  // [0:6] is the sub-list for method input_type
+	0,  // [0:0] is the sub-list for extension type_name
+	0,  // [0:0] is the sub-list for extension extendee
+	0,  // [0:0] is the sub-list for field type_name
 }
 
 func init() { file_graytorrent_proto_init() }
@@ -168,7 +606,7 @@ func file_graytorrent_proto_init() {
 	}
 	if !protoimpl.UnsafeEnabled {
 		file_graytorrent_proto_msgTypes[0].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*ConnectRequest); i {
+			switch v := v.(*QuitRequest); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -180,7 +618,127 @@ func file_graytorrent_proto_init() {
 			}
 		}
 		file_graytorrent_proto_msgTypes[1].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*ConnectReply); i {
+			switch v := v.(*QuitReply); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_graytorrent_proto_msgTypes[2].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*ListRequest); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_graytorrent_proto_msgTypes[3].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*ListReply); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_graytorrent_proto_msgTypes[4].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*AddRequest); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_graytorrent_proto_msgTypes[5].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*AddReply); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_graytorrent_proto_msgTypes[6].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*RemoveRequest); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_graytorrent_proto_msgTypes[7].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*RemoveReply); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_graytorrent_proto_msgTypes[8].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*StartRequest); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_graytorrent_proto_msgTypes[9].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*StartReply); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_graytorrent_proto_msgTypes[10].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*StopRequest); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_graytorrent_proto_msgTypes[11].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*StopReply); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -198,7 +756,7 @@ func file_graytorrent_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: file_graytorrent_proto_rawDesc,
 			NumEnums:      0,
-			NumMessages:   2,
+			NumMessages:   12,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

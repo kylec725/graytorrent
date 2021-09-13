@@ -5,6 +5,8 @@ package graytorrent;
 option go_package = "github.com/kylec725/graytorrent/rpc";
 
 service Torrent {
+  // Closes the server
+  rpc Quit (QuitRequest) returns (QuitReply) {}
   // Requests a list of all managed torrents
   rpc List (ListRequest) returns (ListReply) {}
 
@@ -19,6 +21,13 @@ service Torrent {
 
   // Stops a torrent's download
   rpc Stop (StopRequest) returns (StopReply) {}
+}
+
+message QuitRequest {
+}
+
+message QuitReply {
+  bool reply = 1;
 }
 
 message ListRequest {

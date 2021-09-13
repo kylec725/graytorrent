@@ -18,8 +18,18 @@ const _ = grpc.SupportPackageIsVersion7
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type TorrentClient interface {
-	// Sends an authorization key to the server to start the session
-	Connect(ctx context.Context, in *ConnectRequest, opts ...grpc.CallOption) (*ConnectReply, error)
+	// Closes the server
+	Quit(ctx context.Context, in *QuitRequest, opts ...grpc.CallOption) (*QuitReply, error)
+	// Requests a list of all managed torrents
+	List(ctx context.Context, in *ListRequest, opts ...grpc.CallOption) (*ListReply, error)
+	// Adds another torrent to be managed
+	Add(ctx context.Context, in *AddRequest, opts ...grpc.CallOption) (*AddReply, error)
+	// Removes a torrent from being managed
+	Remove(ctx context.Context, in *RemoveRequest, opts ...grpc.CallOption) (*RemoveReply, error)
+	// Starts a torrent's download
+	Start(ctx context.Context, in *StartRequest, opts ...grpc.CallOption) (*StartReply, error)
+	// Stops a torrent's download
+	Stop(ctx context.Context, in *StopRequest, opts ...grpc.CallOption) (*StopReply, error)
 }
 
 type torrentClient struct {
@@ -30,9 +40,54 @@ func NewTorrentClient(cc grpc.ClientConnInterface) TorrentClient {
 	return &torrentClient{cc}
 }
 
-func (c *torrentClient) Connect(ctx context.Context, in *ConnectRequest, opts ...grpc.CallOption) (*ConnectReply, error) {
-	out := new(ConnectReply)
-	err := c.cc.Invoke(ctx, "/graytorrent.Torrent/Connect", in, out, opts...)
+func (c *torrentClient) Quit(ctx context.Context, in *QuitRequest, opts ...grpc.CallOption) (*QuitReply, error) {
+	out := new(QuitReply)
+	err := c.cc.Invoke(ctx, "/graytorrent.Torrent/Quit", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *torrentClient) List(ctx context.Context, in *ListRequest, opts ...grpc.CallOption) (*ListReply, error) {
+	out := new(ListReply)
+	err := c.cc.Invoke(ctx, "/graytorrent.Torrent/List", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *torrentClient) Add(ctx context.Context, in *AddRequest, opts ...grpc.CallOption) (*AddReply, error) {
+	out := new(AddReply)
+	err := c.cc.Invoke(ctx, "/graytorrent.Torrent/Add", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *torrentClient) Remove(ctx context.Context, in *RemoveRequest, opts ...grpc.CallOption) (*RemoveReply, error) {
+	out := new(RemoveReply)
+	err := c.cc.Invoke(ctx, "/graytorrent.Torrent/Remove", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *torrentClient) Start(ctx context.Context, in *StartRequest, opts ...grpc.CallOption) (*StartReply, error) {
+	out := new(StartReply)
+	err := c.cc.Invoke(ctx, "/graytorrent.Torrent/Start", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *torrentClient) Stop(ctx context.Context, in *StopRequest, opts ...grpc.CallOption) (*StopReply, error) {
+	out := new(StopReply)
+	err := c.cc.Invoke(ctx, "/graytorrent.Torrent/Stop", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -43,8 +98,18 @@ func (c *torrentClient) Connect(ctx context.Context, in *ConnectRequest, opts ..
 // All implementations must embed UnimplementedTorrentServer
 // for forward compatibility
 type TorrentServer interface {
-	// Sends an authorization key to the server to start the session
-	Connect(context.Context, *ConnectRequest) (*ConnectReply, error)
+	// Closes the server
+	Quit(context.Context, *QuitRequest) (*QuitReply, error)
+	// Requests a list of all managed torrents
+	List(context.Context, *ListRequest) (*ListReply, error)
+	// Adds another torrent to be managed
+	Add(context.Context, *AddRequest) (*AddReply, error)
+	// Removes a torrent from being managed
+	Remove(context.Context, *RemoveRequest) (*RemoveReply, error)
+	// Starts a torrent's download
+	Start(context.Context, *StartRequest) (*StartReply, error)
+	// Stops a torrent's download
+	Stop(context.Context, *StopRequest) (*StopReply, error)
 	mustEmbedUnimplementedTorrentServer()
 }
 
@@ -52,8 +117,23 @@ type TorrentServer interface {
 type UnimplementedTorrentServer struct {
 }
 
-func (UnimplementedTorrentServer) Connect(context.Context, *ConnectRequest) (*ConnectReply, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method Connect not implemented")
+func (UnimplementedTorrentServer) Quit(context.Context, *QuitRequest) (*QuitReply, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Quit not implemented")
+}
+func (UnimplementedTorrentServer) List(context.Context, *ListRequest) (*ListReply, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method List not implemented")
+}
+func (UnimplementedTorrentServer) Add(context.Context, *AddRequest) (*AddReply, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Add not implemented")
+}
+func (UnimplementedTorrentServer) Remove(context.Context, *RemoveRequest) (*RemoveReply, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Remove not implemented")
+}
+func (UnimplementedTorrentServer) Start(context.Context, *StartRequest) (*StartReply, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Start not implemented")
+}
+func (UnimplementedTorrentServer) Stop(context.Context, *StopRequest) (*StopReply, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Stop not implemented")
 }
 func (UnimplementedTorrentServer) mustEmbedUnimplementedTorrentServer() {}
 
@@ -68,20 +148,110 @@ func RegisterTorrentServer(s grpc.ServiceRegistrar, srv TorrentServer) {
 	s.RegisterService(&Torrent_ServiceDesc, srv)
 }
 
-func _Torrent_Connect_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(ConnectRequest)
+func _Torrent_Quit_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(QuitRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(TorrentServer).Connect(ctx, in)
+		return srv.(TorrentServer).Quit(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/graytorrent.Torrent/Connect",
+		FullMethod: "/graytorrent.Torrent/Quit",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(TorrentServer).Connect(ctx, req.(*ConnectRequest))
+		return srv.(TorrentServer).Quit(ctx, req.(*QuitRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Torrent_List_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(TorrentServer).List(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/graytorrent.Torrent/List",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(TorrentServer).List(ctx, req.(*ListRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Torrent_Add_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(AddRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(TorrentServer).Add(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/graytorrent.Torrent/Add",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(TorrentServer).Add(ctx, req.(*AddRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Torrent_Remove_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(RemoveRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(TorrentServer).Remove(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/graytorrent.Torrent/Remove",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(TorrentServer).Remove(ctx, req.(*RemoveRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Torrent_Start_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(StartRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(TorrentServer).Start(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/graytorrent.Torrent/Start",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(TorrentServer).Start(ctx, req.(*StartRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Torrent_Stop_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(StopRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(TorrentServer).Stop(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/graytorrent.Torrent/Stop",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(TorrentServer).Stop(ctx, req.(*StopRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -94,8 +264,28 @@ var Torrent_ServiceDesc = grpc.ServiceDesc{
 	HandlerType: (*TorrentServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
-			MethodName: "Connect",
-			Handler:    _Torrent_Connect_Handler,
+			MethodName: "Quit",
+			Handler:    _Torrent_Quit_Handler,
+		},
+		{
+			MethodName: "List",
+			Handler:    _Torrent_List_Handler,
+		},
+		{
+			MethodName: "Add",
+			Handler:    _Torrent_Add_Handler,
+		},
+		{
+			MethodName: "Remove",
+			Handler:    _Torrent_Remove_Handler,
+		},
+		{
+			MethodName: "Start",
+			Handler:    _Torrent_Start_Handler,
+		},
+		{
+			MethodName: "Stop",
+			Handler:    _Torrent_Stop_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
