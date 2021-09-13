@@ -6,13 +6,13 @@ option go_package = "github.com/kylec725/graytorrent/rpc";
 
 service Torrent {
   // Sends an authorization key to the server to start the session
-  rpc Connect (ConnectRequest) returns (ConnectResponse) {}
+  rpc Connect (ConnectRequest) returns (ConnectReply) {}
 }
 
 message ConnectRequest {
   string key = 1;
 }
 
-message ConnectResponse {
-  bool response = 1;
+message ConnectReply {
+  bool correct = 1;
 }

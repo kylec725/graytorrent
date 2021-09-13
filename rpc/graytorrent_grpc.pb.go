@@ -19,7 +19,7 @@ const _ = grpc.SupportPackageIsVersion7
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type TorrentClient interface {
 	// Sends an authorization key to the server to start the session
-	Connect(ctx context.Context, in *ConnectRequest, opts ...grpc.CallOption) (*ConnectResponse, error)
+	Connect(ctx context.Context, in *ConnectRequest, opts ...grpc.CallOption) (*ConnectReply, error)
 }
 
 type torrentClient struct {
@@ -30,8 +30,8 @@ func NewTorrentClient(cc grpc.ClientConnInterface) TorrentClient {
 	return &torrentClient{cc}
 }
 
-func (c *torrentClient) Connect(ctx context.Context, in *ConnectRequest, opts ...grpc.CallOption) (*ConnectResponse, error) {
-	out := new(ConnectResponse)
+func (c *torrentClient) Connect(ctx context.Context, in *ConnectRequest, opts ...grpc.CallOption) (*ConnectReply, error) {
+	out := new(ConnectReply)
 	err := c.cc.Invoke(ctx, "/graytorrent.Torrent/Connect", in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -44,7 +44,7 @@ func (c *torrentClient) Connect(ctx context.Context, in *ConnectRequest, opts ..
 // for forward compatibility
 type TorrentServer interface {
 	// Sends an authorization key to the server to start the session
-	Connect(context.Context, *ConnectRequest) (*ConnectResponse, error)
+	Connect(context.Context, *ConnectRequest) (*ConnectReply, error)
 	mustEmbedUnimplementedTorrentServer()
 }
 
@@ -52,7 +52,7 @@ type TorrentServer interface {
 type UnimplementedTorrentServer struct {
 }
 
-func (UnimplementedTorrentServer) Connect(context.Context, *ConnectRequest) (*ConnectResponse, error) {
+func (UnimplementedTorrentServer) Connect(context.Context, *ConnectRequest) (*ConnectReply, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Connect not implemented")
 }
 func (UnimplementedTorrentServer) mustEmbedUnimplementedTorrentServer() {}
