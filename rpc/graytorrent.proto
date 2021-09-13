@@ -2,10 +2,10 @@ syntax = "proto3";
 
 package graytorrent;
 
-option go_package = "github.com/kylec725/graytorrent/grpc";
+option go_package = "github.com/kylec725/graytorrent/rpc";
 
-// Send credentials to login
-service Connect {
+service Torrent {
+  // Sends an authorization key to the server to start the session
   rpc Connect (ConnectRequest) returns (ConnectResponse) {}
 }
 

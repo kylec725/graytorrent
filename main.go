@@ -79,8 +79,6 @@ func main() {
 		return
 	}
 
-	// Initialize GUI
-	// defer g.Close()
+	// Setup grpc server
 
-	// Send torrent stopped messages
 }
