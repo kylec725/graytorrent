@@ -43,6 +43,11 @@ func init() {
 	flag.StringVarP(&filename, "file", "f", "", "Filename of torrent file")
 	flag.BoolVarP(&verbose, "verbose", "v", false, "Print events to stdout")
 	flag.Parse()
+}
+
+func main() {
+	// Setup our context
+	ctx, cancel := context.WithCancel(context.WithValue(context.Background(), common.KeyPort, port))
 
 	err = os.MkdirAll(grayTorrentPath, os.ModePerm)
 	if err != nil {
@@ -61,11 +66,6 @@ func init() {
 	if err != nil {
 		log.WithField("error", err).Debug("Could not retrieve torrent management data")
 	}
-}
-
-func main() {
-	// Setup our context
-	ctx, cancel := context.WithCancel(context.WithValue(context.Background(), common.KeyPort, port))
 
 	// Cleanup
 	defer func() {
