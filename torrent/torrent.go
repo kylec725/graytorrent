@@ -97,6 +97,7 @@ func (to *Torrent) Start(ctx context.Context) {
 
 	// Cleanup
 	defer func() {
+		unchokeTicker.Stop()
 		to.Peers = nil     // Clear peers
 		to.deadPeers = nil // Clear dead peers
 		cancel()           // Close all trackers and peers if the torrent goroutine returns
