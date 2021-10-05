@@ -13,7 +13,7 @@ Could alternatively use `go build` or `go run main.go`
 
 ## Usage
 Currently, graytorrent does not have a complete client. To use the torrenting functionality you will have to run graytorrent in single torrent download mode.
-First, download the `.torrent` file that you want to torrent, and run `graytorrent -f pathToFile/examplefile.torrent` and graytorrent will start the torrent.
+First, download the `.torrent` file for the torrent you want to use, and run `graytorrent -f pathtofile/examplefile.torrent` and graytorrent will start the torrent.
 
 ## In Progress
 - Setting up graytorrent to act as a GRPC server
