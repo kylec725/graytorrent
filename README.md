@@ -1,16 +1,25 @@
 # graytorrent
 BitTorrent client implemented in golang
 
-## In Progress...
+## Installation
+### Manual
+First make sure [Go is installed](https://golang.org/doc/install)
+```
+git clone https://github.com/kylec725/graytorrent.git
+cd graytorrent
+go install
+```
+Could alternatively use `go build` or `go run main.go`
+
+## In Progress
+- Setting up graytorrent to act as a GRPC server
 - Optimistic Unchoking
-- Save the progress of managed torrents
-- Fine-tune the adaptive download rate
 - Limit number of connections
 
-## Potential Goals
+## Future Goals
 - Extensions (BEP6, DHT/PEX)
 - Efficient rarest first requesting algorithm
-- Use Google Protocol Buffers for network interactions
+- Fine-tune the adaptive download rate
 
 ## Dependencies
 - [bencode-go](https://github.com/jackpal/bencode-go)
