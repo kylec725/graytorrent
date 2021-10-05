@@ -1,5 +1,5 @@
 # graytorrent
-BitTorrent client implemented in golang
+BitTorrent client implemented in [Go](https://golang.org)
 
 ## Installation
 ### Manual
@@ -10,6 +10,10 @@ cd graytorrent
 go install
 ```
 Could alternatively use `go build` or `go run main.go`
+
+## Usage
+Currently, graytorrent does not have a complete client. To use the torrenting functionality you will have to run graytorrent in single torrent download mode.
+First, download the `.torrent` file that you want to torrent, and run `graytorrent -f pathToFile/examplefile.torrent` and graytorrent will start the torrent.
 
 ## In Progress
 - Setting up graytorrent to act as a GRPC server
