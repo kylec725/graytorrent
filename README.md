@@ -18,12 +18,12 @@ First, download the `.torrent` file for the torrent you want to use, then run `g
 ## In Progress
 - Setting up graytorrent to act as a GRPC server
 - Optimistic Unchoking
-- Limit number of connections
+- Limit global number of connections
 
 ## Future Goals
 - Extensions (BEP6, DHT/PEX)
 - Efficient rarest first requesting algorithm
-- Fine-tune the adaptive download rate
+- Optimize the adaptive download rate
 
 ## Dependencies
 - [bencode-go](https://github.com/jackpal/bencode-go)
