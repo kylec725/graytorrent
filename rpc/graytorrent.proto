@@ -26,7 +26,18 @@ message ListRequest {
 }
 
 message TorrentInfo {
-  bool correct = 1;
+  string name = 1;
+  bytes infoHash = 2;
+  uint32 totalLength = 3;
+  uint32 left = 4;
+  enum State {
+    STARTED = 0;
+    STOPPED = 1;
+    STALLED = 2;
+    SEEDING = 3;
+    COMPLETE = 4;
+  }
+  State state = 5;
 }
 
 message AddRequest {
