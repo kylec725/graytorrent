@@ -108,7 +108,6 @@ func (to *Torrent) Start(ctx context.Context) {
 		}
 	}
 
-	pieces := 0 // Counter of finished pieces
 	for {
 		select {
 		case <-ctx.Done():
@@ -124,9 +123,12 @@ func (to *Torrent) Start(ctx context.Context) {
 		case index := <-results:
 			to.Info.Bitfield.Set(index)
 			to.Info.Left -= common.PieceSize(to.Info, index)
-			go to.sendHave(index)
-			pieces++
-			if pieces == to.Info.TotalPieces {
+			msg := message.Have(uint32(index)) // Notify peers that we have a new piece
+			for i := range to.Peers {
+				to.Peers[i].SendMessage(msg)
+			}
+
+			if to.Info.Left == 0 {
 				log.WithField("name", to.Info.Name).Info("Torrent completed")
 				close(complete) // Notify trackers to send completed message
 			}
