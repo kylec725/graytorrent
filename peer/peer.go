@@ -78,17 +78,17 @@ func (p *Peer) SendMessage(msg message.Message) {
 }
 
 // StartWork makes a peer wait for pieces to download
-func (p *Peer) StartWork(ctx context.Context, work chan int, results chan int, remove chan string) {
+func (p *Peer) StartWork(ctx context.Context, work chan int, results chan int, deadPeers chan string) {
 	info := common.Info(ctx)
 	peerLog := log.WithField("peer", p.String())
 	if p.Conn == nil {
 		if err := p.dial(); err != nil {
 			peerLog.WithField("error", err.Error()).Debug("Dial failed")
-			remove <- p.String() // Notify main to remove this peer from its list
+			deadPeers <- p.String() // Notify main to remove this peer from its list
 			return
 		} else if err := p.initHandshake(info); err != nil {
 			peerLog.WithField("error", err.Error()).Debug("Handshake failed")
-			remove <- p.String()
+			deadPeers <- p.String()
 			return
 		}
 	}
@@ -102,7 +102,7 @@ func (p *Peer) StartWork(ctx context.Context, work chan int, results chan int, r
 
 	// Cleanup
 	defer func() {
-		remove <- p.String() // Notify main to remove this peer from its list
+		deadPeers <- p.String() // Notify main to remove this peer from its list
 		p.clearWork(work)
 		connCancel()
 		peerLog.Debug("Peer shutdown")
