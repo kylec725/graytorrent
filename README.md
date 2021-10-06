@@ -3,7 +3,7 @@ BitTorrent client implemented in [Go](https://golang.org)
 
 ## Installation
 ### Manual
-First make sure [Go is installed](https://golang.org/doc/install)
+Make sure [Go is installed](https://golang.org/doc/install)
 ```
 git clone https://github.com/kylec725/graytorrent.git
 cd graytorrent
