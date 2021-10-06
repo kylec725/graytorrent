@@ -24,6 +24,7 @@ const requestTimeout = 30 * time.Second    // How long to wait on requests befor
 const receiveKeepAlive = 120 * time.Second // How long to wait before removing a peer with no messages
 const sendKeepAlive = 90 * time.Second     // How long to wait before sending a keep alive message
 const startRate = 2                        // Uses adaptive rate after first requests
+const adjustTime = 5                       // How often in seconds to adjust the queuing rate
 
 // Peer stores info about connecting to peers as well as their state
 type Peer struct {
@@ -33,10 +34,11 @@ type Peer struct {
 	AmInterested   bool
 	PeerChoking    bool
 	PeerInterested bool
-	Rate           int // max number of outgoing requests/pieces a peer can queue
+	Rate           int // Peer's download rate in KiB/s
 
 	bitfield            bitfield.Bitfield
 	workQueue           []workPiece
+	kbReceived          int // Number of kilobytes of data received since the last adjustment time
 	lastMessageReceived time.Time
 	lastMessageSent     time.Time
 	lastRequest         time.Time
@@ -64,10 +66,11 @@ func New(addr string, conn net.Conn, info common.TorrentInfo) Peer {
 		Rate:           startRate,
 
 		bitfield:            make([]byte, bitfieldSize),
+		workQueue:           []workPiece{},
+		kbReceived:          0,
 		lastMessageReceived: time.Now(),
 		lastMessageSent:     time.Now(),
 		lastRequest:         time.Now(),
-		workQueue:           []workPiece{},
 		send:                make(chan message.Message),
 	}
 }
@@ -100,11 +103,15 @@ func (p *Peer) StartWork(ctx context.Context, work chan int, results chan int, d
 	connection := make(chan []byte, 2) // Buffer so that connection can exit if we haven't read the data yet
 	go p.Conn.Poll(connCtx, connection)
 
+	// Create ticker to adjust queuing rate
+	rateTicker := time.NewTicker(adjustTime * time.Second)
+
 	// Cleanup
 	defer func() {
 		deadPeers <- p.String() // Notify main to remove this peer from its list
 		p.clearWork(work)
 		connCancel()
+		rateTicker.Stop()
 		peerLog.Debug("Peer shutdown")
 	}()
 
@@ -129,6 +136,9 @@ func (p *Peer) StartWork(ctx context.Context, work chan int, results chan int, d
 				peerLog.WithFields(log.Fields{"type": msg.String(), "error": err.Error()}).Debug("Error sending message")
 				return
 			}
+		case <-rateTicker.C:
+			p.adjustRate()
+			p.kbReceived = 0
 		case <-time.After(workTimeout): // Poll to get unstuck if no messages are received
 			if time.Since(p.lastRequest) >= requestTimeout {
 				p.clearWork(work)

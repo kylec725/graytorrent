@@ -14,6 +14,7 @@ import (
 )
 
 const reqSize = 16384 // 16 kilobytes
+const kb = 1024
 
 // Errors
 var (
@@ -117,6 +118,9 @@ func (p *Peer) handlePiece(msg *message.Message, info common.TorrentInfo, result
 	begin := binary.BigEndian.Uint32(msg.Payload[4:8])
 	block := msg.Payload[8:]
 
+	// Update peer's amount downloaded
+	p.kbReceived += len(block) / kb
+
 	// If piece is not in work queue, nothing happens
 	for i := range p.workQueue { // We want to operate directly on the workQueue pieces
 		if index == uint32(p.workQueue[i].index) {
@@ -134,7 +138,6 @@ func (p *Peer) handlePiece(msg *message.Message, info common.TorrentInfo, result
 			}
 
 			// Piece is done: Verify hash then write
-			p.adjustRate(p.workQueue[i])                                    // Change rate regardless whether piece was correct
 			if !write.VerifyPiece(info, int(index), p.workQueue[i].piece) { // Return to work pool if hash is incorrect
 				p.removeWorkPiece(int(index))
 				return errors.Wrap(ErrPieceHash, "handlePiece")
@@ -196,23 +199,14 @@ func (p *Peer) downloadPiece(info common.TorrentInfo, index int) error {
 	return nil
 }
 
-// adjustRate changes rate according to the work rate of reqSize per second
-func (p *Peer) adjustRate(wp workPiece) {
-	duration := time.Since(wp.startTime)
-	numBlocks := wp.curr / reqSize                      // truncate number of blocks to be conservative
-	currRate := float64(numBlocks) / duration.Seconds() // reqSize per second
+// adjustRate changes the amount of requests to send out based on the download speed
+func (p *Peer) adjustRate() {
+	currRate := p.kbReceived / adjustTime
 
 	// Use aggressive algorithm from rtorrent
-	// if currRate < 20 {
-	// 	p.rate = int(currRate) + 2
-	// } else {
-	// 	p.rate = int(currRate/5 + 18)
-	// }
-	if currRate > float64(p.Rate) {
-		p.Rate = p.Rate + 2
-	} else if currRate < 2 {
-		p.Rate = 2
+	if currRate < 20 {
+		p.Rate = currRate + 2
 	} else {
-		p.Rate = int(currRate)
+		p.Rate = currRate/5 + 18
 	}
 }
