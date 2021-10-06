@@ -39,7 +39,6 @@ type Torrent struct {
 	Peers         []peer.Peer        `json:"-"`
 	deadPeers     []string           `json:"-"`
 	Cancel        context.CancelFunc `json:"-"`
-	State         State              `json:"-"`
 }
 
 // Setup gets and sets up necessary properties of a new torrent object
@@ -70,7 +69,7 @@ func (to *Torrent) Setup(ctx context.Context) error {
 	// Make channel for incoming peers
 	to.IncomingPeers = make(chan peer.Peer)
 
-	to.State = Stopped
+	to.Cancel = nil
 	// TODO: set state as Complete based off save data
 
 	return nil
@@ -88,24 +87,13 @@ func (to *Torrent) Start(ctx context.Context) {
 	ctx, cancel := context.WithCancel(context.WithValue(ctx, common.KeyInfo, &to.Info))
 	to.Cancel = cancel
 
-	// Change state
-	if to.State == Stopped {
-		to.State = Started
-	} else if to.State == Complete {
-		to.State = Seeding
-	}
-
 	// Cleanup
 	defer func() {
 		unchokeTicker.Stop()
 		to.Peers = nil     // Clear peers
 		to.deadPeers = nil // Clear dead peers
 		cancel()           // Close all trackers and peers if the torrent goroutine returns
-		if to.State == Started {
-			to.State = Stopped
-		} else if to.State == Seeding {
-			to.State = Complete
-		}
+		to.Cancel = nil    // Make cancel func nil so that state can see if the torrent was started
 	}()
 
 	// Start tracker goroutines
@@ -149,18 +137,11 @@ func (to *Torrent) Start(ctx context.Context) {
 			if pieces == to.Info.TotalPieces {
 				log.WithField("name", to.Info.Name).Info("Torrent completed")
 				close(complete) // Notify trackers to send completed message
-				to.State = Seeding
 			}
 		case <-unchokeTicker.C:
 			if len(to.Peers) > 0 {
 				to.unchokeAlg()
 			}
-		}
-		// Adjust download state based off number of peers
-		if to.State == Started && len(to.Peers) == 0 {
-			to.State = Stalled
-		} else if to.State == Stalled && len(to.Peers) > 0 {
-			to.State = Started
 		}
 	}
 }
@@ -211,4 +192,13 @@ func (to *Torrent) isDeadPeer(peer peer.Peer) bool {
 		}
 	}
 	return false
+}
+
+// Rate returns the current total download rate of the torrent
+func (to *Torrent) Rate() int {
+	totalRate := 0
+	for i := range to.Peers {
+		totalRate += to.Peers[i].Rate
+	}
+	return totalRate
 }

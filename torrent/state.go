@@ -28,3 +28,21 @@ func (state State) String() string {
 		return "Unknown"
 	}
 }
+
+// State returns the current state of the torrent
+func (to *Torrent) State() State {
+	// Torrent's Start() goroutine is running
+	if to.Cancel != nil {
+		if to.Info.Left == 0 {
+			return Seeding
+		} else if to.Rate() > 0 {
+			return Seeding
+		} else {
+			return Stalled
+		}
+	}
+	if to.Info.Left == 0 {
+		return Complete
+	}
+	return Stopped
+}
