@@ -21,7 +21,7 @@ import (
 const peerTimeout = 20 * time.Second       // Time to wait on an expected peer connection operation
 const workTimeout = 5 * time.Second        // To get unstuck if we need to get work
 const requestTimeout = 30 * time.Second    // How long to wait on requests before sending work back
-const receiveKeepAlive = 120 * time.Second // How long to wait before removing a peer with no messages
+const keepAliveTimeout = 120 * time.Second // How long to wait before removing a peer with no messages
 const sendKeepAlive = 90 * time.Second     // How long to wait before sending a keep alive message
 
 // Peer stores info about connecting to peers as well as their state
@@ -34,14 +34,14 @@ type Peer struct {
 	PeerInterested bool
 	Rate           int // Peer's download rate in KiB/s
 
-	bitfield            bitfield.Bitfield
-	workPieces          []workPiece
-	queue               int // How many requests can be queued at a time
-	kbReceived          int // Number of kilobytes of data received since the last adjustment time
-	lastMessageReceived time.Time
-	lastMessageSent     time.Time
-	lastRequest         time.Time
-	send                chan message.Message // Used for torrent goroutine to send messages
+	bitfield    bitfield.Bitfield
+	queue       []workPiece
+	maxQueue    int // How many requests can be queued at a time
+	kbReceived  int // Number of kilobytes of data received since the last adjustment time
+	lastMsgRcvd time.Time
+	lastMsgSent time.Time
+	lastRequest time.Time
+	send        chan message.Message // Used for torrent goroutine to send messages
 }
 
 func (p Peer) String() string {
@@ -64,14 +64,14 @@ func New(addr string, conn net.Conn, info common.TorrentInfo) Peer {
 		PeerInterested: false,
 		Rate:           0,
 
-		bitfield:            make([]byte, bitfieldSize),
-		workPieces:          []workPiece{},
-		queue:               startQueue,
-		kbReceived:          0,
-		lastMessageReceived: time.Now(),
-		lastMessageSent:     time.Now(),
-		lastRequest:         time.Now(),
-		send:                make(chan message.Message),
+		bitfield:    make([]byte, bitfieldSize),
+		queue:       []workPiece{},
+		maxQueue:    startQueue,
+		kbReceived:  0,
+		lastMsgRcvd: time.Now(),
+		lastMsgSent: time.Now(),
+		lastRequest: time.Now(),
+		send:        make(chan message.Message),
 	}
 }
 
@@ -124,7 +124,7 @@ func (p *Peer) StartWork(ctx context.Context, work chan int, results chan int, d
 			if !ok { // Connection failed
 				return
 			}
-			p.lastMessageReceived = time.Now()
+			p.lastMsgRcvd = time.Now()
 			currInfo := common.Info(ctx)
 			msg := message.Decode(data)
 			if err := p.handleMessage(msg, currInfo, work, results); err != nil {
@@ -143,16 +143,16 @@ func (p *Peer) StartWork(ctx context.Context, work chan int, results chan int, d
 			if time.Since(p.lastRequest) >= requestTimeout {
 				p.clearWork(work)
 			}
-			if time.Since(p.lastMessageSent) >= sendKeepAlive {
+			if time.Since(p.lastMsgSent) >= sendKeepAlive {
 				p.sendMessage(nil)
 			}
-			if time.Since(p.lastMessageReceived) >= receiveKeepAlive { // Check if peer has passed the keep-alive time
+			if time.Since(p.lastMsgRcvd) >= keepAliveTimeout { // Check if peer has passed the keep-alive time
 				return
 			}
 		}
 
-		// Find new work piece if queue is open
-		if len(p.workPieces) < p.queue {
+		// Find new work piece if maxQueue is open
+		if len(p.queue) < p.maxQueue {
 			select {
 			case index := <-work:
 				// Send the work back if the peer does not have the piece

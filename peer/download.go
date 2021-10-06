@@ -34,7 +34,7 @@ func (p *Peer) sendMessage(msg *message.Message) error {
 		p.AmChoking = false
 	}
 	_, err := p.Conn.Write(msg.Encode())
-	p.lastMessageSent = time.Now()
+	p.lastMsgSent = time.Now()
 	return errors.Wrap(err, "sendMessage")
 }
 
@@ -125,39 +125,39 @@ func (p *Peer) handlePiece(msg *message.Message, info common.TorrentInfo, result
 	p.kbReceived += len(block) / kb
 
 	// If piece is not in work queue, nothing happens
-	for i := range p.workPieces { // We want to operate directly on the workPieces pieces
-		if index == uint32(p.workPieces[i].index) {
-			p.workPieces[i].left -= len(block)
+	for i := range p.queue { // We want to operate directly on the queue pieces
+		if index == uint32(p.queue[i].index) {
+			p.queue[i].left -= len(block)
 			p.lastRequest = time.Now()
 
-			err := write.AddBlock(info, int(index), int(begin), block, p.workPieces[i].piece)
+			err := write.AddBlock(info, int(index), int(begin), block, p.queue[i].piece)
 			if err != nil {
 				errors.Wrap(err, "handlePiece")
 			}
 			// If piece isn't done, request next piece and exit
-			if p.workPieces[i].left > 0 {
+			if p.queue[i].left > 0 {
 				err := p.nextBlock(int(index))
 				return errors.Wrap(err, "handlePiece")
 			}
 
 			// Piece is done: Verify hash then write
-			if !write.VerifyPiece(info, int(index), p.workPieces[i].piece) { // Return to work pool if hash is incorrect
+			if !write.VerifyPiece(info, int(index), p.queue[i].piece) { // Return to work pool if hash is incorrect
 				p.removeWorkPiece(int(index))
 				return errors.Wrap(ErrPieceHash, "handlePiece")
 			}
-			if err = write.AddPiece(info, int(index), p.workPieces[i].piece); err != nil { // Write piece to file
+			if err = write.AddPiece(info, int(index), p.queue[i].piece); err != nil { // Write piece to file
 				log.WithFields(log.Fields{"peer": p.String(), "piece index": index, "error": err.Error()}).Debug("Writing piece to file failed")
 				p.removeWorkPiece(int(index))
 				return errors.Wrap(err, "handlePiece")
 			}
-			log.WithFields(log.Fields{"peer": p.String(), "piece index": index, "queue": p.queue}).Trace("Wrote piece to file")
+			log.WithFields(log.Fields{"peer": p.String(), "piece index": index, "maxQueue": p.maxQueue}).Trace("Wrote piece to file")
 
 			// Write was successful
 			p.removeWorkPiece(int(index))
 			results <- int(index) // Notify main that a piece is done
 
 			// Send not interested if necessary
-			if len(p.workPieces) == 0 {
+			if len(p.queue) == 0 {
 				msg := message.NotInterested()
 				if _, err := p.Conn.Write(msg.Encode()); err != nil {
 					return errors.Wrap(err, "downloadPiece")
@@ -172,12 +172,12 @@ func (p *Peer) handlePiece(msg *message.Message, info common.TorrentInfo, result
 
 // nextBlock requests the next block in a piece
 func (p *Peer) nextBlock(index int) error {
-	for i := range p.workPieces {
-		if index == p.workPieces[i].index {
-			length := common.Min(p.workPieces[i].left, reqSize)
-			msg := message.Request(uint32(index), uint32(p.workPieces[i].curr), uint32(length))
+	for i := range p.queue {
+		if index == p.queue[i].index {
+			length := common.Min(p.queue[i].left, reqSize)
+			msg := message.Request(uint32(index), uint32(p.queue[i].curr), uint32(length))
 			err := p.sendMessage(&msg)
-			p.workPieces[i].curr += length
+			p.queue[i].curr += length
 			p.lastRequest = time.Now()
 			return errors.Wrap(err, "nextBlock")
 		}
@@ -208,11 +208,11 @@ func (p *Peer) adjustRate() {
 
 	// Use aggressive algorithm from rtorrent
 	if currRate < 20 {
-		p.queue = currRate + 2
+		p.maxQueue = currRate + 2
 	} else {
-		p.queue = currRate/5 + 18
+		p.maxQueue = currRate/5 + 18
 	}
-	if p.queue > maxQueue {
-		p.queue = maxQueue
+	if p.maxQueue > maxQueue {
+		p.maxQueue = maxQueue
 	}
 }
