@@ -38,19 +38,19 @@ func (to *Torrent) bestRates() []int {
 	highRates := make([]int, 4)
 	// Find peers with top 4 download rates
 	for i, peer := range to.Peers {
-		if peer.Rate > to.Peers[highRates[0]].Rate && peer.AmInterested {
+		if peer.Rate() > to.Peers[highRates[0]].Rate() && peer.AmInterested {
 			highRates[3] = highRates[2]
 			highRates[2] = highRates[1]
 			highRates[1] = highRates[0]
 			highRates[0] = i
-		} else if peer.Rate > to.Peers[highRates[1]].Rate && peer.AmInterested {
+		} else if peer.Rate() > to.Peers[highRates[1]].Rate() && peer.AmInterested {
 			highRates[3] = highRates[2]
 			highRates[2] = highRates[1]
 			highRates[1] = i
-		} else if peer.Rate > to.Peers[highRates[2]].Rate && peer.AmInterested {
+		} else if peer.Rate() > to.Peers[highRates[2]].Rate() && peer.AmInterested {
 			highRates[3] = highRates[1]
 			highRates[2] = i
-		} else if peer.Rate > to.Peers[highRates[3]].Rate && peer.AmInterested {
+		} else if peer.Rate() > to.Peers[highRates[3]].Rate() && peer.AmInterested {
 			highRates[3] = i
 		}
 	}

@@ -32,12 +32,11 @@ type Peer struct {
 	AmInterested   bool
 	PeerChoking    bool
 	PeerInterested bool
-	Rate           int // Peer's download rate in KiB/s
 
 	bitfield    bitfield.Bitfield
 	queue       []workPiece
 	maxQueue    int // How many requests can be queued at a time
-	kbReceived  int // Number of kilobytes of data received since the last adjustment time
+	kbRcvd      int // Number of kilobytes of data received since the last adjustment time
 	lastMsgRcvd time.Time
 	lastMsgSent time.Time
 	lastRequest time.Time
@@ -62,12 +61,11 @@ func New(addr string, conn net.Conn, info common.TorrentInfo) Peer {
 		AmInterested:   false,
 		PeerChoking:    true,
 		PeerInterested: false,
-		Rate:           0,
 
 		bitfield:    make([]byte, bitfieldSize),
 		queue:       []workPiece{},
 		maxQueue:    startQueue,
-		kbReceived:  0,
+		kbRcvd:      0,
 		lastMsgRcvd: time.Now(),
 		lastMsgSent: time.Now(),
 		lastRequest: time.Now(),
@@ -138,7 +136,6 @@ func (p *Peer) StartWork(ctx context.Context, work chan int, results chan int, d
 			}
 		case <-rateTicker.C:
 			p.adjustRate()
-			p.kbReceived = 0
 		case <-time.After(workTimeout): // Poll to get unstuck if no messages are received
 			if time.Since(p.lastRequest) >= requestTimeout {
 				p.clearWork(work)

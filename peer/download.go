@@ -125,7 +125,11 @@ func (p *Peer) handlePiece(msg *message.Message, info common.TorrentInfo, result
 	block := msg.Payload[8:]
 
 	// Update peer's amount downloaded
-	p.kbReceived += len(block) / kb
+	p.kbRcvd += len(block) / kb
+	go func() { // Only keep track of download rate within the adjustTime
+		time.Sleep(adjustTime * time.Second)
+		p.kbRcvd -= len(block) / kb
+	}()
 
 	// If piece is not in work queue, nothing happens
 	for i := range p.queue { // We want to operate directly on the queue pieces
@@ -153,7 +157,7 @@ func (p *Peer) handlePiece(msg *message.Message, info common.TorrentInfo, result
 				p.removeWorkPiece(int(index))
 				return errors.Wrap(err, "handlePiece")
 			}
-			log.WithFields(log.Fields{"peer": p.String(), "piece index": index, "maxQueue": p.maxQueue}).Trace("Wrote piece to file")
+			log.WithFields(log.Fields{"peer": p.String(), "piece index": index, "Rate": p.Rate()}).Trace("Wrote piece to file")
 
 			// Write was successful
 			p.removeWorkPiece(int(index))
@@ -205,9 +209,14 @@ func (p *Peer) downloadPiece(info common.TorrentInfo, index int) error {
 	return nil
 }
 
+// Rate returns the current download rate in kb/sec
+func (p *Peer) Rate() int {
+	return p.kbRcvd / adjustTime
+}
+
 // adjustRate changes the amount of requests to send out based on the download speed
 func (p *Peer) adjustRate() {
-	currRate := p.kbReceived / adjustTime
+	currRate := p.Rate()
 
 	// Use aggressive algorithm from rtorrent
 	if currRate < 20 {

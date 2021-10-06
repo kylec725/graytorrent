@@ -169,7 +169,7 @@ func (to *Torrent) hasPeer(peer peer.Peer) bool {
 func (to *Torrent) Rate() int {
 	totalRate := 0
 	for i := range to.Peers {
-		totalRate += to.Peers[i].Rate
+		totalRate += to.Peers[i].Rate()
 	}
 	return totalRate
 }
