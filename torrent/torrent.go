@@ -22,6 +22,7 @@ import (
 	"github.com/kylec725/graytorrent/write"
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
+	viper "github.com/spf13/viper"
 )
 
 // Errors
@@ -32,13 +33,13 @@ var (
 
 // Torrent stores metainfo and current progress on a torrent
 type Torrent struct {
-	Path          string             `json:"Path"`
-	IncomingPeers chan peer.Peer     `json:"-"`    // Used by main to forward incoming peers
-	Info          common.TorrentInfo `json:"Info"` // Contains meta data of the torrent
-	Trackers      []tracker.Tracker  `json:"Trackers"`
-	Peers         []peer.Peer        `json:"-"`
-	deadPeers     []string           `json:"-"`
-	Cancel        context.CancelFunc `json:"-"` // Cancel function for context, we can use it to see if the Start goroutine is running
+	Path      string             `json:"Path"`
+	NewPeers  chan peer.Peer     `json:"-"`    // Used by main and trackers to send in new peers
+	Info      common.TorrentInfo `json:"Info"` // Contains meta data of the torrent
+	Trackers  []tracker.Tracker  `json:"Trackers"`
+	Peers     []peer.Peer        `json:"-"`
+	deadPeers []string           `json:"-"`
+	Cancel    context.CancelFunc `json:"-"` // Cancel function for context, we can use it to see if the Start goroutine is running
 }
 
 // Setup gets and sets up necessary properties of a new torrent object
@@ -67,7 +68,7 @@ func (to *Torrent) Setup(ctx context.Context) error {
 	}
 
 	// Make channel for incoming peers
-	to.IncomingPeers = make(chan peer.Peer)
+	to.NewPeers = make(chan peer.Peer)
 
 	to.Cancel = nil
 	// TODO: set state as Complete based off save data
@@ -78,10 +79,9 @@ func (to *Torrent) Setup(ctx context.Context) error {
 // Start initiates a routine to download a torrent from peers
 func (to *Torrent) Start(ctx context.Context) {
 	log.WithField("name", to.Info.Name).Info("Torrent started")
-	peers := make(chan peer.Peer)                     // For incoming peers from trackers
 	work := make(chan int, to.Info.TotalPieces)       // Piece indices we need
 	results := make(chan int, to.Info.TotalPieces)    // Notification that a piece is done
-	remove := make(chan string)                       // For peers to notify they should be removed from our list
+	deadPeers := make(chan string)                    // For peers to notify they should be removed from our list
 	complete := make(chan bool)                       // To notify trackers to send the completed message
 	unchokeTicker := time.NewTicker(10 * time.Second) // Change who is unchoked after a period of time
 	ctx, cancel := context.WithCancel(context.WithValue(ctx, common.KeyInfo, &to.Info))
@@ -98,7 +98,7 @@ func (to *Torrent) Start(ctx context.Context) {
 
 	// Start tracker goroutines
 	for i := range to.Trackers {
-		go to.Trackers[i].Run(ctx, peers, complete)
+		go to.Trackers[i].Run(ctx, to.NewPeers, complete)
 	}
 
 	// Populate work queue
@@ -114,20 +114,12 @@ func (to *Torrent) Start(ctx context.Context) {
 		case <-ctx.Done():
 			log.WithField("name", to.Info.Name).Info("Torrent stopped")
 			return
-		case deadPeer := <-remove: // Don't exit since trackers may find peers
+		case deadPeer := <-deadPeers: // Don't exit since trackers may find peers
 			to.removePeer(deadPeer)
-		case newPeer := <-peers: // Peers from trackers
-			if !to.hasPeer(newPeer) && !to.isDeadPeer(newPeer) {
+		case newPeer := <-to.NewPeers: // Incoming peers from main
+			if !to.hasPeer(newPeer) && len(to.Peers) < viper.GetInt("network.connections.torrentMax") {
 				to.Peers = append(to.Peers, newPeer)
-				go newPeer.StartWork(ctx, work, results, remove)
-			}
-		case newPeer := <-to.IncomingPeers: // Incoming peers from main
-			if !to.hasPeer(newPeer) {
-				if to.isDeadPeer(newPeer) {
-					to.removeDeadPeer(newPeer.Addr)
-				}
-				to.Peers = append(to.Peers, newPeer)
-				go newPeer.StartWork(ctx, work, results, remove)
+				go newPeer.StartWork(ctx, work, results, deadPeers)
 			}
 		case index := <-results:
 			to.Info.Bitfield.Set(index)
@@ -157,8 +149,6 @@ func (to *Torrent) sendHave(index int) {
 func (to *Torrent) removePeer(name string) {
 	for i := range to.Peers {
 		if name == to.Peers[i].String() {
-			to.deadPeers = append(to.deadPeers, to.Peers[i].String())
-
 			to.Peers[i] = to.Peers[len(to.Peers)-1]
 			to.Peers = to.Peers[:len(to.Peers)-1]
 			return
@@ -169,25 +159,6 @@ func (to *Torrent) removePeer(name string) {
 func (to *Torrent) hasPeer(peer peer.Peer) bool {
 	for i := range to.Peers {
 		if peer.Addr == to.Peers[i].Addr {
-			return true
-		}
-	}
-	return false
-}
-
-func (to *Torrent) removeDeadPeer(addr string) {
-	for i := range to.deadPeers {
-		if addr == to.deadPeers[i] {
-			to.deadPeers[i] = to.deadPeers[len(to.deadPeers)-1]
-			to.deadPeers = to.deadPeers[:len(to.deadPeers)-1]
-			return
-		}
-	}
-}
-
-func (to *Torrent) isDeadPeer(peer peer.Peer) bool {
-	for i := range to.deadPeers {
-		if peer.Addr == to.deadPeers[i] {
 			return true
 		}
 	}

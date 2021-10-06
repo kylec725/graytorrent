@@ -152,7 +152,7 @@ func peerListen() {
 					break
 				}
 
-				torrentList[i].IncomingPeers <- newPeer // Send to torrent session
+				torrentList[i].NewPeers <- newPeer // Send to torrent session
 				log.WithField("peer", newPeer.String()).Debug("Incoming peer was accepted")
 			}
 		}
