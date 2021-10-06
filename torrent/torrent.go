@@ -71,7 +71,6 @@ func (to *Torrent) Setup(ctx context.Context) error {
 	to.NewPeers = make(chan peer.Peer)
 
 	to.Cancel = nil
-	// TODO: set state as Complete based off save data
 
 	return nil
 }
@@ -147,7 +146,6 @@ func (to *Torrent) sendHave(index int) {
 	}
 }
 
-// TODO: change to move dead peers into a separate list so that we do not recontact, allow them to init connection with us though
 func (to *Torrent) removePeer(name string) {
 	for i := range to.Peers {
 		if name == to.Peers[i].String() {
