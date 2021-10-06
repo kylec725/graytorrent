@@ -38,7 +38,7 @@ type Torrent struct {
 	Trackers      []tracker.Tracker  `json:"Trackers"`
 	Peers         []peer.Peer        `json:"-"`
 	deadPeers     []string           `json:"-"`
-	Cancel        context.CancelFunc `json:"-"`
+	Cancel        context.CancelFunc `json:"-"` // Cancel function for context, we can use it to see if the Start goroutine is running
 }
 
 // Setup gets and sets up necessary properties of a new torrent object

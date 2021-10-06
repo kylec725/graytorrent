@@ -132,6 +132,10 @@ func peerListen() {
 
 		// Check if the infohash matches any torrents we are serving
 		for i := range torrentList {
+			// Check if the torrent's goroutine is running first
+			if torrentList[i].Cancel == nil {
+				continue
+			}
 			if bytes.Equal(infoHash[:], torrentList[i].Info.InfoHash[:]) {
 				newPeer := peer.New(addr, conn, torrentList[i].Info)
 				// Send back a handshake
