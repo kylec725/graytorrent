@@ -23,8 +23,6 @@ const workTimeout = 5 * time.Second        // To get unstuck if we need to get w
 const requestTimeout = 30 * time.Second    // How long to wait on requests before sending work back
 const receiveKeepAlive = 120 * time.Second // How long to wait before removing a peer with no messages
 const sendKeepAlive = 90 * time.Second     // How long to wait before sending a keep alive message
-const startRate = 2                        // Uses adaptive rate after first requests
-const adjustTime = 5                       // How often in seconds to adjust the queuing rate
 
 // Peer stores info about connecting to peers as well as their state
 type Peer struct {
@@ -37,7 +35,8 @@ type Peer struct {
 	Rate           int // Peer's download rate in KiB/s
 
 	bitfield            bitfield.Bitfield
-	workQueue           []workPiece
+	workPieces          []workPiece
+	queue               int // How many requests can be queued at a time
 	kbReceived          int // Number of kilobytes of data received since the last adjustment time
 	lastMessageReceived time.Time
 	lastMessageSent     time.Time
@@ -63,10 +62,11 @@ func New(addr string, conn net.Conn, info common.TorrentInfo) Peer {
 		AmInterested:   false,
 		PeerChoking:    true,
 		PeerInterested: false,
-		Rate:           startRate,
+		Rate:           0,
 
 		bitfield:            make([]byte, bitfieldSize),
-		workQueue:           []workPiece{},
+		workPieces:          []workPiece{},
+		queue:               startQueue,
 		kbReceived:          0,
 		lastMessageReceived: time.Now(),
 		lastMessageSent:     time.Now(),
@@ -152,7 +152,7 @@ func (p *Peer) StartWork(ctx context.Context, work chan int, results chan int, d
 		}
 
 		// Find new work piece if queue is open
-		if len(p.workQueue) < p.Rate {
+		if len(p.workPieces) < p.queue {
 			select {
 			case index := <-work:
 				// Send the work back if the peer does not have the piece
