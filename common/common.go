@@ -66,7 +66,7 @@ func GetInfo(meta metainfo.BencodeMeta) (TorrentInfo, error) {
 	info.Paths = getPaths(meta)
 
 	// Set the peer ID
-	info.setID()
+	info.setID() // TODO: Set peerID once for the client, and make it persistent
 
 	// Get the infohash from the metainfo
 	var err error
