@@ -101,7 +101,7 @@ func (to *Torrent) Start(ctx context.Context) {
 	}
 
 	// Populate work queue
-	for i := 0; i < to.Info.TotalPieces; i++ { // TODO: change to random order
+	for i := 0; i < to.Info.TotalPieces; i++ { // TODO: change to random order or a priority queue (use heap)
 		if !to.Info.Bitfield.Has(i) {
 			work <- i
 		}
