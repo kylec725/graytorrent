@@ -157,7 +157,7 @@ func (p *Peer) handlePiece(msg *message.Message, info common.TorrentInfo, result
 				p.removeWorkPiece(int(index))
 				return errors.Wrap(err, "handlePiece")
 			}
-			log.WithFields(log.Fields{"peer": p.String(), "piece index": index, "Rate": p.Rate()}).Trace("Wrote piece to file")
+			log.WithFields(log.Fields{"peer": p.String(), "piece index": index, "Rate": p.RatePretty()}).Trace("Wrote piece to file")
 
 			// Write was successful
 			p.removeWorkPiece(int(index))
@@ -212,6 +212,21 @@ func (p *Peer) downloadPiece(info common.TorrentInfo, index int) error {
 // Rate returns the current download rate in bytes/sec
 func (p *Peer) Rate() uint32 {
 	return p.bytesRcvd / adjustTime
+}
+
+// RatePretty returns a human readable form of the download rate
+func (p *Peer) RatePretty() string {
+	rate := float64(p.Rate())
+	suffix := "B/s"
+	if rate > 1024 {
+		rate /= 1024
+		suffix = "KiB/s"
+	}
+	if rate > 1024 {
+		rate /= 1024
+		suffix = "MiB/s"
+	}
+	return fmt.Sprintf("%.2f "+suffix, rate)
 }
 
 // adjustRate changes the amount of requests to send out based on the download speed
