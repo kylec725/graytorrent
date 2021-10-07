@@ -139,13 +139,6 @@ func (to *Torrent) Start(ctx context.Context) {
 	}
 }
 
-func (to *Torrent) sendHave(index int) {
-	msg := message.Have(uint32(index))
-	for i := range to.Peers {
-		to.Peers[i].SendMessage(msg)
-	}
-}
-
 func (to *Torrent) removePeer(name string) {
 	for i := range to.Peers {
 		if name == to.Peers[i].String() {
@@ -165,7 +158,7 @@ func (to *Torrent) hasPeer(peer peer.Peer) bool {
 	return false
 }
 
-// Rate returns the current total download rate of the torrent
+// Rate returns the current total download rate of the torrent in kb/sec
 func (to *Torrent) Rate() int {
 	totalRate := 0
 	for i := range to.Peers {
