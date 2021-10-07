@@ -101,15 +101,15 @@ func (p *Peer) StartWork(ctx context.Context, work chan int, results chan int, d
 	connection := make(chan []byte, 2) // Buffer so that connection can exit if we haven't read the data yet
 	go p.Conn.Poll(connCtx, connection)
 
-	// Create ticker to adjust queuing rate
-	rateTicker := time.NewTicker(adjustTime * time.Second)
+	// Create ticker to update the adaptive queuing rate
+	adapRateTicker := time.NewTicker(adjustTime * time.Second)
 
 	// Cleanup
 	defer func() {
 		deadPeers <- p.String() // Notify main to remove this peer from its list
 		p.clearWork(work)
 		connCancel()
-		rateTicker.Stop()
+		adapRateTicker.Stop()
 		peerLog.Debug("Peer shutdown")
 	}()
 
@@ -134,7 +134,7 @@ func (p *Peer) StartWork(ctx context.Context, work chan int, results chan int, d
 				peerLog.WithFields(log.Fields{"type": msg.String(), "error": err.Error()}).Debug("Error sending message")
 				return
 			}
-		case <-rateTicker.C:
+		case <-adapRateTicker.C:
 			p.adjustRate()
 		case <-time.After(workTimeout): // Poll to get unstuck if no messages are received
 			if time.Since(p.lastRequest) >= requestTimeout {
