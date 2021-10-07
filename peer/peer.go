@@ -35,8 +35,8 @@ type Peer struct {
 
 	bitfield    bitfield.Bitfield
 	queue       []workPiece
-	maxQueue    int // How many requests can be queued at a time
-	kbRcvd      int // Number of kilobytes of data received since the last adjustment time
+	maxQueue    int    // How many requests can be queued at a time
+	bytesRcvd   uint32 // Number of kilobytes of data received since the last adjustment time
 	lastMsgRcvd time.Time
 	lastMsgSent time.Time
 	lastRequest time.Time
@@ -65,7 +65,7 @@ func New(addr string, conn net.Conn, info common.TorrentInfo) Peer {
 		bitfield:    make([]byte, bitfieldSize),
 		queue:       []workPiece{},
 		maxQueue:    startQueue,
-		kbRcvd:      0,
+		bytesRcvd:   0,
 		lastMsgRcvd: time.Now(),
 		lastMsgSent: time.Now(),
 		lastRequest: time.Now(),

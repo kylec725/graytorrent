@@ -158,9 +158,9 @@ func (to *Torrent) hasPeer(peer peer.Peer) bool {
 	return false
 }
 
-// Rate returns the current total download rate of the torrent in kb/sec
-func (to *Torrent) Rate() int {
-	totalRate := 0
+// Rate returns the current total download rate of the torrent in bytes/sec
+func (to *Torrent) Rate() uint32 {
+	totalRate := uint32(0)
 	for i := range to.Peers {
 		totalRate += to.Peers[i].Rate()
 	}
