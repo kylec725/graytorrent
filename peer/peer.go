@@ -32,6 +32,7 @@ type Peer struct {
 	AmInterested   bool
 	PeerChoking    bool
 	PeerInterested bool
+	Send           chan message.Message // Used by outer goroutines to send messages, allows us to handle errors internally
 
 	bitfield     bitfield.Bitfield
 	workPieces   map[int]workPiece // Map to keep track of what pieces we're trying to get
@@ -43,7 +44,6 @@ type Peer struct {
 	lastMsgSent  time.Time
 	lastRequest  time.Time
 	lastUnchoked time.Time
-	send         chan message.Message // Used for torrent goroutine to send messages
 }
 
 func (p Peer) String() string {
@@ -64,6 +64,7 @@ func New(addr string, conn net.Conn, info common.TorrentInfo) Peer {
 		AmInterested:   false,
 		PeerChoking:    true,
 		PeerInterested: false,
+		Send:           make(chan message.Message),
 
 		bitfield:    make([]byte, bitfieldSize),
 		workPieces:  make(map[int]workPiece),
@@ -74,13 +75,7 @@ func New(addr string, conn net.Conn, info common.TorrentInfo) Peer {
 		lastMsgRcvd: time.Now(),
 		lastMsgSent: time.Now(),
 		lastRequest: time.Now(),
-		send:        make(chan message.Message),
 	}
-}
-
-// SendMessage allows outside goroutines to send messages to a peer, not used internally
-func (p *Peer) SendMessage(msg message.Message) {
-	p.send <- msg
 }
 
 // StartWork makes a peer wait for pieces to download
@@ -145,7 +140,7 @@ func (p *Peer) StartWork(ctx context.Context, work chan int, results chan int, d
 				peerLog.WithFields(log.Fields{"type": msg.String(), "size": len(msg.Payload), "error": err.Error()}).Debug("Error handling message")
 				return
 			}
-		case msg := <-p.send:
+		case msg := <-p.Send:
 			if err := p.sendMessage(&msg); err != nil {
 				peerLog.WithFields(log.Fields{"type": msg.String(), "error": err.Error()}).Debug("Error sending message")
 				return

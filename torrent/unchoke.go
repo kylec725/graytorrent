@@ -11,7 +11,8 @@ func (to *Torrent) unchokeAlg() {
 	prevIndex := highRates[0]
 	for _, index := range highRates {
 		if to.Peers[index].AmChoking && index != prevIndex { // Make sure we don't unchoke the same peer again
-			to.Peers[index].SendMessage(msgUnchoke)
+			to.Peers[index].AmChoking = false
+			to.Peers[index].Send <- (msgUnchoke)
 		}
 		prevIndex = index
 	}
@@ -20,7 +21,8 @@ func (to *Torrent) unchokeAlg() {
 	msgChoke := message.Choke()
 	for i := range to.Peers {
 		if !to.Peers[i].AmChoking && !numInSlice(i, highRates) {
-			to.Peers[i].SendMessage(msgChoke)
+			to.Peers[i].AmChoking = true
+			to.Peers[i].Send <- (msgChoke)
 		}
 	}
 }

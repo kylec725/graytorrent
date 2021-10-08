@@ -124,7 +124,7 @@ func (to *Torrent) Start(ctx context.Context) {
 			to.Info.Left -= common.PieceSize(to.Info, index)
 			msg := message.Have(uint32(index)) // Notify peers that we have a new piece
 			for i := range to.Peers {
-				to.Peers[i].SendMessage(msg)
+				to.Peers[i].Send <- msg
 			}
 
 			if to.Info.Left == 0 {

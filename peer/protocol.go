@@ -26,15 +26,6 @@ var (
 )
 
 func (p *Peer) sendMessage(msg *message.Message) error {
-	if msg != nil {
-		switch msg.ID {
-		case message.MsgChoke:
-			p.AmChoking = true
-		case message.MsgUnchoke:
-			p.AmChoking = false
-			p.lastUnchoked = time.Now()
-		}
-	}
 	_, err := p.Conn.Write(msg.Encode())
 	p.lastMsgSent = time.Now()
 	return errors.Wrap(err, "sendMessage")
@@ -50,6 +41,7 @@ func (p *Peer) handleMessage(msg *message.Message, info common.TorrentInfo, work
 		p.clearWork(work) // Send back our work if we get choked
 	case message.MsgUnchoke:
 		p.PeerChoking = false
+		p.lastUnchoked = time.Now()
 	case message.MsgInterested:
 		p.PeerInterested = true
 	case message.MsgNotInterested:
@@ -92,7 +84,7 @@ func (p *Peer) handleMessage(msg *message.Message, info common.TorrentInfo, work
 	return nil
 }
 
-// TODO: limit the client's upload rate, may need to workPieces requests that come in
+// TODO: limit the client's upload rate, may need to queue requests that come in
 func (p *Peer) handleRequest(msg *message.Message, info common.TorrentInfo) error {
 	if p.AmChoking { // Ignore requests if we are choking
 		return nil
