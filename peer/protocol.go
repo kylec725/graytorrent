@@ -224,10 +224,7 @@ func (p *Peer) fillQueue() error {
 // DownRate returns the current download rate in bytes/sec
 func (p *Peer) DownRate() uint32 {
 	if time.Since(p.lastUnchoked).Seconds() < rateTime {
-		if time.Since(p.lastUnchoked).Seconds() == 0 {
-			return p.bytesRcvd
-		}
-		return p.bytesRcvd / uint32(time.Since(p.lastUnchoked).Seconds())
+		return uint32(float64(p.bytesRcvd) / time.Since(p.lastUnchoked).Seconds())
 	}
 	return p.bytesRcvd / rateTime
 }
@@ -250,10 +247,7 @@ func (p *Peer) DownRatePretty() string {
 // UpRate returns the current download rate in bytes/sec
 func (p *Peer) UpRate() uint32 {
 	if time.Since(p.lastUnchoked).Seconds() < rateTime {
-		if time.Since(p.lastUnchoked).Seconds() == 0 {
-			return p.bytesSent
-		}
-		return p.bytesSent / uint32(time.Since(p.lastUnchoked).Seconds())
+		return uint32(float64(p.bytesSent) / time.Since(p.lastUnchoked).Seconds())
 	}
 	return p.bytesSent / rateTime
 }
