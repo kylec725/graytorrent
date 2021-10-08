@@ -108,7 +108,7 @@ func (p *Peer) handleRequest(msg *message.Message, info common.TorrentInfo) erro
 
 	// Update peer's amount uploaded
 	p.bytesSent += uint32(length)
-	go func() { // Only keep track of download rate within the rateTime
+	go func() { // Only keep track of upload rate within the rateTime
 		time.Sleep(rateTime * time.Second)
 		p.bytesSent -= uint32(length)
 	}()
