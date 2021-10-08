@@ -1,14 +1,17 @@
 package torrent
 
 import (
+	"math/rand"
+	"time"
+
 	"github.com/kylec725/graytorrent/peer/message"
 )
 
 func (to *Torrent) unchokeAlg() {
-	// Unchoke the peers with the top 4 rates
+	// Unchoke the peers that are uploading the most
 	msgUnchoke := message.Unchoke()
 	highRates := to.bestRates()
-	prevIndex := highRates[0]
+	prevIndex := -1
 	for _, index := range highRates {
 		if to.Peers[index].AmChoking && index != prevIndex { // Make sure we don't unchoke the same peer again
 			to.Peers[index].AmChoking = false
@@ -40,21 +43,27 @@ func (to *Torrent) bestRates() []int {
 	highRates := make([]int, 4)
 	// Find peers with top 4 download rates
 	for i, peer := range to.Peers {
-		if peer.DownRate() > to.Peers[highRates[0]].DownRate() && peer.AmInterested {
+		if peer.DownRate() > to.Peers[highRates[0]].DownRate() && peer.PeerInterested {
 			highRates[3] = highRates[2]
 			highRates[2] = highRates[1]
 			highRates[1] = highRates[0]
 			highRates[0] = i
-		} else if peer.DownRate() > to.Peers[highRates[1]].DownRate() && peer.AmInterested {
+		} else if peer.DownRate() > to.Peers[highRates[1]].DownRate() && peer.PeerInterested {
 			highRates[3] = highRates[2]
 			highRates[2] = highRates[1]
 			highRates[1] = i
-		} else if peer.DownRate() > to.Peers[highRates[2]].DownRate() && peer.AmInterested {
+		} else if peer.DownRate() > to.Peers[highRates[2]].DownRate() && peer.PeerInterested {
 			highRates[3] = highRates[1]
 			highRates[2] = i
-		} else if peer.DownRate() > to.Peers[highRates[3]].DownRate() && peer.AmInterested {
+		} else if peer.DownRate() > to.Peers[highRates[3]].DownRate() && peer.PeerInterested {
 			highRates[3] = i
 		}
 	}
 	return highRates
+}
+
+func (to *Torrent) optimisticUnchoke() int {
+	rand.Seed(time.Now().UnixNano())
+	peer := rand.Intn(len(to.Peers))
+	return peer
 }
