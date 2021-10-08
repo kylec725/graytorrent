@@ -7,7 +7,6 @@ package peer
 
 import (
 	"context"
-	"fmt"
 	"math"
 	"net"
 	"time"
@@ -136,7 +135,6 @@ func (p *Peer) StartWork(ctx context.Context, work chan int, results chan int, d
 				return
 			}
 		case <-adapRateTicker.C:
-			fmt.Println("adjusted rate")
 			p.adjustRate()
 			if time.Since(p.lastRequest) >= requestTimeout {
 				p.clearWork(work)
