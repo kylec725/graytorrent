@@ -35,7 +35,7 @@ func (to *Torrent) State() State {
 	if to.Cancel != nil {
 		if to.Info.Left == 0 {
 			return Seeding
-		} else if to.Rate() > 0 {
+		} else if to.DownRate() > 0 {
 			return Seeding
 		} else {
 			return Stalled
