@@ -13,7 +13,7 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-const reqSize = 16384 // 16 kilobytes
+const blockSize = 16384 // 16 kilobytes
 const kb = 1024
 const startQueue = 5 // Uses adaptive rate after first requests
 const maxQueue = 625 // Maximum number of requests that can be sent out
@@ -189,7 +189,7 @@ func (p *Peer) handlePiece(msg *message.Message, info common.TorrentInfo, work c
 // nextBlock requests the next block in a piece
 func (p *Peer) nextBlock(index int) error {
 	if wp, ok := p.workPieces[index]; ok {
-		length := common.Min(wp.left, reqSize)
+		length := common.Min(wp.left, blockSize)
 		msg := message.Request(uint32(index), uint32(wp.curr), uint32(length)) // Message must be sent before updating the workpiece curr value
 		err := p.sendMessage(&msg)
 		err = errors.WithMessagef(err, "index %d begin %d length %d", index, wp.curr, length)
