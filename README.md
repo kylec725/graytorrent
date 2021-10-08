@@ -24,6 +24,7 @@ First, download the `.torrent` file for the torrent you want to use, then run `g
 - Add Protocol Encryption (MSE/PE)
 - Extensions (BEP6, DHT/PEX)
 - Efficient rarest first requesting algorithm
+- Switch to mmap file operations (possibly directly writing blocks?)
 
 ## Dependencies
 - [bencode-go](https://github.com/jackpal/bencode-go)
