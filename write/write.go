@@ -111,10 +111,11 @@ func AddBlock(info common.TorrentInfo, index, begin int, block, piece []byte) er
 	return nil
 }
 
-// AddPiece takes a torrent piece, and writes it info the appropriate file
+// AddPiece takes a torrent piece, and writes it into the appropriate file
 func AddPiece(info common.TorrentInfo, index int, piece []byte) error {
 	if index < 0 || index >= info.TotalPieces {
-		return errors.Wrap(ErrPieceIndex, "AddPiece")
+		err := errors.WithMessagef(ErrPieceIndex, "index %d", index)
+		return errors.Wrap(err, "AddPiece")
 	}
 	var pieceStart, pieceEnd int
 	offset, _ := pieceBounds(info, index)      // Offset starts at the start bound of the piece
@@ -129,6 +130,7 @@ func AddPiece(info common.TorrentInfo, index int, piece []byte) error {
 			err := writeOffset(file.Path, piece[pieceStart:pieceEnd], offset)
 			// fmt.Println("wrote info:", file.Path)
 			if err != nil {
+				err = errors.WithMessagef(err, "index %d path %s", index, file.Path)
 				return errors.Wrap(err, "AddPiece")
 			}
 
