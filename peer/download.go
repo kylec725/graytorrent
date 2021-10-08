@@ -17,7 +17,7 @@ const reqSize = 16384 // 16 kilobytes
 const kb = 1024
 const startQueue = 5 // Uses adaptive rate after first requests
 const maxQueue = 625 // Maximum number of requests that can be sent out
-const adjustTime = 5 // How often in seconds to adjust the queuing rate
+const adjustTime = 4 // How often in seconds to adjust the transfer rates
 
 // Errors
 var (
@@ -113,6 +113,14 @@ func (p *Peer) handleRequest(msg *message.Message, info common.TorrentInfo) erro
 	}
 	pieceMsg := message.Piece(index, begin, piece[begin:begin+length])
 	_, err = p.Conn.Write(pieceMsg.Encode())
+
+	// Update peer's amount uploaded
+	p.bytesSent += uint32(length)
+	go func() { // Only keep track of download rate within the adjustTime
+		time.Sleep(adjustTime * time.Second)
+		p.bytesSent -= uint32(length)
+	}()
+
 	return errors.Wrap(err, "handleRequest")
 }
 
@@ -160,7 +168,7 @@ func (p *Peer) handlePiece(msg *message.Message, info common.TorrentInfo, work c
 			work <- int(index)
 			return errors.Wrap(err, "handlePiece")
 		}
-		log.WithFields(log.Fields{"peer": p.String(), "piece index": index, "Rate": p.RatePretty()}).Trace("Wrote piece to file")
+		log.WithFields(log.Fields{"peer": p.String(), "piece index": index, "DownRate": p.DownRatePretty()}).Trace("Wrote piece to file")
 
 		// Write was successful
 		delete(p.workPieces, int(index))
@@ -221,14 +229,34 @@ func (p *Peer) fillQueue() error {
 	return nil
 }
 
-// Rate returns the current download rate in bytes/sec
-func (p *Peer) Rate() uint32 {
+// DownRate returns the current download rate in bytes/sec
+func (p *Peer) DownRate() uint32 {
 	return p.bytesRcvd / adjustTime
 }
 
-// RatePretty returns a human readable form of the download rate
-func (p *Peer) RatePretty() string {
-	rate := float64(p.Rate())
+// DownRatePretty returns a human readable form of the download rate
+func (p *Peer) DownRatePretty() string {
+	rate := float64(p.DownRate())
+	suffix := "B/s"
+	if rate > 1024 {
+		rate /= 1024
+		suffix = "KiB/s"
+	}
+	if rate > 1024 {
+		rate /= 1024
+		suffix = "MiB/s"
+	}
+	return fmt.Sprintf("%.2f "+suffix, rate)
+}
+
+// UpRate returns the current download rate in bytes/sec
+func (p *Peer) UpRate() uint32 {
+	return p.bytesRcvd / adjustTime
+}
+
+// UpRatePretty returns a human readable form of the download rate
+func (p *Peer) UpRatePretty() string {
+	rate := float64(p.UpRate())
 	suffix := "B/s"
 	if rate > 1024 {
 		rate /= 1024
@@ -243,7 +271,7 @@ func (p *Peer) RatePretty() string {
 
 // adjustRate changes the amount of requests to send out based on the download speed
 func (p *Peer) adjustRate() {
-	currRate := int(p.Rate() / kb) // we use rate in kb/sec for calculating the new rate
+	currRate := int(p.DownRate() / kb) // we use rate in kb/sec for calculating the new rate
 
 	// Use aggressive algorithm from rtorrent
 	if currRate < 20 {

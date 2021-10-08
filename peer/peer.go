@@ -37,6 +37,7 @@ type Peer struct {
 	queue       int               // How many requests have been sent out
 	maxQueue    int               // How many requests can be queued at a time
 	bytesRcvd   uint32            // Number of bytes received since the last adjustment time
+	bytesSent   uint32            // Number of bytes sent since the last adjustment time
 	lastMsgRcvd time.Time
 	lastMsgSent time.Time
 	lastRequest time.Time
@@ -67,6 +68,7 @@ func New(addr string, conn net.Conn, info common.TorrentInfo) Peer {
 		queue:       0,
 		maxQueue:    startQueue,
 		bytesRcvd:   0,
+		bytesSent:   0,
 		lastMsgRcvd: time.Now(),
 		lastMsgSent: time.Now(),
 		lastRequest: time.Now(),
