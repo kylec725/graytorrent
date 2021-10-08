@@ -16,7 +16,6 @@ import (
 const blockSize = 16384 // 16 kilobytes
 const minQueue = 5      // Uses adaptive rate after first requests
 const maxQueue = 625    // Maximum number of requests that can be sent out
-const adjustTime = 5    // How often in seconds to adjust the transfer rates
 const rateTime = 20     // How far back in time to keep track of the transfer rates
 
 // Errors

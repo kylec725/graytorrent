@@ -22,6 +22,7 @@ const peerTimeout = 20 * time.Second       // Time to wait on an expected peer c
 const requestTimeout = 15 * time.Second    // How long to wait on requests before sending work back
 const keepAliveTimeout = 120 * time.Second // How long to wait before removing a peer with no messages
 const sendKeepAlive = 90 * time.Second     // How long to wait before sending a keep alive message
+const adjustTime = 5 * time.Second         // How often in seconds to adjust the transfer rates
 
 // Peer stores info about connecting to peers as well as their state
 type Peer struct {
@@ -106,7 +107,7 @@ func (p *Peer) StartWork(ctx context.Context, work chan int, results chan int, d
 	go p.Conn.Poll(connCtx, connection)
 
 	// Create ticker to update the adaptive queuing rate
-	adapRateTicker := time.NewTicker(adjustTime * time.Second)
+	adapRateTicker := time.NewTicker(adjustTime)
 
 	// Cleanup
 	defer func() {
