@@ -7,6 +7,7 @@ package peer
 
 import (
 	"context"
+	"fmt"
 	"math"
 	"net"
 	"time"
@@ -118,17 +119,6 @@ func (p *Peer) StartWork(ctx context.Context, work chan int, results chan int, d
 		select {
 		case <-ctx.Done():
 			return
-		case <-adapRateTicker.C:
-			p.adjustRate()
-			if time.Since(p.lastRequest) >= requestTimeout {
-				p.clearWork(work)
-			}
-			if time.Since(p.lastMsgSent) >= sendKeepAlive {
-				p.sendMessage(nil)
-			}
-			if time.Since(p.lastMsgRcvd) >= keepAliveTimeout { // Check if peer has passed the keep-alive time
-				return
-			}
 		case data, ok := <-connection: // Incoming data from peer
 			if !ok { // Connection failed
 				return
@@ -143,6 +133,18 @@ func (p *Peer) StartWork(ctx context.Context, work chan int, results chan int, d
 		case msg := <-p.Send:
 			if err := p.sendMessage(&msg); err != nil {
 				peerLog.WithFields(log.Fields{"type": msg.String(), "error": err.Error()}).Debug("Error sending message")
+				return
+			}
+		case <-adapRateTicker.C:
+			fmt.Println("adjusted rate")
+			p.adjustRate()
+			if time.Since(p.lastRequest) >= requestTimeout {
+				p.clearWork(work)
+			}
+			if time.Since(p.lastMsgSent) >= sendKeepAlive {
+				p.sendMessage(nil)
+			}
+			if time.Since(p.lastMsgRcvd) >= keepAliveTimeout { // Check if peer has passed the keep-alive time
 				return
 			}
 		}

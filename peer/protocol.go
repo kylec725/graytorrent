@@ -196,7 +196,7 @@ func (p *Peer) nextBlock(index int) error {
 }
 
 // downloadPiece starts a routine to download a piece from a peer
-func (p *Peer) downloadPiece(info common.TorrentInfo, index int) error {
+func (p *Peer) downloadPiece(info common.TorrentInfo, index int) error { // TODO: may want to change behavior when we get choked
 	if !p.AmInterested {
 		msg := message.Interested()
 		if _, err := p.Conn.Write(msg.Encode()); err != nil {
