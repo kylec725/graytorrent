@@ -176,6 +176,7 @@ func (tr *Tracker) Run(ctx context.Context, peers chan peer.Peer, complete chan 
 		peers <- peerList[i]
 	}
 
+	// TODO: request peerlist from tracker more persistently, some practice runs resulted in no peers being sent even when the tracker has the peers
 	for {
 		select {
 		case <-ctx.Done():
@@ -192,6 +193,7 @@ func (tr *Tracker) Run(ctx context.Context, peers chan peer.Peer, complete chan 
 				}
 				tr.Working = false
 			} else {
+				trackerLog.WithField("amount", len(peerList)).Trace("Received announce list of peers")
 				// Send peers through channel
 				for i := range peerList {
 					peers <- peerList[i]

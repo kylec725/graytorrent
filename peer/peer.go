@@ -19,8 +19,7 @@ import (
 )
 
 const peerTimeout = 20 * time.Second       // Time to wait on an expected peer connection operation
-const workTimeout = 5 * time.Second        // To get unstuck if we need to get work
-const requestTimeout = 30 * time.Second    // How long to wait on requests before sending work back
+const requestTimeout = 15 * time.Second    // How long to wait on requests before sending work back
 const keepAliveTimeout = 120 * time.Second // How long to wait before removing a peer with no messages
 const sendKeepAlive = 90 * time.Second     // How long to wait before sending a keep alive message
 
@@ -34,9 +33,10 @@ type Peer struct {
 	PeerInterested bool
 
 	bitfield    bitfield.Bitfield
-	queue       []workPiece
-	maxQueue    int    // How many requests can be queued at a time
-	bytesRcvd   uint32 // Number of kilobytes of data received since the last adjustment time
+	workPieces  map[int]workPiece // Map to keep track of what pieces we're trying to get
+	queue       int               // How many requests have been sent out
+	maxQueue    int               // How many requests can be queued at a time
+	bytesRcvd   uint32            // Number of bytes received since the last adjustment time
 	lastMsgRcvd time.Time
 	lastMsgSent time.Time
 	lastRequest time.Time
@@ -63,7 +63,8 @@ func New(addr string, conn net.Conn, info common.TorrentInfo) Peer {
 		PeerInterested: false,
 
 		bitfield:    make([]byte, bitfieldSize),
-		queue:       []workPiece{},
+		workPieces:  make(map[int]workPiece),
+		queue:       0,
 		maxQueue:    startQueue,
 		bytesRcvd:   0,
 		lastMsgRcvd: time.Now(),
@@ -118,6 +119,17 @@ func (p *Peer) StartWork(ctx context.Context, work chan int, results chan int, d
 		select {
 		case <-ctx.Done():
 			return
+		case <-adapRateTicker.C:
+			p.adjustRate()
+			if time.Since(p.lastRequest) >= requestTimeout {
+				p.clearWork(work)
+			}
+			if time.Since(p.lastMsgSent) >= sendKeepAlive {
+				p.sendMessage(nil)
+			}
+			if time.Since(p.lastMsgRcvd) >= keepAliveTimeout { // Check if peer has passed the keep-alive time
+				return
+			}
 		case data, ok := <-connection: // Incoming data from peer
 			if !ok { // Connection failed
 				return
@@ -134,22 +146,10 @@ func (p *Peer) StartWork(ctx context.Context, work chan int, results chan int, d
 				peerLog.WithFields(log.Fields{"type": msg.String(), "error": err.Error()}).Debug("Error sending message")
 				return
 			}
-		case <-adapRateTicker.C:
-			p.adjustRate()
-		case <-time.After(workTimeout): // Poll to get unstuck if no messages are received
-			if time.Since(p.lastRequest) >= requestTimeout {
-				p.clearWork(work)
-			}
-			if time.Since(p.lastMsgSent) >= sendKeepAlive {
-				p.sendMessage(nil)
-			}
-			if time.Since(p.lastMsgRcvd) >= keepAliveTimeout { // Check if peer has passed the keep-alive time
-				return
-			}
 		}
 
-		// Find new work piece if maxQueue is open
-		if len(p.queue) < p.maxQueue {
+		// Find new work piece if queue is open
+		if p.queue < p.maxQueue {
 			select {
 			case index := <-work:
 				// Send the work back if the peer does not have the piece
@@ -165,6 +165,13 @@ func (p *Peer) StartWork(ctx context.Context, work chan int, results chan int, d
 					return
 				}
 			default: // Don't block if we can't find work
+			}
+		}
+		if !p.PeerChoking {
+			err := p.fillQueue()
+			if err != nil {
+				peerLog.WithField("error", err.Error()).Debug("Issue when filling queue")
+				return
 			}
 		}
 	}
