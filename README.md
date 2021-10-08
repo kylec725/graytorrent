@@ -21,9 +21,9 @@ First, download the `.torrent` file for the torrent you want to use, then run `g
 - Limit global number of connections
 
 ## Future Goals
+- Add Protocol Encryption (MSE/PE)
 - Extensions (BEP6, DHT/PEX)
 - Efficient rarest first requesting algorithm
-- Optimize the adaptive download rate
 
 ## Dependencies
 - [bencode-go](https://github.com/jackpal/bencode-go)
