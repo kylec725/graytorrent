@@ -32,16 +32,17 @@ type Peer struct {
 	PeerChoking    bool
 	PeerInterested bool
 
-	bitfield    bitfield.Bitfield
-	workPieces  map[int]workPiece // Map to keep track of what pieces we're trying to get
-	queue       int               // How many requests have been sent out
-	maxQueue    int               // How many requests can be queued at a time
-	bytesRcvd   uint32            // Number of bytes received since the last adjustment time
-	bytesSent   uint32            // Number of bytes sent since the last adjustment time
-	lastMsgRcvd time.Time
-	lastMsgSent time.Time
-	lastRequest time.Time
-	send        chan message.Message // Used for torrent goroutine to send messages
+	bitfield     bitfield.Bitfield
+	workPieces   map[int]workPiece // Map to keep track of what pieces we're trying to get
+	queue        int               // How many requests have been sent out
+	queueSize    int               // How many requests can be queued at a time
+	bytesRcvd    uint32            // Number of bytes received since the last adjustment time
+	bytesSent    uint32            // Number of bytes sent since the last adjustment time
+	lastMsgRcvd  time.Time
+	lastMsgSent  time.Time
+	lastRequest  time.Time
+	lastUnchoked time.Time
+	send         chan message.Message // Used for torrent goroutine to send messages
 }
 
 func (p Peer) String() string {
@@ -66,7 +67,7 @@ func New(addr string, conn net.Conn, info common.TorrentInfo) Peer {
 		bitfield:    make([]byte, bitfieldSize),
 		workPieces:  make(map[int]workPiece),
 		queue:       0,
-		maxQueue:    startQueue,
+		queueSize:   minQueue,
 		bytesRcvd:   0,
 		bytesSent:   0,
 		lastMsgRcvd: time.Now(),
@@ -151,7 +152,7 @@ func (p *Peer) StartWork(ctx context.Context, work chan int, results chan int, d
 		}
 
 		// Find new work piece if queue is open
-		if p.queue < p.maxQueue {
+		if p.queue < p.queueSize {
 			select {
 			case index := <-work:
 				// Send the work back if the peer does not have the piece

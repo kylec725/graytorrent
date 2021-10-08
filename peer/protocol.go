@@ -14,10 +14,10 @@ import (
 )
 
 const blockSize = 16384 // 16 kilobytes
-const kb = 1024
-const startQueue = 5 // Uses adaptive rate after first requests
-const maxQueue = 625 // Maximum number of requests that can be sent out
-const adjustTime = 5 // How often in seconds to adjust the transfer rates
+const minQueue = 5      // Uses adaptive rate after first requests
+const maxQueue = 625    // Maximum number of requests that can be sent out
+const adjustTime = 5    // How often in seconds to adjust the transfer rates
+const rateTime = 20     // How far back in time to keep track of the transfer rates
 
 // Errors
 var (
@@ -33,6 +33,7 @@ func (p *Peer) sendMessage(msg *message.Message) error {
 			p.AmChoking = true
 		case message.MsgUnchoke:
 			p.AmChoking = false
+			p.lastUnchoked = time.Now()
 		}
 	}
 	_, err := p.Conn.Write(msg.Encode())
@@ -116,8 +117,8 @@ func (p *Peer) handleRequest(msg *message.Message, info common.TorrentInfo) erro
 
 	// Update peer's amount uploaded
 	p.bytesSent += uint32(length)
-	go func() { // Only keep track of download rate within the adjustTime
-		time.Sleep(adjustTime * time.Second)
+	go func() { // Only keep track of download rate within the rateTime
+		time.Sleep(rateTime * time.Second)
 		p.bytesSent -= uint32(length)
 	}()
 
@@ -132,8 +133,8 @@ func (p *Peer) handlePiece(msg *message.Message, info common.TorrentInfo, work c
 
 	// Update peer's amount downloaded
 	p.bytesRcvd += uint32(len(block))
-	go func() { // Only keep track of download rate within the adjustTime
-		time.Sleep(adjustTime * time.Second)
+	go func() { // Only keep track of download rate within the rateTime
+		time.Sleep(rateTime * time.Second)
 		p.bytesRcvd -= uint32(len(block))
 	}()
 
@@ -219,7 +220,7 @@ func (p *Peer) downloadPiece(info common.TorrentInfo, index int) error {
 // fillQueue sends out as many requests for blocks as the peer's queue allows
 func (p *Peer) fillQueue() error {
 	for i := range p.workPieces {
-		for p.queue < p.maxQueue && p.workPieces[i].curr < p.workPieces[i].size {
+		for p.queue < p.queueSize && p.workPieces[i].curr < p.workPieces[i].size {
 			err := p.nextBlock(i)
 			if err != nil {
 				return errors.Wrap(err, "fillQueue")
@@ -231,7 +232,10 @@ func (p *Peer) fillQueue() error {
 
 // DownRate returns the current download rate in bytes/sec
 func (p *Peer) DownRate() uint32 {
-	return p.bytesRcvd / adjustTime
+	if time.Since(p.lastUnchoked).Seconds() < rateTime {
+		return p.bytesRcvd / uint32(time.Since(p.lastUnchoked).Seconds())
+	}
+	return p.bytesRcvd / rateTime
 }
 
 // DownRatePretty returns a human readable form of the download rate
@@ -251,7 +255,10 @@ func (p *Peer) DownRatePretty() string {
 
 // UpRate returns the current download rate in bytes/sec
 func (p *Peer) UpRate() uint32 {
-	return p.bytesRcvd / adjustTime
+	if time.Since(p.lastUnchoked).Seconds() < rateTime {
+		return p.bytesSent / uint32(time.Since(p.lastUnchoked).Seconds())
+	}
+	return p.bytesSent / rateTime
 }
 
 // UpRatePretty returns a human readable form of the download rate
@@ -271,15 +278,22 @@ func (p *Peer) UpRatePretty() string {
 
 // adjustRate changes the amount of requests to send out based on the download speed
 func (p *Peer) adjustRate() {
-	currRate := int(p.DownRate() / kb) // we use rate in kb/sec for calculating the new rate
+	// currRate := int(p.DownRate() / 1024) // we use rate in kb/sec to calculate the new rate
+	currRate := int(p.DownRate() / blockSize)
 
-	// Use aggressive algorithm from rtorrent
-	if currRate < 20 {
-		p.maxQueue = currRate + 2
-	} else {
-		p.maxQueue = currRate/5 + 18
-	}
-	if p.maxQueue > maxQueue {
-		p.maxQueue = maxQueue
+	// aggressive algorithm from rtorrent
+	// if currRate < 20 {
+	// 	p.queueSize = currRate + 2
+	// } else {
+	// 	p.queueSize = currRate/5 + 18
+	// }
+
+	// libtorrent method, simply match the current rate (we add slightly to ensure saturation)
+	p.queueSize = currRate + 3
+
+	if p.queueSize > maxQueue {
+		p.queueSize = maxQueue
+	} else if p.queueSize < minQueue {
+		p.queueSize = minQueue
 	}
 }
