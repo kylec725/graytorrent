@@ -35,11 +35,13 @@ func (to *Torrent) State() State {
 	if to.Cancel != nil {
 		if to.Info.Left == 0 {
 			return Seeding
-		} else if to.DownRate() > 0 {
-			return Seeding
-		} else {
-			return Stalled
 		}
+		for _, peer := range to.Peers {
+			if !peer.PeerChoking {
+				return Started
+			}
+		}
+		return Stalled
 	}
 	if to.Info.Left == 0 {
 		return Complete
