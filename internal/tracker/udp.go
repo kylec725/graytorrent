@@ -7,8 +7,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/kylec725/graytorrent/common"
-	"github.com/kylec725/graytorrent/peer"
+	"github.com/kylec725/graytorrent/internal/common"
+	"github.com/kylec725/graytorrent/internal/peer"
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 )

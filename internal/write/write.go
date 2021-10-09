@@ -6,7 +6,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/kylec725/graytorrent/common"
+	"github.com/kylec725/graytorrent/internal/common"
 	"github.com/pkg/errors"
 )
 

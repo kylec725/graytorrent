@@ -4,8 +4,8 @@ import (
 	"math/rand"
 	"time"
 
-	"github.com/kylec725/graytorrent/peer"
-	"github.com/kylec725/graytorrent/peer/message"
+	"github.com/kylec725/graytorrent/internal/peer"
+	"github.com/kylec725/graytorrent/internal/peer/message"
 )
 
 func (to *Torrent) unchokeAlg() {

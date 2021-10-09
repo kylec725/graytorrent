@@ -6,7 +6,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/kylec725/graytorrent/common"
+	"github.com/kylec725/graytorrent/internal/common"
 	pb "github.com/kylec725/graytorrent/rpc"
 	"github.com/kylec725/graytorrent/torrent"
 	log "github.com/sirupsen/logrus"
