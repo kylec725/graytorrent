@@ -33,13 +33,12 @@ var (
 
 // Torrent stores metainfo and current progress on a torrent
 type Torrent struct {
-	Path      string             `json:"Path"`
-	NewPeers  chan peer.Peer     `json:"-"`    // Used by main and trackers to send in new peers
-	Info      common.TorrentInfo `json:"Info"` // Contains meta data of the torrent
-	Trackers  []tracker.Tracker  `json:"Trackers"`
-	Peers     []peer.Peer        `json:"-"`
-	deadPeers []string           `json:"-"`
-	Cancel    context.CancelFunc `json:"-"` // Cancel function for context, we can use it to see if the Start goroutine is running
+	Path     string             `json:"Path"`
+	NewPeers chan peer.Peer     `json:"-"`    // Used by main and trackers to send in new peers
+	Info     common.TorrentInfo `json:"Info"` // Contains meta data of the torrent
+	Trackers []tracker.Tracker  `json:"Trackers"`
+	Peers    []peer.Peer        `json:"-"`
+	Cancel   context.CancelFunc `json:"-"` // Cancel function for context, we can use it to see if the Start goroutine is running
 }
 
 // Setup gets and sets up necessary properties of a new torrent object
@@ -89,10 +88,9 @@ func (to *Torrent) Start(ctx context.Context) {
 	// Cleanup
 	defer func() {
 		unchokeTicker.Stop()
-		to.Peers = nil     // Clear peers
-		to.deadPeers = nil // Clear dead peers
-		cancel()           // Close all trackers and peers if the torrent goroutine returns
-		to.Cancel = nil    // Make cancel func nil so that state can see if the torrent was started
+		to.Peers = nil  // Clear peers
+		cancel()        // Close all trackers and peers if the torrent goroutine returns
+		to.Cancel = nil // Make cancel func nil so that state can see if the torrent was started
 	}()
 
 	// Start tracker goroutines
