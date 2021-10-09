@@ -158,6 +158,11 @@ func (p *Peer) StartWork(ctx context.Context, work chan int, results chan int, d
 			}
 		}
 
+		if err := p.fillQueue(); err != nil {
+			peerLog.WithField("error", err.Error()).Debug("Error filling queue")
+			return
+		}
+
 		// Find new work piece if queue is open
 		if p.queue < p.queueSize {
 			select {
@@ -168,20 +173,13 @@ func (p *Peer) StartWork(ctx context.Context, work chan int, results chan int, d
 					continue
 				}
 
-				// Download piece from the peer
-				err := p.downloadPiece(info, index)
-				if err != nil {
-					peerLog.WithFields(log.Fields{"piece index": index, "error": err.Error()}).Debug("Failed to start piece download")
+				p.addWorkPiece(info, index)
+
+				if err := p.fillQueue(); err != nil {
+					peerLog.WithField("error", err.Error()).Debug("Error filling queue")
 					return
 				}
 			default: // Don't block if we can't find work
-			}
-		}
-		if !p.PeerChoking {
-			err := p.fillQueue()
-			if err != nil {
-				peerLog.WithField("error", err.Error()).Debug("Issue when filling queue")
-				return
 			}
 		}
 	}

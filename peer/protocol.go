@@ -128,19 +128,17 @@ func (p *Peer) handlePiece(msg *message.Message, info common.TorrentInfo, work c
 		time.Sleep(rateTime * time.Second)
 		p.bytesRcvd -= uint32(len(block))
 	}()
-	p.lastPiece = time.Now()
 
 	// If piece is not in workPieces, nothing happens
 	if wp, ok := p.workPieces[int(index)]; ok {
-		p.lastRequest = time.Now()
+		p.lastPiece = time.Now()
 		p.queue--
 
 		// Update the workpiece
-		wp.left -= len(block)
-		err := write.AddBlock(info, int(index), int(begin), block, wp.piece)
-		if err != nil {
-			errors.Wrap(err, "handlePiece")
+		if err := write.AddBlock(info, int(index), int(begin), block, wp.piece); err != nil {
+			return errors.Wrap(err, "handlePiece")
 		}
+		wp.left -= len(block)
 		p.workPieces[int(index)] = wp
 
 		// If piece isn't done, request next piece and exit
@@ -156,7 +154,7 @@ func (p *Peer) handlePiece(msg *message.Message, info common.TorrentInfo, work c
 			work <- int(index)
 			return errors.Wrap(ErrPieceHash, "handlePiece")
 		}
-		if err = write.AddPiece(info, int(index), p.workPieces[int(index)].piece); err != nil { // Write piece to file
+		if err := write.AddPiece(info, int(index), p.workPieces[int(index)].piece); err != nil { // Write piece to file
 			delete(p.workPieces, int(index))
 			work <- int(index)
 			return errors.Wrap(err, "handlePiece")
@@ -164,14 +162,14 @@ func (p *Peer) handlePiece(msg *message.Message, info common.TorrentInfo, work c
 		log.WithFields(log.Fields{"peer": p.String(), "piece index": index, "DownRate": p.DownRatePretty()}).Trace("Wrote piece to file")
 
 		// Write was successful
-		delete(p.workPieces, int(index))
 		results <- int(index) // Notify main that a piece is done
+		delete(p.workPieces, int(index))
 
 		// Send not interested if necessary
 		if len(p.workPieces) == 0 {
 			msg := message.NotInterested()
 			if _, err := p.Conn.Write(msg.Encode()); err != nil {
-				return errors.Wrap(err, "downloadPiece")
+				return errors.Wrap(err, "handlePiece")
 			}
 			p.AmInterested = false
 		}
@@ -182,7 +180,7 @@ func (p *Peer) handlePiece(msg *message.Message, info common.TorrentInfo, work c
 // nextBlock requests the next block in a piece
 func (p *Peer) nextBlock(index int) error {
 	if wp, ok := p.workPieces[index]; ok {
-		length := common.Min(wp.left, blockSize)
+		length := common.Min(wp.size-wp.curr, blockSize)
 		msg := message.Request(uint32(index), uint32(wp.curr), uint32(length)) // Message must be sent before updating the workpiece curr value
 		err := p.sendMessage(&msg)
 		err = errors.WithMessagef(err, "index %d begin %d length %d", index, wp.curr, length)
@@ -196,21 +194,18 @@ func (p *Peer) nextBlock(index int) error {
 	return nil
 }
 
-// downloadPiece starts a routine to download a piece from a peer
-func (p *Peer) downloadPiece(info common.TorrentInfo, index int) error { // TODO: may want to change behavior when we get choked
-	if !p.AmInterested {
-		msg := message.Interested()
-		if _, err := p.Conn.Write(msg.Encode()); err != nil {
-			return errors.Wrap(err, "downloadPiece")
-		}
-		p.AmInterested = true
-	}
-	p.addWorkPiece(info, index)
-	return nil
-}
-
 // fillQueue sends out as many requests for blocks as the peer's queue allows
 func (p *Peer) fillQueue() error {
+	// Make sure we notify the peer that we are interested, and they are not choking us before we request pieces
+	if !p.AmInterested {
+		p.AmInterested = true
+		msg := message.Interested()
+		_, err := p.Conn.Write(msg.Encode())
+		return errors.Wrap(err, "fillQueue")
+	} else if p.PeerChoking {
+		return nil
+	}
+
 	for i := range p.workPieces {
 		for p.queue < p.queueSize && p.workPieces[i].curr < p.workPieces[i].size {
 			err := p.nextBlock(i)
@@ -281,7 +276,8 @@ func (p *Peer) adjustRate() {
 	// }
 
 	// libtorrent method, simply match the current rate (we add slightly to ensure saturation)
-	p.queueSize = currRate + 3
+	// p.queueSize = currRate + 3
+	p.queueSize = currRate
 
 	if p.queueSize > maxQueue {
 		p.queueSize = maxQueue
