@@ -87,7 +87,6 @@ func (p *Peer) StartWork(ctx context.Context, work chan int, results chan int, d
 
 	// Setup peer connection
 	connCtx, connCancel := context.WithCancel(ctx)
-	p.Conn.Timeout = peerTimeout
 	connection := make(chan []byte, 2) // Buffer so that connection can exit if we haven't read the data yet
 	go p.Conn.Poll(connCtx, connection)
 

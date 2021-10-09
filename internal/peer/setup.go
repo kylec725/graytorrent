@@ -46,7 +46,7 @@ func (p *Peer) Dial() error {
 	d := net.Dialer{Timeout: peerTimeout}
 	conn, err := d.Dial("tcp", p.String())
 	if err != nil {
-		return errors.Wrap(err, "dial")
+		return errors.Wrap(err, "Dial")
 	}
 	p.Conn = &connect.Conn{Conn: conn, Timeout: peerTimeout}
 	return nil
@@ -56,16 +56,33 @@ func (p *Peer) Dial() error {
 func (p *Peer) InitHandshake(info common.TorrentInfo) error {
 	h := handshake.New(info)
 	if _, err := p.Conn.Write(h.Encode()); err != nil {
-		return errors.Wrap(err, "initHandshake")
+		return errors.Wrap(err, "InitHandshake")
 	}
 	infoHash, err := handshake.Read(p.Conn.Conn)
 	if err != nil {
-		return errors.Wrap(err, "initHandshake")
+		return errors.Wrap(err, "InitHandshake")
 	} else if !bytes.Equal(infoHash[:], info.InfoHash[:]) { // Verify the infohash
-		return errors.Wrap(ErrInfoHash, "initHandshake")
+		return errors.Wrap(ErrInfoHash, "InitHandshake")
 	}
 	// Send bitfield to the peer
 	msg := message.Bitfield(info.Bitfield)
 	_, err = p.Conn.Write(msg.Encode())
-	return errors.Wrap(err, "initHandshake")
+	return errors.Wrap(err, "InitHandshake")
+}
+
+// RespondHandshake responds to a received handshake form a peer
+func (p *Peer) RespondHandshake(info common.TorrentInfo) error {
+	h := handshake.New(info)
+	if _, err := p.Conn.Write(h.Encode()); err != nil {
+		return errors.Wrap(err, "RespondHandshake")
+	}
+
+	// Send bitfield to the peer
+	msg := message.Bitfield(info.Bitfield)
+	if _, err := p.Conn.Write(msg.Encode()); err != nil {
+		return errors.Wrap(err, "RespondHandshake")
+	}
+
+	p.Conn.Timeout = peerTimeout
+	return nil
 }

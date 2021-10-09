@@ -12,7 +12,6 @@ import (
 	"github.com/kylec725/graytorrent/internal/connect"
 	"github.com/kylec725/graytorrent/internal/peer"
 	"github.com/kylec725/graytorrent/internal/peer/handshake"
-	"github.com/kylec725/graytorrent/internal/peer/message"
 	"github.com/kylec725/graytorrent/torrent"
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
@@ -126,7 +125,7 @@ func peerListen() {
 
 		infoHash, err := handshake.Read(conn)
 		if err != nil {
-			log.WithFields(log.Fields{"peer": addr, "error": err.Error()}).Debug("Incoming peer handshake sequence failed")
+			log.WithFields(log.Fields{"peer": addr, "error": err.Error()}).Debug("Error with incoming peer handshake")
 			continue
 		}
 
@@ -138,18 +137,8 @@ func peerListen() {
 			}
 			if bytes.Equal(infoHash[:], torrentList[i].Info.InfoHash[:]) {
 				newPeer := peer.New(addr, conn, torrentList[i].Info)
-				// Send back a handshake
-				h := handshake.New(torrentList[i].Info)
-				if _, err = newPeer.Conn.Write(h.Encode()); err != nil {
-					log.WithFields(log.Fields{"peer": newPeer.String(), "error": err.Error()}).Debug("Incoming peer handshake sequence failed")
-					break
-				}
-
-				// Send bitfield to the peer
-				msg := message.Bitfield(torrentList[i].Info.Bitfield)
-				if _, err = newPeer.Conn.Write(msg.Encode()); err != nil {
-					log.WithFields(log.Fields{"peer": newPeer.String(), "error": err.Error()}).Debug("Sending bitfield failed")
-					break
+				if err := newPeer.RespondHandshake(torrentList[i].Info); err != nil {
+					log.WithFields(log.Fields{"peer": newPeer.String(), "error": err.Error()}).Debug("Error when responding to handshake")
 				}
 
 				torrentList[i].NewPeers <- newPeer // Send to torrent session
