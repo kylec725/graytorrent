@@ -1,8 +1,8 @@
 # graytorrent
-BitTorrent client implemented in [Go](https://golang.org)
+BitTorrent engine implemented in [Go](https://golang.org)
 
 ## Installation
-### Manual
+### Compile
 Make sure [Go is installed](https://golang.org/doc/install)
 ```
 git clone https://github.com/kylec725/graytorrent.git
