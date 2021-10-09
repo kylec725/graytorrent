@@ -54,7 +54,7 @@ func setupViper() {
 
 	viper.SetConfigName("config")
 	viper.SetConfigType("toml")
-	viper.AddConfigPath(".") // Remove in the future
+	// viper.AddConfigPath(".") // Remove in the future
 	viper.AddConfigPath(grayTorrentPath)
 	viper.AddConfigPath("/etc/graytorrent")
 

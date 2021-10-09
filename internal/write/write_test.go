@@ -5,8 +5,8 @@ import (
 	"os"
 	"testing"
 
-	"github.com/kylec725/graytorrent/common"
-	"github.com/kylec725/graytorrent/metainfo"
+	"github.com/kylec725/graytorrent/internal/common"
+	"github.com/kylec725/graytorrent/internal/metainfo"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
