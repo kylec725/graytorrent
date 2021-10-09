@@ -39,6 +39,8 @@ type Torrent struct {
 	Trackers []tracker.Tracker  `json:"Trackers"`
 	Peers    []peer.Peer        `json:"-"`
 	Cancel   context.CancelFunc `json:"-"` // Cancel function for context, we can use it to see if the Start goroutine is running
+
+	optimisticUnchoke *peer.Peer `json:"-"` // The peer that is currently optimistically unchoked
 }
 
 // Setup gets and sets up necessary properties of a new torrent object
@@ -69,8 +71,6 @@ func (to *Torrent) Setup(ctx context.Context) error {
 	// Make channel for incoming peers
 	to.NewPeers = make(chan peer.Peer)
 
-	to.Cancel = nil
-
 	return nil
 }
 
@@ -82,6 +82,7 @@ func (to *Torrent) Start(ctx context.Context) {
 	deadPeers := make(chan string)                    // For peers to notify they should be removed from our list
 	complete := make(chan bool)                       // To notify trackers to send the completed message
 	unchokeTicker := time.NewTicker(10 * time.Second) // Change who is unchoked after a period of time
+	lastOpUnchoke := time.Now()                       // Keep track of when the optimistic unchoke was changed
 	ctx, cancel := context.WithCancel(context.WithValue(ctx, common.KeyInfo, &to.Info))
 	to.Cancel = cancel
 
@@ -91,6 +92,7 @@ func (to *Torrent) Start(ctx context.Context) {
 		to.Peers = nil  // Clear peers
 		cancel()        // Close all trackers and peers if the torrent goroutine returns
 		to.Cancel = nil // Make cancel func nil so that state can see if the torrent was started
+		to.optimisticUnchoke = nil
 	}()
 
 	// Start tracker goroutines
@@ -131,6 +133,9 @@ func (to *Torrent) Start(ctx context.Context) {
 			}
 		case <-unchokeTicker.C:
 			if len(to.Peers) > 0 {
+				if time.Since(lastOpUnchoke) > 30*time.Second || to.optimisticUnchoke == nil {
+					to.changeOptimisticUnchoke(&lastOpUnchoke)
+				}
 				to.unchokeAlg()
 			}
 		}
