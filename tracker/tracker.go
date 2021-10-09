@@ -193,7 +193,7 @@ func (tr *Tracker) Run(ctx context.Context, peers chan peer.Peer, complete chan 
 				}
 				tr.Working = false
 			} else {
-				trackerLog.WithField("amount", len(peerList)).Debug("Received announce list of peers")
+				trackerLog.WithField("amount", len(peerList)).Debug("Received list of peers")
 				// Send peers through channel
 				for i := range peerList {
 					peers <- peerList[i]
