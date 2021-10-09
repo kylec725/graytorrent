@@ -29,7 +29,7 @@ var (
 	verbose  bool
 	port     uint16
 
-	torrentList     []torrent.Torrent
+	torrentList     []torrent.Torrent // TODO: make torrentList a map[infohash]Torrent
 	peerListener    net.Listener
 	grayTorrentPath = filepath.Join(os.Getenv("HOME"), ".config", "graytorrent")
 	server          *grpc.Server
