@@ -43,6 +43,8 @@ type Torrent struct {
 	optimisticUnchoke *peer.Peer `json:"-"` // The peer that is currently optimistically unchoked
 }
 
+// TODO: add mutex to Info and pass pointer directly to the Info field
+
 // Setup gets and sets up necessary properties of a new torrent object
 func (to *Torrent) Setup(ctx context.Context) error {
 	// Get metainfo
