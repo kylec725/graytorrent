@@ -17,7 +17,6 @@ First, download the `.torrent` file for the torrent you want to use, then run `g
 
 ## In Progress
 - Setting up graytorrent to act as a GRPC server
-- Optimistic Unchoking
 - Limit global number of connections
 
 ## Future Goals
