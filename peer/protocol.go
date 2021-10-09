@@ -128,6 +128,7 @@ func (p *Peer) handlePiece(msg *message.Message, info common.TorrentInfo, work c
 		time.Sleep(rateTime * time.Second)
 		p.bytesRcvd -= uint32(len(block))
 	}()
+	p.lastPiece = time.Now()
 
 	// If piece is not in workPieces, nothing happens
 	if wp, ok := p.workPieces[int(index)]; ok {
