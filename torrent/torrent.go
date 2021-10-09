@@ -164,3 +164,12 @@ func (to *Torrent) DownRate() uint32 {
 	}
 	return totalRate
 }
+
+// UpRate returns the current total download rate of the torrent in bytes/sec
+func (to *Torrent) UpRate() uint32 {
+	totalRate := uint32(0)
+	for i := range to.Peers {
+		totalRate += to.Peers[i].UpRate()
+	}
+	return totalRate
+}
