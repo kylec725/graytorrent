@@ -116,8 +116,7 @@ func (to *Torrent) Start(ctx context.Context) {
 			to.removePeer(deadPeer)
 		case newPeer := <-to.NewPeers: // Incoming peers from main
 			if !to.hasPeer(newPeer) && len(to.Peers) < viper.GetInt("network.connections.torrentMax") {
-				to.Peers = append(to.Peers, newPeer)
-				go newPeer.StartWork(ctx, work, results, deadPeers)
+				go to.addPeer(ctx, &newPeer, work, results, deadPeers)
 			}
 		case index := <-results:
 			to.Info.Bitfield.Set(index)
@@ -142,9 +141,24 @@ func (to *Torrent) Start(ctx context.Context) {
 	}
 }
 
-func (to *Torrent) removePeer(name string) {
+func (to *Torrent) addPeer(ctx context.Context, p *peer.Peer, work chan int, results chan int, deadPeers chan string) {
+	if p.Conn == nil {
+		if err := p.Dial(); err != nil {
+			log.WithFields(log.Fields{"error": err.Error(), "peer": p.String()}).Debug("Dial failed")
+			return
+		} else if err := p.InitHandshake(common.Info(ctx)); err != nil {
+			log.WithFields(log.Fields{"error": err.Error(), "peer": p.String()}).Debug("Handshake failed")
+			return
+		}
+	}
+	log.WithField("peer", p.String()).Debug("Handshake successful")
+	to.Peers = append(to.Peers, *p)
+	p.StartWork(ctx, work, results, deadPeers)
+}
+
+func (to *Torrent) removePeer(p string) {
 	for i := range to.Peers {
-		if name == to.Peers[i].String() {
+		if to.Peers[i].String() == p {
 			to.Peers[i] = to.Peers[len(to.Peers)-1]
 			to.Peers = to.Peers[:len(to.Peers)-1]
 			return
@@ -152,9 +166,9 @@ func (to *Torrent) removePeer(name string) {
 	}
 }
 
-func (to *Torrent) hasPeer(peer peer.Peer) bool {
+func (to *Torrent) hasPeer(p peer.Peer) bool {
 	for i := range to.Peers {
-		if peer.Addr == to.Peers[i].Addr {
+		if to.Peers[i].String() == p.String() {
 			return true
 		}
 	}

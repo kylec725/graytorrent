@@ -41,8 +41,10 @@ func Unmarshal(peersBytes []byte, info common.TorrentInfo) ([]Peer, error) {
 	return peersList, nil
 }
 
-func (p *Peer) dial() error {
-	conn, err := net.Dial("tcp", p.String())
+// Dial establishes a TCP connection with a peer
+func (p *Peer) Dial() error {
+	d := net.Dialer{Timeout: peerTimeout}
+	conn, err := d.Dial("tcp", p.String())
 	if err != nil {
 		return errors.Wrap(err, "dial")
 	}
@@ -50,8 +52,8 @@ func (p *Peer) dial() error {
 	return nil
 }
 
-// Sends and receives a handshake from the peer
-func (p *Peer) initHandshake(info common.TorrentInfo) error {
+// InitHandshake sends and receives a handshake from the peer
+func (p *Peer) InitHandshake(info common.TorrentInfo) error {
 	h := handshake.New(info)
 	if _, err := p.Conn.Write(h.Encode()); err != nil {
 		return errors.Wrap(err, "initHandshake")

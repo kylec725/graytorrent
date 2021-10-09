@@ -84,18 +84,6 @@ func New(addr string, conn net.Conn, info common.TorrentInfo) Peer {
 func (p *Peer) StartWork(ctx context.Context, work chan int, results chan int, deadPeers chan string) {
 	info := common.Info(ctx)
 	peerLog := log.WithField("peer", p.String())
-	if p.Conn == nil {
-		if err := p.dial(); err != nil {
-			peerLog.WithField("error", err.Error()).Debug("Dial failed")
-			deadPeers <- p.String() // Notify main to remove this peer from its list
-			return
-		} else if err := p.initHandshake(info); err != nil {
-			peerLog.WithField("error", err.Error()).Debug("Handshake failed")
-			deadPeers <- p.String()
-			return
-		}
-	}
-	peerLog.Debug("Handshake successful")
 
 	// Setup peer connection
 	connCtx, connCancel := context.WithCancel(ctx)
