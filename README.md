@@ -25,7 +25,7 @@ First, download the `.torrent` file for the torrent you want to use, then run `g
 - Command line interface
 - Limit global number of connections
 
-## Future Features
+## Potential Features
 - [Fast Extension](https://www.bittorrent.org/beps/bep_0006.html)
 - [DHT](https://www.bittorrent.org/beps/bep_0005.html)
 - [Peer Exchange (PEX)](https://www.bittorrent.org/beps/bep_0011.html)
