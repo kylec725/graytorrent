@@ -33,7 +33,7 @@ First, download the `.torrent` file for the torrent you want to use, then run `g
 - Rarest first requesting
 - Use mmap for file operations
 
-## Dependencies
+## Libraries Used
 - [bencode-go](https://github.com/jackpal/bencode-go)
 - [pkg/errors](https://github.com/pkg/errors)
 - [logrus](https://github.com/sirupsen/logrus)
