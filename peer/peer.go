@@ -42,7 +42,8 @@ type Peer struct {
 	bytesSent    uint32            // Number of bytes sent since the last adjustment time
 	lastMsgRcvd  time.Time
 	lastMsgSent  time.Time
-	lastRequest  time.Time
+	lastRequest  time.Time // Last time a request was sent
+	lastPiece    time.Time // Last time a piece was received
 	lastUnchoked time.Time
 }
 
@@ -75,6 +76,7 @@ func New(addr string, conn net.Conn, info common.TorrentInfo) Peer {
 		lastMsgRcvd: time.Now(),
 		lastMsgSent: time.Now(),
 		lastRequest: time.Now(),
+		lastPiece:   time.Now(),
 	}
 }
 
@@ -136,11 +138,20 @@ func (p *Peer) StartWork(ctx context.Context, work chan int, results chan int, d
 			}
 		case <-adapRateTicker.C:
 			p.adjustRate()
-			if time.Since(p.lastRequest) >= requestTimeout {
+			if p.lastRequest.Sub(p.lastPiece) >= requestTimeout {
 				p.clearWork(work)
+				msg := message.NotInterested()
+				if err := p.sendMessage(&msg); err != nil {
+					peerLog.WithFields(log.Fields{"type": msg.String(), "error": err.Error()}).Debug("Error sending message")
+					return
+				}
 			}
 			if time.Since(p.lastMsgSent) >= sendKeepAlive {
-				p.sendMessage(nil)
+				msg := (*message.Message)(nil)
+				if err := p.sendMessage(msg); err != nil {
+					peerLog.WithFields(log.Fields{"type": msg.String(), "error": err.Error()}).Debug("Error sending message")
+					return
+				}
 			}
 			if time.Since(p.lastMsgRcvd) >= keepAliveTimeout { // Check if peer has passed the keep-alive time
 				return
