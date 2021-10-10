@@ -48,6 +48,8 @@ func newTracker(announce string) Tracker {
 	}
 }
 
+// TODO: change to use tiers of trackers
+
 // GetTrackers parses metainfo to retrieve a list of trackers
 func GetTrackers(meta metainfo.BencodeMeta) ([]Tracker, error) {
 	// If announce-list is empty, use announce only
