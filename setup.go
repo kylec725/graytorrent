@@ -1,18 +1,9 @@
 package main
 
 import (
-	"bytes"
-	"context"
 	"io"
-	"net"
 	"os"
-	"os/signal"
-	"strconv"
 
-	"github.com/kylec725/graytorrent/internal/connect"
-	"github.com/kylec725/graytorrent/internal/peer"
-	"github.com/kylec725/graytorrent/internal/peer/handshake"
-	"github.com/kylec725/graytorrent/torrent"
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 	viper "github.com/spf13/viper"
@@ -22,7 +13,7 @@ import (
 // ErrListener is used to close the peerListener safely
 var ErrListener = errors.New("use of closed network connection")
 
-func setupLog() {
+func initLog() {
 	// Logging file
 	logFile, err = os.OpenFile("info.log", os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0644)
 	// logFile, err = os.OpenFile(filepath.Join(grayTorrentPath, "info.log"), os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0644)
@@ -44,7 +35,7 @@ func setupLog() {
 	log.SetLevel(logLevel)
 }
 
-func setupViper() {
+func initConfig() {
 	viper.SetDefault("torrent.path", ".")
 	viper.SetDefault("torrent.autoseed", true)
 	viper.SetDefault("network.portrange", [2]int{6881, 6889})
@@ -69,81 +60,21 @@ func setupViper() {
 	}
 }
 
-// Binds a socket to some port for peers to contact us
-func setupListen() {
-	portRange := viper.GetIntSlice("network.portrange")
-	port, err = connect.OpenPort(portRange)
-	if err != nil {
-		log.WithFields(log.Fields{
-			"portrange": portRange,
-			"error":     err.Error(),
-		}).Warn("No open port found in port range, using random port")
-	}
-
-	service := ":" + strconv.Itoa(int(port))
-	peerListener, err = net.Listen("tcp", service)
-	if err != nil {
-		panic("Could not bind to any port")
-	}
-	// Set global port
-	port, err = connect.PortFromAddr(peerListener.Addr().String()) // Get actual port in case none in portrange were available
-	if err != nil {
-		panic("Could not find the binded port")
-	}
-}
-
-func catchInterrupt(ctx context.Context, cancel context.CancelFunc) {
-	signalChan := make(chan os.Signal, 1)
-	signal.Notify(signalChan, os.Interrupt)
-	select {
-	case <-signalChan: // Cleanup on interrupt signal
-		signal.Stop(signalChan)
-		peerListener.Close()
-		cancel()
-		err = torrent.SaveAll(torrentList)
-		if err != nil {
-			log.WithField("error", err).Debug("Problem occurred while saving torrent management data")
-		}
-		log.Info("Graytorrent stopped")
-		logFile.Close()
-		os.Exit(1)
-	case <-ctx.Done():
-	}
-}
-
-// peerListen loops to listen for incoming connections of peers
-func peerListen() {
-	for {
-		conn, err := peerListener.Accept()
-		if err != nil { // Exit if the peerListener encounters an error
-			if errors.Is(err, ErrListener) {
-				log.WithField("error", err.Error()).Debug("Listener shutdown")
-			}
-			return
-		}
-		addr := conn.RemoteAddr().String()
-
-		infoHash, err := handshake.Read(conn)
-		if err != nil {
-			log.WithFields(log.Fields{"peer": addr, "error": err.Error()}).Debug("Error with incoming peer handshake")
-			continue
-		}
-
-		// Check if the infohash matches any torrents we are serving
-		for i := range torrentList {
-			// Check if the torrent's goroutine is running first
-			if torrentList[i].Cancel == nil {
-				continue
-			}
-			if bytes.Equal(infoHash[:], torrentList[i].Info.InfoHash[:]) {
-				newPeer := peer.New(addr, conn, torrentList[i].Info)
-				if err := newPeer.RespondHandshake(torrentList[i].Info); err != nil {
-					log.WithFields(log.Fields{"peer": newPeer.String(), "error": err.Error()}).Debug("Error when responding to handshake")
-				}
-
-				torrentList[i].NewPeers <- newPeer // Send to torrent session
-				log.WithField("peer", newPeer.String()).Debug("Incoming peer was accepted")
-			}
-		}
-	}
-}
+// func catchInterrupt(ctx context.Context, cancel context.CancelFunc) {
+// 	signalChan := make(chan os.Signal, 1)
+// 	signal.Notify(signalChan, os.Interrupt)
+// 	select {
+// 	case <-signalChan: // Cleanup on interrupt signal
+// 		signal.Stop(signalChan)
+// 		peerListener.Close()
+// 		cancel()
+// 		err = torrent.SaveAll(torrentList)
+// 		if err != nil {
+// 			log.WithField("error", err).Debug("Problem occurred while saving torrent management data")
+// 		}
+// 		log.Info("Graytorrent stopped")
+// 		logFile.Close()
+// 		os.Exit(1)
+// 	case <-ctx.Done():
+// 	}
+// }

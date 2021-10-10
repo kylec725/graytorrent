@@ -2,16 +2,15 @@ package main
 
 import (
 	"context"
-	"fmt"
 
 	pb "github.com/kylec725/graytorrent/rpc"
 )
 
 func (s *torrentServer) List(in *pb.ListRequest, stream pb.Torrent_ListServer) error {
-	for i := range torrentList {
-		stream.Send(&pb.TorrentInfo{})
-		fmt.Println(torrentList[i].Info.Name)
-	}
+	// for i := range torrentList {
+	// 	stream.Send(&pb.TorrentInfo{})
+	// 	fmt.Println(torrentList[i].Info.Name)
+	// }
 	return nil
 }
 

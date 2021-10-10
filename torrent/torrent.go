@@ -38,9 +38,10 @@ type Torrent struct {
 	Info     common.TorrentInfo `json:"Info"` // Contains meta data of the torrent
 	Trackers []tracker.Tracker  `json:"Trackers"`
 	Peers    []peer.Peer        `json:"-"`
-	Cancel   context.CancelFunc `json:"-"` // Cancel function for context, we can use it to see if the Start goroutine is running
+	Started  bool               `json:"-"` // Flag to see if torrent goroutine is running
 
-	optimisticUnchoke *peer.Peer `json:"-"` // The peer that is currently optimistically unchoked
+	cancel            context.CancelFunc `json:"-"` // Cancel function for context, we can use it to see if the Start goroutine is running
+	optimisticUnchoke *peer.Peer         `json:"-"` // The peer that is currently optimistically unchoked
 }
 
 // TODO: add mutex to Info and pass pointer directly to the Info field
@@ -86,14 +87,14 @@ func (to *Torrent) Start(ctx context.Context) {
 	unchokeTicker := time.NewTicker(10 * time.Second) // Change who is unchoked after a period of time
 	lastOpUnchoke := time.Now()                       // Keep track of when the optimistic unchoke was changed
 	ctx, cancel := context.WithCancel(context.WithValue(ctx, common.KeyInfo, &to.Info))
-	to.Cancel = cancel
+	to.cancel = cancel
 
 	// Cleanup
 	defer func() {
 		unchokeTicker.Stop()
 		to.Peers = nil  // Clear peers
 		cancel()        // Close all trackers and peers if the torrent goroutine returns
-		to.Cancel = nil // Make cancel func nil so that state can see if the torrent was started
+		to.cancel = nil // Make cancel func nil so that state can see if the torrent was started
 		to.optimisticUnchoke = nil
 	}()
 
@@ -111,7 +112,7 @@ func (to *Torrent) Start(ctx context.Context) {
 
 	for {
 		select {
-		case <-ctx.Done():
+		case <-ctx.Done(): // TODO: use a waitgroup to make sure trackers and peers properly close out
 			log.WithField("name", to.Info.Name).Info("Torrent stopped")
 			return
 		case deadPeer := <-deadPeers: // Don't exit since trackers may find peers
