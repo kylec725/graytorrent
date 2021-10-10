@@ -39,6 +39,7 @@ First, download the `.torrent` file for the torrent you want to use, then run `g
 - [pkg/errors](https://github.com/pkg/errors)
 - [logrus](https://github.com/sirupsen/logrus)
 - [pflag](https://github.com/spf13/pflag)
+- [cobra](https://github.com/spf13/cobra)
 - [viper](https://github.com/spf13/viper)
 - [testify](https://github.com/stretchr/testify)
 - [logrus-prefixed-formatter](https://github.com/x-cray/logrus-prefixed-formatter)
