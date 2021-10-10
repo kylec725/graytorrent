@@ -10,17 +10,23 @@ import (
 
 func init() {
 	rootCmd.AddCommand(downloadCommand)
+	rootCmd.Flags().StringVarP(&magnetLink, "magnet", "m", "", "use a magnet link instead of a .torrent file to join a swarm")
 }
 
-var downloadCommand = &cobra.Command{
-	Use:   "download",
-	Short: "download a single torrent from a .torrent file",
-	Args:  cobra.MinimumNArgs(1),
-	Run: func(cmd *cobra.Command, args []string) {
-		session, err := torrent.NewSession()
-		if err != nil {
-			log.WithField("error", err).Info("Error when starting a new session for download")
-		}
-		session.Download(context.Background(), args[0])
-	},
-}
+var (
+	// Flags
+	magnetLink string
+
+	downloadCommand = &cobra.Command{
+		Use:   "download",
+		Short: "download a single torrent from a .torrent file or magnet link",
+		Args:  cobra.MinimumNArgs(1),
+		Run: func(cmd *cobra.Command, args []string) {
+			session, err := torrent.NewSession()
+			if err != nil {
+				log.WithField("error", err).Info("Error when starting a new session for download")
+			}
+			session.Download(context.Background(), args[0])
+		},
+	}
+)
