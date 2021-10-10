@@ -34,7 +34,7 @@ type torrentServer struct {
 
 func init() {
 	flag.BoolVarP(&verbose, "verbose", "v", false, "print events to stdout")
-	// flag.Parse()
+	flag.Parse()
 }
 
 func main() {
