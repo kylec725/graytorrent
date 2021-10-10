@@ -7,6 +7,7 @@ package common
 import (
 	"math"
 	"math/rand"
+	"os"
 	"path/filepath"
 	"sync"
 	"time"
@@ -17,6 +18,13 @@ import (
 )
 
 const peerID = "-GR0100-"
+
+var (
+	// GrayPath is the config directory of gray
+	GrayPath = filepath.Join(os.Getenv("HOME"), ".config", "gray")
+	// SavePath is the directory to store data about managed torrents
+	SavePath = filepath.Join(GrayPath, ".torrents")
+)
 
 // TorrentInfo contains information about a torrent
 type TorrentInfo struct {

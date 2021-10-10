@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"io"
 	"os"
-	"path/filepath"
 
+	"github.com/kylec725/gray/internal/common"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -20,7 +20,6 @@ func init() {
 var (
 	logLevel = log.TraceLevel // InfoLevel || DebugLevel || TraceLevel
 	logFile  *os.File
-	grayPath = filepath.Join(os.Getenv("HOME"), ".config", "gray")
 
 	// Flags
 	verbose bool
@@ -53,7 +52,7 @@ func Execute() {
 
 // initDirs initializes any necessary management directories
 func initDirs() {
-	err := os.MkdirAll(grayPath, os.ModePerm)
+	err := os.MkdirAll(common.SavePath, os.ModePerm) // SavePath includes GrayPath
 	if err != nil {
 		log.WithField("error", err.Error()).Fatal("Could not create necessary directories")
 	}
@@ -92,7 +91,7 @@ func initConfig() {
 	viper.SetConfigName("config")
 	viper.SetConfigType("toml")
 	// viper.AddConfigPath(".") // Remove in the future
-	viper.AddConfigPath(grayPath)
+	viper.AddConfigPath(common.GrayPath)
 	// viper.AddConfigPath("/etc/gray")
 
 	if err := viper.ReadInConfig(); err != nil {

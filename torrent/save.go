@@ -12,11 +12,6 @@ import (
 
 const saveDataType = ".gz"
 
-var (
-	grayPath     = filepath.Join(os.Getenv("HOME"), ".config", "gray")
-	saveDataPath = filepath.Join(grayPath, ".torrents"+saveDataType)
-)
-
 // SaveAll saves the states of all managed torrents
 func SaveAll(torrentList []Torrent) error {
 	jsonStream, err := json.Marshal(torrentList)
