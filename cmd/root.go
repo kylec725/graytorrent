@@ -14,7 +14,7 @@ import (
 
 func init() {
 	rootCmd.PersistentFlags().BoolVarP(&verbose, "verbose", "v", false, "print events to stdout")
-	cobra.OnInitialize(initDirs, initLog, initConfig, viper.WatchConfig)
+	cobra.OnInitialize(initLog, initConfig, viper.WatchConfig)
 }
 
 var (
@@ -38,9 +38,10 @@ var (
 
 // Execute runs the root command
 func Execute() {
-	log.Info("Graytorrent started")
+	initDirs()
+	// log.Info("Graytorrent started")
 	defer func() {
-		log.Info("Graytorrent stopped")
+		// log.Info("Graytorrent stopped")
 		logFile.Close()
 	}()
 
@@ -69,7 +70,8 @@ func initLog() {
 	// Set logging settings
 	log.SetOutput(logFile)
 	log.SetFormatter(&prefixed.TextFormatter{
-		TimestampFormat: "2006-01-02 15:04:05",
+		// TimestampFormat: "2006-01-02 15:04:05",
+		TimestampFormat: "15:04:05",
 		FullTimestamp:   true,
 		ForceFormatting: true,
 	})

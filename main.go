@@ -5,31 +5,14 @@ import (
 	"path/filepath"
 
 	"github.com/kylec725/graytorrent/cmd"
-	log "github.com/sirupsen/logrus"
-	"google.golang.org/grpc"
-)
-
-const (
-	serverPort = ":7001" // GRPC server port
 )
 
 var (
-	err error
-
 	grayTorrentPath = filepath.Join(os.Getenv("HOME"), ".config", "graytorrent")
-	server          *grpc.Server
 )
 
+// Launches cobra, code execution begins in cmd/root.go
 func main() {
-
-	// setupListen()
-
-	// Cleanup
-	defer func() {
-		log.Info("Graytorrent stopped")
-		// logFile.Close()
-	}()
-
 	cmd.Execute()
 
 	// Setup grpc server
