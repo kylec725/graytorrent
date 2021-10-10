@@ -54,7 +54,7 @@ func LoadAll() (map[[20]byte]*Torrent, error) {
 		if d.IsDir() { // Ignore directories
 			return nil
 		}
-		file, err := os.Open(d.Name())
+		file, err := os.Open(path)
 		if err != nil { // If the save data file doesn't exist, return an empty list
 			return err
 		}
