@@ -15,7 +15,7 @@ import (
 	"github.com/pkg/errors"
 )
 
-const peerID = "-GT0100-"
+const peerID = "-GR0100-"
 
 // TorrentInfo contains information about a torrent
 type TorrentInfo struct {
