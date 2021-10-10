@@ -6,6 +6,8 @@ import (
 	pb "github.com/kylec725/graytorrent/rpc"
 )
 
+const serverPort = ":7001" // GRPC server port
+
 type torrentServer struct {
 	pb.UnimplementedTorrentServer
 }
