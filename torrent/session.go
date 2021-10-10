@@ -4,6 +4,8 @@ import (
 	"context"
 	"fmt"
 	"net"
+	"os"
+	"os/signal"
 	"time"
 
 	"github.com/kylec725/gray/internal/common"
@@ -22,29 +24,34 @@ type Session struct {
 
 // NewSession returns a new gray session
 func NewSession() (Session, error) {
-	torrentList, err := LoadAll()
-	if err != nil {
-		return Session{}, errors.Wrap(err, "NewSession")
-	}
+	log.Info("Gray Started")
+	// torrentList, err := LoadAll() // NOTE: only LoadAll if we are starting a server
+	// if err != nil {
+	// 	return Session{}, errors.Wrap(err, "NewSession")
+	// }
 	listener, port, err := initListener()
 	if err != nil {
 		return Session{}, errors.Wrap(err, "NewSession")
 	}
 	return Session{
-		torrentList:  torrentList,
+		torrentList:  make(map[[20]byte]*Torrent),
 		peerListener: listener,
 		port:         port,
-		server:       nil,
+		server:       grpc.NewServer(),
 	}, nil
 }
 
 // Close performs clean up for a session
 func (s *Session) Close() {
+	for _, to := range s.torrentList {
+		to.Stop()
+	}
 	if err := s.SaveAll(); err != nil {
-		panic("SaveAll failed")
+		log.WithField("error", err.Error()).Debug("Problem occurred while saving torrent management data")
 	}
 	s.peerListener.Close()
 	s.server.Stop()
+	log.Info("Gray stopped")
 }
 
 // AddTorrent adds a new torrent to be managed
@@ -67,7 +74,10 @@ func (s *Session) RemoveTorrent(to Torrent) {
 
 // Download begins a download for a single torrent
 func (s *Session) Download(ctx context.Context, filename string) {
+	defer s.Close()
+	go s.catchInterrupt()
 	go s.peerListen()
+
 	ctx = context.WithValue(ctx, common.KeyPort, s.port)
 
 	to, err := s.AddTorrent(ctx, filename)
@@ -78,30 +88,20 @@ func (s *Session) Download(ctx context.Context, filename string) {
 	}
 	log.WithField("name", to.Info.Name).Info("Torrent added")
 
-	go to.Start(ctx)
+	go to.Start(ctx) // NOTE: maybe add an option to seed after download is complete
 	for to.Info.Left > 0 {
 		time.Sleep(time.Second)
 	}
-	to.Stop()
-	to.Save()
 	fmt.Println("Torrent done:", to.Info.Name)
 }
 
-// func catchInterrupt(ctx context.Context, cancel context.CancelFunc) {
-// 	signalChan := make(chan os.Signal, 1)
-// 	signal.Notify(signalChan, os.Interrupt)
-// 	select {
-// 	case <-signalChan: // Cleanup on interrupt signal
-// 		signal.Stop(signalChan)
-// 		peerListener.Close()
-// 		cancel()
-// 		err = torrent.SaveAll(torrentList)
-// 		if err != nil {
-// 			log.WithField("error", err).Debug("Problem occurred while saving torrent management data")
-// 		}
-// 		log.Info("Gray stopped")
-// 		logFile.Close()
-// 		os.Exit(1)
-// 	case <-ctx.Done():
-// 	}
-// }
+func (s *Session) catchInterrupt() {
+	signalChan := make(chan os.Signal, 1)
+	signal.Notify(signalChan, os.Interrupt)
+	select {
+	case <-signalChan: // Cleanup on interrupt signal
+		signal.Stop(signalChan)
+		s.Close()
+		os.Exit(1)
+	}
+}
