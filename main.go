@@ -1,14 +1,7 @@
 package main
 
 import (
-	"os"
-	"path/filepath"
-
 	"github.com/kylec725/gray/cmd"
-)
-
-var (
-	grayPath = filepath.Join(os.Getenv("HOME"), ".config", "gray")
 )
 
 // Launches cobra, code execution begins in cmd/root.go
