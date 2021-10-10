@@ -42,6 +42,7 @@ func initListener() (net.Listener, uint16, error) {
 
 // peerListen loops to listen for incoming connections of peers
 func (s *Session) peerListen() {
+	// loop will exit as long as we call listener.Close()
 	for {
 		conn, err := s.peerListener.Accept()
 		if err != nil { // Exit if the peerListener encounters an error
