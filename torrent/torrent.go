@@ -33,11 +33,13 @@ var (
 
 // Torrent stores metainfo and current progress on a torrent
 type Torrent struct {
-	Path     string              `json:"Path"`
-	NewPeers chan peer.Peer      `json:"-"`    // Used by main and trackers to send in new peers
-	Info     *common.TorrentInfo `json:"Info"` // Contains meta data of the torrent
+	File     string              `json:"File"`   // .torrent file
+	Magnet   string              `json:"Magnet"` // magnet link
+	Info     *common.TorrentInfo `json:"Info"`   // Contains meta data of the torrent
+	InfoHash [20]byte            `json:"InfoHash"`
 	Trackers []tracker.Tracker   `json:"Trackers"`
 	Peers    []peer.Peer         `json:"-"`
+	NewPeers chan peer.Peer      `json:"-"` // Used by main and trackers to send in new peers
 	Started  bool                `json:"-"` // Flag to see if torrent goroutine is running
 
 	cancel            context.CancelFunc `json:"-"` // Cancel function for context, we can use it to see if the Start goroutine is running
@@ -49,8 +51,9 @@ type Torrent struct {
 
 // Setup gets and sets up necessary properties of a new torrent object
 func (to *Torrent) Setup(ctx context.Context) error {
+	// NOTE: may want to handle magnet links here too
 	// Get metainfo
-	meta, err := metainfo.Meta(to.Path)
+	meta, err := metainfo.Meta(to.File)
 	if err != nil {
 		return errors.Wrap(err, "Setup")
 	}
@@ -60,6 +63,8 @@ func (to *Torrent) Setup(ctx context.Context) error {
 	if err != nil {
 		return errors.Wrap(err, "Setup")
 	}
+
+	to.InfoHash = to.Info.InfoHash
 
 	// Create trackers list from metainfo announce or announce-list
 	to.Trackers, err = tracker.GetTrackers(meta)
@@ -75,6 +80,8 @@ func (to *Torrent) Setup(ctx context.Context) error {
 	// Make channel for incoming peers
 	to.NewPeers = make(chan peer.Peer)
 
+	to.Started = false
+
 	_, to.cancel = context.WithCancel(context.Background()) // Dummy function so that stopping a torrent does not fail
 
 	return nil
@@ -82,6 +89,7 @@ func (to *Torrent) Setup(ctx context.Context) error {
 
 // Start initiates a routine to download a torrent from peers
 func (to *Torrent) Start(ctx context.Context) {
+	to.Started = true
 	log.WithField("name", to.Info.Name).Info("Torrent started")
 	work := make(chan int, to.Info.TotalPieces)       // Piece indices we need
 	results := make(chan int, to.Info.TotalPieces)    // Notification that a piece is done
@@ -94,6 +102,7 @@ func (to *Torrent) Start(ctx context.Context) {
 
 	// Cleanup
 	defer func() {
+		to.Started = false
 		unchokeTicker.Stop()
 		to.Peers = nil // Clear peers
 		cancel()       // Close all trackers and peers if the torrent goroutine returns

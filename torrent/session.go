@@ -14,7 +14,7 @@ import (
 
 // Session is an instance of gray
 type Session struct {
-	torrentList  []Torrent // TODO: make torrentList a map[infohash]Torrent
+	torrentList  map[[20]byte]*Torrent
 	peerListener net.Listener
 	port         uint16
 	server       *grpc.Server
@@ -40,8 +40,7 @@ func NewSession() (Session, error) {
 
 // Close performs clean up for a session
 func (s *Session) Close() {
-	err := SaveAll(s.torrentList)
-	if err != nil {
+	if err := s.SaveAll(); err != nil {
 		panic("SaveAll failed")
 	}
 	s.peerListener.Close()
@@ -50,25 +49,21 @@ func (s *Session) Close() {
 
 // AddTorrent adds a new torrent to be managed
 func (s *Session) AddTorrent(ctx context.Context, filename string) (*Torrent, error) {
-	to := Torrent{Path: filename}
+	to := Torrent{File: filename}
 	if err := to.Setup(ctx); err != nil {
 		return nil, errors.Wrap(err, "AddTorrent")
 	}
-	s.torrentList = append(s.torrentList, to)
-	return &s.torrentList[len(s.torrentList)-1], nil
+	s.torrentList[to.InfoHash] = &to
+	return &to, nil
 }
 
 // RemoveTorrent removes a currently managed torrent
 func (s *Session) RemoveTorrent(to Torrent) {
-	to.cancel()
-	for i := range s.torrentList {
-		if to.Path == s.torrentList[i].Path {
-			s.torrentList[i] = s.torrentList[len(s.torrentList)-1]
-			s.torrentList = s.torrentList[:len(s.torrentList)-1]
-			return
-		}
-	}
+	to.Stop()
+	delete(s.torrentList, to.InfoHash)
 }
+
+// TODO: add an option to resume a torrent if it matches this one
 
 // Download begins a download for a single torrent
 func (s *Session) Download(ctx context.Context, filename string) {
@@ -88,7 +83,7 @@ func (s *Session) Download(ctx context.Context, filename string) {
 		time.Sleep(time.Second)
 	}
 	to.Stop()
-	SaveAll(s.torrentList)
+	to.Save()
 	fmt.Println("Torrent done:", to.Info.Name)
 }
 
