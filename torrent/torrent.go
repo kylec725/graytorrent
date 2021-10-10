@@ -44,7 +44,7 @@ type Torrent struct {
 	optimisticUnchoke *peer.Peer         `json:"-"` // The peer that is currently optimistically unchoked
 }
 
-// TODO: add mutex to Info and pass pointer directly to the Info field
+// TODO: add mutex to Info and pass pointer directly to the Info field (so that we don't need to pass Info into ctx)
 
 // Setup gets and sets up necessary properties of a new torrent object
 func (to *Torrent) Setup(ctx context.Context) error {
@@ -74,6 +74,8 @@ func (to *Torrent) Setup(ctx context.Context) error {
 	// Make channel for incoming peers
 	to.NewPeers = make(chan peer.Peer)
 
+	_, to.cancel = context.WithCancel(context.Background()) // Dummy function so that stopping a torrent does not fail
+
 	return nil
 }
 
@@ -92,9 +94,8 @@ func (to *Torrent) Start(ctx context.Context) {
 	// Cleanup
 	defer func() {
 		unchokeTicker.Stop()
-		to.Peers = nil  // Clear peers
-		cancel()        // Close all trackers and peers if the torrent goroutine returns
-		to.cancel = nil // Make cancel func nil so that state can see if the torrent was started
+		to.Peers = nil // Clear peers
+		cancel()       // Close all trackers and peers if the torrent goroutine returns
 		to.optimisticUnchoke = nil
 	}()
 
@@ -142,6 +143,11 @@ func (to *Torrent) Start(ctx context.Context) {
 			}
 		}
 	}
+}
+
+// Stop stops the download or upload of a torrent
+func (to *Torrent) Stop() {
+	to.cancel()
 }
 
 func (to *Torrent) addPeer(ctx context.Context, p *peer.Peer, work chan int, results chan int, deadPeers chan string) {
