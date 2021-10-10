@@ -32,7 +32,7 @@ message TorrentInfo {
   uint32 left = 4;
   uint32 rate = 5;
   enum State {
-    STARTED = 0;
+    DOWNLOADING = 0;
     STOPPED = 1;
     STALLED = 2;
     SEEDING = 3;
