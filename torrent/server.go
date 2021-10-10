@@ -1,10 +1,14 @@
-package main
+package torrent
 
 import (
 	"context"
 
 	pb "github.com/kylec725/graytorrent/rpc"
 )
+
+type torrentServer struct {
+	pb.UnimplementedTorrentServer
+}
 
 func (s *torrentServer) List(in *pb.ListRequest, stream pb.Torrent_ListServer) error {
 	// for i := range torrentList {
