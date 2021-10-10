@@ -28,18 +28,8 @@ var (
 type Session struct {
 	torrentList  []Torrent // TODO: make torrentList a map[infohash]Torrent
 	peerListener net.Listener
-	server       *grpc.Server
 	port         uint16
-}
-
-// Close performs clean up for a session
-func (s *Session) Close() {
-	err := SaveAll(s.torrentList)
-	if err != nil {
-		panic("SaveAll failed")
-	}
-	s.peerListener.Close()
-	s.server.Stop()
+	server       *grpc.Server
 }
 
 // NewSession returns a new graytorrent session
@@ -55,9 +45,19 @@ func NewSession() (Session, error) {
 	return Session{
 		torrentList:  torrentList,
 		peerListener: listener,
-		server:       nil,
 		port:         port,
+		server:       nil,
 	}, nil
+}
+
+// Close performs clean up for a session
+func (s *Session) Close() {
+	err := SaveAll(s.torrentList)
+	if err != nil {
+		panic("SaveAll failed")
+	}
+	s.peerListener.Close()
+	s.server.Stop()
 }
 
 // AddTorrent adds a new torrent to be managed
@@ -82,19 +82,11 @@ func (s *Session) RemoveTorrent(to Torrent) {
 	}
 }
 
-// StartTorrent starts the download or upload of a torrent
-// func StartTorrent(to Torrent) {
-// 	go to.Start()
-// }
-
-// StopTorrent stops the download or upload of a torrent
-func StopTorrent(to Torrent) {
-	to.cancel()
-}
-
 // Download begins a download for a single torrent
 func (s *Session) Download(ctx context.Context, filename string) {
+	go s.peerListen()
 	ctx = context.WithValue(ctx, common.KeyPort, s.port)
+
 	to, err := s.AddTorrent(ctx, filename)
 	if err != nil {
 		fmt.Println("Single torrent failed:", err)
@@ -102,10 +94,12 @@ func (s *Session) Download(ctx context.Context, filename string) {
 		return
 	}
 	log.WithField("name", to.Info.Name).Info("Torrent added")
+
 	go to.Start(ctx)
 	for to.Info.Left > 0 { // Go compiler marks this as data race, not a big deal, we're just polling the value
 		time.Sleep(time.Second)
 	}
+	to.Stop()
 	SaveAll(s.torrentList)
 	fmt.Println("Torrent done:", to.Info.Name)
 }
