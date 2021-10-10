@@ -84,7 +84,7 @@ func (s *Session) Download(ctx context.Context, filename string) {
 	log.WithField("name", to.Info.Name).Info("Torrent added")
 
 	go to.Start(ctx)
-	for to.Info.Left > 0 { // Go compiler marks this as data race, not a big deal, we're just polling the value
+	for to.Info.Left > 0 {
 		time.Sleep(time.Second)
 	}
 	to.Stop()

@@ -24,7 +24,7 @@ type Handshake struct {
 }
 
 // New returns a new handshake for a given torrent
-func New(info common.TorrentInfo) Handshake {
+func New(info *common.TorrentInfo) Handshake {
 	return Handshake{
 		Pstr:     protocol,
 		InfoHash: info.InfoHash,

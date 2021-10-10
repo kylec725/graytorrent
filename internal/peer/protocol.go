@@ -31,7 +31,7 @@ func (p *Peer) sendMessage(msg *message.Message) error {
 	return errors.Wrap(err, "sendMessage")
 }
 
-func (p *Peer) handleMessage(msg *message.Message, info common.TorrentInfo, work chan int, results chan int) error {
+func (p *Peer) handleMessage(msg *message.Message, info *common.TorrentInfo, work chan int, results chan int) error {
 	if msg == nil {
 		return nil // keep-alive message
 	}
@@ -85,7 +85,7 @@ func (p *Peer) handleMessage(msg *message.Message, info common.TorrentInfo, work
 }
 
 // TODO: limit the client's upload rate, may need to queue requests that come in
-func (p *Peer) handleRequest(msg *message.Message, info common.TorrentInfo) error {
+func (p *Peer) handleRequest(msg *message.Message, info *common.TorrentInfo) error {
 	if p.AmChoking { // Ignore requests if we are choking
 		return nil
 	}
@@ -117,7 +117,7 @@ func (p *Peer) handleRequest(msg *message.Message, info common.TorrentInfo) erro
 }
 
 // handlePiece adds a block to a piece we are getting
-func (p *Peer) handlePiece(msg *message.Message, info common.TorrentInfo, work chan int, results chan int) error {
+func (p *Peer) handlePiece(msg *message.Message, info *common.TorrentInfo, work chan int, results chan int) error {
 	index := binary.BigEndian.Uint32(msg.Payload[0:4])
 	begin := binary.BigEndian.Uint32(msg.Payload[4:8])
 	block := msg.Payload[8:]

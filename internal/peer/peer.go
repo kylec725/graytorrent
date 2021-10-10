@@ -52,7 +52,7 @@ func (p Peer) String() string {
 }
 
 // New returns a new instantiated peer
-func New(addr string, conn net.Conn, info common.TorrentInfo) Peer {
+func New(addr string, conn net.Conn, info *common.TorrentInfo) Peer {
 	var peerConn *connect.Conn = nil
 	if conn != nil {
 		peerConn = &connect.Conn{Conn: conn, Timeout: peerTimeout}
@@ -81,8 +81,8 @@ func New(addr string, conn net.Conn, info common.TorrentInfo) Peer {
 }
 
 // StartWork makes a peer wait for pieces to download
-func (p *Peer) StartWork(ctx context.Context, work chan int, results chan int, deadPeers chan string) {
-	info := common.Info(ctx)
+func (p *Peer) StartWork(ctx context.Context, info *common.TorrentInfo, work chan int, results chan int, deadPeers chan string) {
+	// info := common.Info(ctx)
 	peerLog := log.WithField("peer", p.String())
 
 	// Setup peer connection
@@ -112,9 +112,9 @@ func (p *Peer) StartWork(ctx context.Context, work chan int, results chan int, d
 				return
 			}
 			p.lastMsgRcvd = time.Now()
-			currInfo := common.Info(ctx)
+			// currInfo := common.Info(ctx)
 			msg := message.Decode(data)
-			if err := p.handleMessage(msg, currInfo, work, results); err != nil {
+			if err := p.handleMessage(msg, info, work, results); err != nil {
 				peerLog.WithFields(log.Fields{"type": msg.String(), "size": len(msg.Payload), "error": err.Error()}).Debug("Error handling message")
 				return
 			}

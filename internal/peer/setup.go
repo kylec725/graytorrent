@@ -20,7 +20,7 @@ var (
 )
 
 // Unmarshal creates a list of Peers from a serialized list of peers
-func Unmarshal(peersBytes []byte, info common.TorrentInfo) ([]Peer, error) {
+func Unmarshal(peersBytes []byte, info *common.TorrentInfo) ([]Peer, error) {
 	if len(peersBytes)%6 != 0 {
 		return nil, errors.Wrap(ErrBadPeers, "Unmarshal")
 	}
@@ -53,7 +53,7 @@ func (p *Peer) Dial() error {
 }
 
 // InitHandshake sends and receives a handshake from the peer
-func (p *Peer) InitHandshake(info common.TorrentInfo) error {
+func (p *Peer) InitHandshake(info *common.TorrentInfo) error {
 	h := handshake.New(info)
 	if _, err := p.Conn.Write(h.Encode()); err != nil {
 		return errors.Wrap(err, "InitHandshake")
@@ -71,7 +71,7 @@ func (p *Peer) InitHandshake(info common.TorrentInfo) error {
 }
 
 // RespondHandshake responds to a received handshake form a peer
-func (p *Peer) RespondHandshake(info common.TorrentInfo) error {
+func (p *Peer) RespondHandshake(info *common.TorrentInfo) error {
 	h := handshake.New(info)
 	if _, err := p.Conn.Write(h.Encode()); err != nil {
 		return errors.Wrap(err, "RespondHandshake")

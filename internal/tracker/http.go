@@ -24,7 +24,7 @@ type bencodeTrackerResp struct {
 	Incomplete int    `bencode:"incomplete"`
 }
 
-func (tr Tracker) buildURL(event string, info common.TorrentInfo, port uint16, uploaded, downloaded, left int) (string, error) {
+func (tr Tracker) buildURL(event string, info *common.TorrentInfo, port uint16, uploaded, downloaded, left int) (string, error) {
 	base, err := url.Parse(tr.Announce)
 	if err != nil {
 		return "", errors.Wrap(err, "buildURL")
@@ -51,7 +51,7 @@ func (tr Tracker) buildURL(event string, info common.TorrentInfo, port uint16, u
 }
 
 // NOTE: still get a connection reset by peer error from some trackers
-func (tr *Tracker) httpStarted(info common.TorrentInfo, port uint16, uploaded, downloaded, left int) ([]peer.Peer, error) {
+func (tr *Tracker) httpStarted(info *common.TorrentInfo, port uint16, uploaded, downloaded, left int) ([]peer.Peer, error) {
 	// Request
 	req, err := tr.buildURL("started", info, port, uploaded, downloaded, left)
 	if err != nil {
@@ -94,7 +94,7 @@ func (tr *Tracker) httpStarted(info common.TorrentInfo, port uint16, uploaded, d
 	return peersList, errors.Wrap(err, "httpStarted")
 }
 
-func (tr *Tracker) httpStopped(info common.TorrentInfo, port uint16, uploaded, downloaded, left int) error {
+func (tr *Tracker) httpStopped(info *common.TorrentInfo, port uint16, uploaded, downloaded, left int) error {
 	// Request
 	req, err := tr.buildURL("stopped", info, port, uploaded, downloaded, left)
 	if err != nil {
@@ -124,7 +124,7 @@ func (tr *Tracker) httpStopped(info common.TorrentInfo, port uint16, uploaded, d
 	return nil
 }
 
-func (tr *Tracker) httpCompleted(info common.TorrentInfo, port uint16, uploaded, downloaded, left int) error {
+func (tr *Tracker) httpCompleted(info *common.TorrentInfo, port uint16, uploaded, downloaded, left int) error {
 	// Request
 	req, err := tr.buildURL("completed", info, port, uploaded, downloaded, left)
 	if err != nil {
@@ -154,7 +154,7 @@ func (tr *Tracker) httpCompleted(info common.TorrentInfo, port uint16, uploaded,
 	return nil
 }
 
-func (tr *Tracker) httpAnnounce(info common.TorrentInfo, port uint16, uploaded, downloaded, left int) ([]peer.Peer, error) {
+func (tr *Tracker) httpAnnounce(info *common.TorrentInfo, port uint16, uploaded, downloaded, left int) ([]peer.Peer, error) {
 	// Request
 	req, err := tr.buildURL("", info, port, uploaded, downloaded, left)
 	if err != nil {

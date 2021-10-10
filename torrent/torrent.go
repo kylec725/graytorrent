@@ -33,18 +33,19 @@ var (
 
 // Torrent stores metainfo and current progress on a torrent
 type Torrent struct {
-	Path     string             `json:"Path"`
-	NewPeers chan peer.Peer     `json:"-"`    // Used by main and trackers to send in new peers
-	Info     common.TorrentInfo `json:"Info"` // Contains meta data of the torrent
-	Trackers []tracker.Tracker  `json:"Trackers"`
-	Peers    []peer.Peer        `json:"-"`
-	Started  bool               `json:"-"` // Flag to see if torrent goroutine is running
+	Path     string              `json:"Path"`
+	NewPeers chan peer.Peer      `json:"-"`    // Used by main and trackers to send in new peers
+	Info     *common.TorrentInfo `json:"Info"` // Contains meta data of the torrent
+	Trackers []tracker.Tracker   `json:"Trackers"`
+	Peers    []peer.Peer         `json:"-"`
+	Started  bool                `json:"-"` // Flag to see if torrent goroutine is running
 
 	cancel            context.CancelFunc `json:"-"` // Cancel function for context, we can use it to see if the Start goroutine is running
 	optimisticUnchoke *peer.Peer         `json:"-"` // The peer that is currently optimistically unchoked
 }
 
 // TODO: add mutex to Info and pass pointer directly to the Info field (so that we don't need to pass Info into ctx)
+// start by remove KeyInfo to lint where we need to change it
 
 // Setup gets and sets up necessary properties of a new torrent object
 func (to *Torrent) Setup(ctx context.Context) error {
@@ -88,7 +89,7 @@ func (to *Torrent) Start(ctx context.Context) {
 	complete := make(chan bool)                       // To notify trackers to send the completed message
 	unchokeTicker := time.NewTicker(10 * time.Second) // Change who is unchoked after a period of time
 	lastOpUnchoke := time.Now()                       // Keep track of when the optimistic unchoke was changed
-	ctx, cancel := context.WithCancel(context.WithValue(ctx, common.KeyInfo, &to.Info))
+	ctx, cancel := context.WithCancel(ctx)
 	to.cancel = cancel
 
 	// Cleanup
@@ -101,7 +102,7 @@ func (to *Torrent) Start(ctx context.Context) {
 
 	// Start tracker goroutines
 	for i := range to.Trackers {
-		go to.Trackers[i].Run(ctx, to.NewPeers, complete)
+		go to.Trackers[i].Run(ctx, to.Info, to.NewPeers, complete)
 	}
 
 	// Populate work queue
@@ -124,7 +125,7 @@ func (to *Torrent) Start(ctx context.Context) {
 			}
 		case index := <-results:
 			to.Info.Bitfield.Set(index)
-			to.Info.Left -= common.PieceSize(to.Info, index)
+			to.Info.Left -= to.Info.PieceSize(index)
 			msg := message.Have(uint32(index)) // Notify peers that we have a new piece
 			for i := range to.Peers {
 				to.Peers[i].Send <- msg
@@ -155,14 +156,14 @@ func (to *Torrent) addPeer(ctx context.Context, p *peer.Peer, work chan int, res
 		if err := p.Dial(); err != nil {
 			log.WithFields(log.Fields{"error": err.Error(), "peer": p.String()}).Debug("Dial failed")
 			return
-		} else if err := p.InitHandshake(common.Info(ctx)); err != nil {
+		} else if err := p.InitHandshake(to.Info); err != nil {
 			log.WithFields(log.Fields{"error": err.Error(), "peer": p.String()}).Debug("Handshake failed")
 			return
 		}
 	}
 	log.WithField("peer", p.String()).Debug("Handshake successful")
 	to.Peers = append(to.Peers, *p)
-	p.StartWork(ctx, work, results, deadPeers)
+	p.StartWork(ctx, to.Info, work, results, deadPeers)
 }
 
 func (to *Torrent) removePeer(p string) {

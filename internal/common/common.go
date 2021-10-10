@@ -8,6 +8,7 @@ import (
 	"math"
 	"math/rand"
 	"path/filepath"
+	"sync"
 	"time"
 
 	"github.com/kylec725/gray/internal/bitfield"
@@ -29,6 +30,7 @@ type TorrentInfo struct {
 	InfoHash    [20]byte          `json:"InfoHash"`
 	PieceHashes [][20]byte        `json:"PieceHashes"`
 	PeerID      [20]byte          `json:"PeerID"`
+	sync.Mutex
 }
 
 // Path stores info about each file in a torrent
@@ -46,7 +48,7 @@ func Min(x, y int) int {
 }
 
 // GetInfo uses metainfo to retrieve information about a torrent
-func GetInfo(meta metainfo.BencodeMeta) (TorrentInfo, error) {
+func GetInfo(meta metainfo.BencodeMeta) (*TorrentInfo, error) {
 	var info TorrentInfo
 
 	// Set torrent name
@@ -72,16 +74,16 @@ func GetInfo(meta metainfo.BencodeMeta) (TorrentInfo, error) {
 	var err error
 	info.InfoHash, err = meta.InfoHash()
 	if err != nil {
-		return TorrentInfo{}, errors.Wrap(err, "SetInfo")
+		return nil, errors.Wrap(err, "SetInfo")
 	}
 
 	// Get the piece hashes from the metainfo
 	info.PieceHashes, err = meta.PieceHashes()
 	if err != nil {
-		return TorrentInfo{}, errors.Wrap(err, "SetInfo")
+		return nil, errors.Wrap(err, "SetInfo")
 	}
 
-	return info, nil
+	return &info, nil
 }
 
 func (info *TorrentInfo) setID() {
@@ -119,7 +121,7 @@ func getPaths(meta metainfo.BencodeMeta) []Path {
 }
 
 // PieceSize returns the size of a piece at a specified index
-func PieceSize(info TorrentInfo, index int) int {
+func (info *TorrentInfo) PieceSize(index int) int {
 	if index == info.TotalPieces-1 {
 		return info.TotalLength - (info.TotalPieces-1)*info.PieceLength
 	}

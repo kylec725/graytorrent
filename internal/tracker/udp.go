@@ -85,7 +85,7 @@ func (tr *Tracker) udpConnect() error {
 }
 
 // buildPacket creates an announce packet for a corresponding event
-func (tr *Tracker) buildPacket(event string, info common.TorrentInfo, port uint16, uploaded, downloaded, left int) ([]byte, error) {
+func (tr *Tracker) buildPacket(event string, info *common.TorrentInfo, port uint16, uploaded, downloaded, left int) ([]byte, error) {
 	var eventCode uint32
 	switch event {
 	case "announce":
@@ -120,7 +120,7 @@ func (tr *Tracker) buildPacket(event string, info common.TorrentInfo, port uint1
 	return packet, nil
 }
 
-func (tr *Tracker) udpStarted(info common.TorrentInfo, port uint16, uploaded, downloaded, left int) ([]peer.Peer, error) {
+func (tr *Tracker) udpStarted(info *common.TorrentInfo, port uint16, uploaded, downloaded, left int) ([]peer.Peer, error) {
 	// Request
 	req, err := tr.buildPacket("started", info, port, uploaded, downloaded, left)
 	if err != nil {
@@ -164,7 +164,7 @@ func (tr *Tracker) udpStarted(info common.TorrentInfo, port uint16, uploaded, do
 	return peersList, errors.Wrap(err, "udpStarted")
 }
 
-func (tr *Tracker) udpStopped(info common.TorrentInfo, port uint16, uploaded, downloaded, left int) error {
+func (tr *Tracker) udpStopped(info *common.TorrentInfo, port uint16, uploaded, downloaded, left int) error {
 	// Request
 	req, err := tr.buildPacket("stopped", info, port, uploaded, downloaded, left)
 	if err != nil {
@@ -205,7 +205,7 @@ func (tr *Tracker) udpStopped(info common.TorrentInfo, port uint16, uploaded, do
 	return nil
 }
 
-func (tr *Tracker) udpCompleted(info common.TorrentInfo, port uint16, uploaded, downloaded, left int) error {
+func (tr *Tracker) udpCompleted(info *common.TorrentInfo, port uint16, uploaded, downloaded, left int) error {
 	// Request
 	req, err := tr.buildPacket("completed", info, port, uploaded, downloaded, left)
 	if err != nil {
@@ -246,7 +246,7 @@ func (tr *Tracker) udpCompleted(info common.TorrentInfo, port uint16, uploaded, 
 	return nil
 }
 
-func (tr *Tracker) udpAnnounce(info common.TorrentInfo, port uint16, uploaded, downloaded, left int) ([]peer.Peer, error) {
+func (tr *Tracker) udpAnnounce(info *common.TorrentInfo, port uint16, uploaded, downloaded, left int) ([]peer.Peer, error) {
 	// Request
 	req, err := tr.buildPacket("announce", info, port, uploaded, downloaded, left)
 	if err != nil {

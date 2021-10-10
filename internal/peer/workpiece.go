@@ -11,8 +11,8 @@ type workPiece struct {
 	size  int // size of the piece
 }
 
-func (p *Peer) addWorkPiece(info common.TorrentInfo, index int) {
-	pieceSize := common.PieceSize(info, index)
+func (p *Peer) addWorkPiece(info *common.TorrentInfo, index int) {
+	pieceSize := info.PieceSize(index)
 	piece := make([]byte, pieceSize)
 	p.workPieces[index] = workPiece{piece, pieceSize, 0, pieceSize}
 }
