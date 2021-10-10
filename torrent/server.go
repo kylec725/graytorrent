@@ -8,6 +8,8 @@ import (
 
 const serverPort = ":7001" // GRPC server port
 
+// TODO: move the serverPort to config
+
 type torrentServer struct {
 	pb.UnimplementedTorrentServer
 }
