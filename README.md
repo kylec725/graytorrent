@@ -21,8 +21,9 @@ Currently, graytorrent does not have a complete client. To use the torrenting fu
 First, download the `.torrent` file for the torrent you want to use, then run `graytorrent -f pathtofile/examplefile.torrent` and graytorrent will start the torrent.
 
 ## Current Work
-- Set-up graytorrent as a GRPC server
 - Command line interface
+- [Magnet Links](https://www.bittorrent.org/beps/bep_0009.html)
+- Set-up graytorrent as a GRPC server
 - Limit global number of connections
 
 ## Potential Features
