@@ -3,7 +3,7 @@ package handshake
 import (
 	"io"
 
-	"github.com/kylec725/graytorrent/internal/common"
+	"github.com/kylec725/gray/internal/common"
 	"github.com/pkg/errors"
 )
 

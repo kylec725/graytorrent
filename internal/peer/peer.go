@@ -11,10 +11,10 @@ import (
 	"net"
 	"time"
 
-	"github.com/kylec725/graytorrent/internal/bitfield"
-	"github.com/kylec725/graytorrent/internal/common"
-	"github.com/kylec725/graytorrent/internal/connect"
-	"github.com/kylec725/graytorrent/internal/peer/message"
+	"github.com/kylec725/gray/internal/bitfield"
+	"github.com/kylec725/gray/internal/common"
+	"github.com/kylec725/gray/internal/connect"
+	"github.com/kylec725/gray/internal/peer/message"
 	log "github.com/sirupsen/logrus"
 )
 

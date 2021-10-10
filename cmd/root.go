@@ -18,16 +18,16 @@ func init() {
 }
 
 var (
-	logLevel        = log.TraceLevel // InfoLevel || DebugLevel || TraceLevel
-	logFile         *os.File
-	grayTorrentPath = filepath.Join(os.Getenv("HOME"), ".config", "graytorrent")
+	logLevel = log.TraceLevel // InfoLevel || DebugLevel || TraceLevel
+	logFile  *os.File
+	grayPath = filepath.Join(os.Getenv("HOME"), ".config", "gray")
 
 	// Flags
 	verbose bool
 
 	rootCmd = &cobra.Command{
-		Use:   "graytorrent",
-		Short: "graytorrent is a BitTorrent engine",
+		Use:   "gray",
+		Short: "gray is a BitTorrent engine",
 		Long:  `An engine that implements the BitTorrent Protocol and allows for the management of torrents.`,
 		// Run: func(cmd *cobra.Command, args []string) {
 		// 	// Do Stuff Here
@@ -39,9 +39,9 @@ var (
 // Execute runs the root command
 func Execute() {
 	initDirs()
-	// log.Info("Graytorrent started")
+	// log.Info("Gray started")
 	defer func() {
-		// log.Info("Graytorrent stopped")
+		// log.Info("Gray stopped")
 		logFile.Close()
 	}()
 
@@ -53,7 +53,7 @@ func Execute() {
 
 // initDirs initializes any necessary management directories
 func initDirs() {
-	err := os.MkdirAll(grayTorrentPath, os.ModePerm)
+	err := os.MkdirAll(grayPath, os.ModePerm)
 	if err != nil {
 		log.WithField("error", err.Error()).Fatal("Could not create necessary directories")
 	}
@@ -62,7 +62,7 @@ func initDirs() {
 func initLog() {
 	// Logging file
 	logFile, err := os.OpenFile("info.log", os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0644)
-	// logFile, err = os.OpenFile(filepath.Join(grayTorrentPath, "info.log"), os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0644)
+	// logFile, err = os.OpenFile(filepath.Join(grayPath, "info.log"), os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0644)
 	if err != nil {
 		log.WithField("error", err.Error()).Fatal("Could not open log file")
 	}
@@ -92,8 +92,8 @@ func initConfig() {
 	viper.SetConfigName("config")
 	viper.SetConfigType("toml")
 	// viper.AddConfigPath(".") // Remove in the future
-	viper.AddConfigPath(grayTorrentPath)
-	viper.AddConfigPath("/etc/graytorrent")
+	viper.AddConfigPath(grayPath)
+	// viper.AddConfigPath("/etc/gray")
 
 	if err := viper.ReadInConfig(); err != nil {
 		if _, ok := err.(viper.ConfigFileNotFoundError); ok {

@@ -6,7 +6,7 @@ import (
 	"os"
 	"testing"
 
-	"github.com/kylec725/graytorrent/internal/common"
+	"github.com/kylec725/gray/internal/common"
 	"github.com/stretchr/testify/assert"
 )
 

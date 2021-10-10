@@ -3,7 +3,7 @@ package torrent
 import (
 	"context"
 
-	pb "github.com/kylec725/graytorrent/rpc"
+	pb "github.com/kylec725/gray/rpc"
 )
 
 const serverPort = ":7001" // GRPC server port

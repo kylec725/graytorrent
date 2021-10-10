@@ -4,27 +4,15 @@ import (
 	"context"
 	"fmt"
 	"net"
-	"os"
-	"path/filepath"
 	"time"
 
-	"github.com/kylec725/graytorrent/internal/common"
+	"github.com/kylec725/gray/internal/common"
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 	"google.golang.org/grpc"
 )
 
-var (
-	err     error
-	logFile *os.File
-
-	// Flags
-	verbose bool
-
-	grayTorrentPath = filepath.Join(os.Getenv("HOME"), ".config", "graytorrent")
-)
-
-// Session is an instance of graytorrent
+// Session is an instance of gray
 type Session struct {
 	torrentList  []Torrent // TODO: make torrentList a map[infohash]Torrent
 	peerListener net.Listener
@@ -32,7 +20,7 @@ type Session struct {
 	server       *grpc.Server
 }
 
-// NewSession returns a new graytorrent session
+// NewSession returns a new gray session
 func NewSession() (Session, error) {
 	torrentList, err := LoadAll()
 	if err != nil {
@@ -116,7 +104,7 @@ func (s *Session) Download(ctx context.Context, filename string) {
 // 		if err != nil {
 // 			log.WithField("error", err).Debug("Problem occurred while saving torrent management data")
 // 		}
-// 		log.Info("Graytorrent stopped")
+// 		log.Info("Gray stopped")
 // 		logFile.Close()
 // 		os.Exit(1)
 // 	case <-ctx.Done():

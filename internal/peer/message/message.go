@@ -4,7 +4,7 @@ import (
 	"encoding/binary"
 	"fmt"
 
-	"github.com/kylec725/graytorrent/internal/bitfield"
+	"github.com/kylec725/gray/internal/bitfield"
 )
 
 type messageID uint8

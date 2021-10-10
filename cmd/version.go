@@ -14,8 +14,8 @@ func init() {
 
 var versionCmd = &cobra.Command{
 	Use:   "version",
-	Short: "Print the version number of graytorrent",
+	Short: "Print the version number of gray",
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("graytorrent", version)
+		fmt.Println("gray", version)
 	},
 }

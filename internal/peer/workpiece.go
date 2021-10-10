@@ -1,7 +1,7 @@
 package peer
 
 import (
-	"github.com/kylec725/graytorrent/internal/common"
+	"github.com/kylec725/gray/internal/common"
 )
 
 type workPiece struct {

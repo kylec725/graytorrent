@@ -13,7 +13,8 @@ import (
 const saveDataType = ".gz"
 
 var (
-	saveDataPath = filepath.Join(os.Getenv("HOME"), ".config", "graytorrent", ".torrents"+saveDataType)
+	grayPath     = filepath.Join(os.Getenv("HOME"), ".config", "gray")
+	saveDataPath = filepath.Join(grayPath, ".torrents"+saveDataType)
 )
 
 // SaveAll saves the states of all managed torrents

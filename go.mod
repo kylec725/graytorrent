@@ -1,4 +1,4 @@
-module github.com/kylec725/graytorrent
+module github.com/kylec725/gray
 
 go 1.17
 

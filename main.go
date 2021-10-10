@@ -4,11 +4,11 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/kylec725/graytorrent/cmd"
+	"github.com/kylec725/gray/cmd"
 )
 
 var (
-	grayTorrentPath = filepath.Join(os.Getenv("HOME"), ".config", "graytorrent")
+	grayPath = filepath.Join(os.Getenv("HOME"), ".config", "gray")
 )
 
 // Launches cobra, code execution begins in cmd/root.go
