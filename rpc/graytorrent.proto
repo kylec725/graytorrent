@@ -48,7 +48,7 @@ message AddRequest {
 }
 
 message AddReply {
-  string error = 1;
+  string name = 1;
   bytes infoHash = 2;
 }
 
