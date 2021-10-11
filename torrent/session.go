@@ -36,12 +36,15 @@ func NewSession() (Session, error) {
 	if err != nil {
 		return Session{}, errors.Wrap(err, "NewSession")
 	}
-	return Session{
+	session := Session{
 		torrentList:  torrentList,
 		peerListener: listener,
 		port:         port,
 		// server:       grpc.NewServer(),
-	}, nil
+	}
+	go session.peerListen()
+
+	return session, nil
 }
 
 // Close performs clean up for a session
@@ -70,7 +73,7 @@ func (s *Session) AddTorrent(ctx context.Context, filename string) (*Torrent, er
 }
 
 // RemoveTorrent removes a currently managed torrent
-func (s *Session) RemoveTorrent(to Torrent) {
+func (s *Session) RemoveTorrent(to *Torrent) {
 	to.Stop()
 	delete(s.torrentList, to.InfoHash)
 	// TODO: remove save data of torrent
@@ -82,7 +85,6 @@ func (s *Session) RemoveTorrent(to Torrent) {
 func (s *Session) Download(ctx context.Context, filename string) {
 	defer s.Close()
 	go s.catchSignal()
-	go s.peerListen()
 
 	ctx = context.WithValue(ctx, common.KeyPort, s.port)
 
