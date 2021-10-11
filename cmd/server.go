@@ -28,7 +28,7 @@ func init() {
 }
 
 var (
-	// server *grpc.Server
+	server *grpc.Server
 
 	serverCmd = &cobra.Command{
 		Use:   "server",
@@ -55,6 +55,7 @@ var (
 				// this is a good place to flush everything to disk
 				// before terminating.
 				session.Close()
+				server.Stop()
 
 				// remove PID file
 				os.Remove(pidFile)
@@ -70,7 +71,7 @@ var (
 			if err != nil {
 				log.WithFields(log.Fields{"error": err.Error(), "port": serverAddr[1:]}).Fatal("Failed to listen for rpc")
 			}
-			server := grpc.NewServer()
+			server = grpc.NewServer()
 			pb.RegisterTorrentServer(server, &session)
 			if err = server.Serve(serverListener); err != nil {
 				log.WithField("error", err).Debug("Error with serving rpc client")
