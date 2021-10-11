@@ -102,17 +102,17 @@ func TestAddBlock(t *testing.T) {
 func TestAddPiece(t *testing.T) {
 	assert := assert.New(t)
 
-	info := common.TorrentInfo{
+	info := &common.TorrentInfo{
 		Name:        "test",
 		PieceLength: 5,
 		TotalLength: 19,
 		TotalPieces: 4,
 		Paths: []common.Path{
-			common.Path{Length: 2, Path: "test/0.txt"},
-			common.Path{Length: 2, Path: "test/1.txt"},
-			common.Path{Length: 1, Path: "test/2.txt"},
-			common.Path{Length: 5, Path: "test/3.txt"},
-			common.Path{Length: 9, Path: "test/4.txt"},
+			{Length: 2, Path: "test/0.txt"},
+			{Length: 2, Path: "test/1.txt"},
+			{Length: 1, Path: "test/2.txt"},
+			{Length: 5, Path: "test/3.txt"},
+			{Length: 9, Path: "test/4.txt"},
 		},
 	}
 	// Remove the torrent's filename if it exists
@@ -162,17 +162,17 @@ func TestAddPiece(t *testing.T) {
 func TestReadPiece(t *testing.T) {
 	assert := assert.New(t)
 
-	info := common.TorrentInfo{
+	info := &common.TorrentInfo{
 		Name:        "test",
 		PieceLength: 5,
 		TotalLength: 19,
 		TotalPieces: 4,
 		Paths: []common.Path{
-			common.Path{Length: 2, Path: "test/0.txt"},
-			common.Path{Length: 2, Path: "test/1.txt"},
-			common.Path{Length: 1, Path: "test/2.txt"},
-			common.Path{Length: 5, Path: "test/3.txt"},
-			common.Path{Length: 9, Path: "test/4.txt"},
+			{Length: 2, Path: "test/0.txt"},
+			{Length: 2, Path: "test/1.txt"},
+			{Length: 1, Path: "test/2.txt"},
+			{Length: 5, Path: "test/3.txt"},
+			{Length: 9, Path: "test/4.txt"},
 		},
 	}
 
