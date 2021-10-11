@@ -14,10 +14,10 @@ service Torrent {
   // Removes a torrent from being managed
   rpc Remove (RemoveRequest) returns (RemoveReply) {}
 
-  // Starts a torrent's download
+  // Starts a torrent's download/upload
   rpc Start (StartRequest) returns (StartReply) {}
 
-  // Stops a torrent's download
+  // Stops a torrent's download/upload
   rpc Stop (StopRequest) returns (StopReply) {}
 }
 
@@ -30,7 +30,8 @@ message TorrentInfo {
   bytes infoHash = 2;
   uint32 totalLength = 3;
   uint32 left = 4;
-  uint32 rate = 5;
+  uint32 downRate = 5;
+  uint32 upRate = 6;
   enum State {
     DOWNLOADING = 0;
     STOPPED = 1;
@@ -38,13 +39,14 @@ message TorrentInfo {
     SEEDING = 3;
     COMPLETE = 4;
   }
-  State state = 6;
+  State state = 7;
 }
 
 message AddRequest {
 }
 
 message AddReply {
+  string message = 1;
 }
 
 message RemoveRequest {

@@ -14,7 +14,7 @@ import (
 
 func init() {
 	rootCmd.PersistentFlags().BoolVarP(&verbose, "verbose", "v", false, "print events to stdout")
-	cobra.OnInitialize(initLog, initConfig, viper.WatchConfig)
+	// cobra.OnInitialize(initLog, initConfig, viper.WatchConfig)
 }
 
 var (
@@ -29,16 +29,14 @@ var (
 		Short:   "gray is a BitTorrent engine",
 		Long:    `An engine that implements the BitTorrent Protocol and allows for the management of torrents.`,
 		Version: "0.20",
-		// Run: func(cmd *cobra.Command, args []string) {
-		// 	// Do Stuff Here
-		// 	fmt.Println("hello root command")
-		// },
 	}
 )
 
 // Execute runs the root command
 func Execute() {
 	initDirs()
+	initLog()
+	initConfig()
 	// log.Info("Gray started")
 	defer func() {
 		// log.Info("Gray stopped")
@@ -100,7 +98,7 @@ func initConfig() {
 		if _, ok := err.(viper.ConfigFileNotFoundError); ok {
 			// Config file not found, create default config
 			viper.SafeWriteConfig()
-			log.Info("Config file written")
+			log.Info("Config file written at " + common.GrayPath)
 		} else {
 			// Some other error was found
 			log.Panic("Fatal error reading config file:", err)

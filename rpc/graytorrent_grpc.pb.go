@@ -24,9 +24,9 @@ type TorrentClient interface {
 	Add(ctx context.Context, in *AddRequest, opts ...grpc.CallOption) (*AddReply, error)
 	// Removes a torrent from being managed
 	Remove(ctx context.Context, in *RemoveRequest, opts ...grpc.CallOption) (*RemoveReply, error)
-	// Starts a torrent's download
+	// Starts a torrent's download/upload
 	Start(ctx context.Context, in *StartRequest, opts ...grpc.CallOption) (*StartReply, error)
-	// Stops a torrent's download
+	// Stops a torrent's download/upload
 	Stop(ctx context.Context, in *StopRequest, opts ...grpc.CallOption) (*StopReply, error)
 }
 
@@ -116,9 +116,9 @@ type TorrentServer interface {
 	Add(context.Context, *AddRequest) (*AddReply, error)
 	// Removes a torrent from being managed
 	Remove(context.Context, *RemoveRequest) (*RemoveReply, error)
-	// Starts a torrent's download
+	// Starts a torrent's download/upload
 	Start(context.Context, *StartRequest) (*StartReply, error)
-	// Stops a torrent's download
+	// Stops a torrent's download/upload
 	Stop(context.Context, *StopRequest) (*StopReply, error)
 	mustEmbedUnimplementedTorrentServer()
 }

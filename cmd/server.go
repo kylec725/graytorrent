@@ -3,15 +3,19 @@ package cmd
 import (
 	"fmt"
 	"io/ioutil"
-	"log"
-	"net/http"
+	"net"
 	"os"
 	"os/exec"
 	"os/signal"
 	"strconv"
 	"syscall"
 
+	pb "github.com/kylec725/gray/rpc"
+	"github.com/kylec725/gray/torrent"
+	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
+	"google.golang.org/grpc"
 )
 
 const pidFile = "/tmp/gray.pid"
@@ -27,24 +31,18 @@ var (
 	serverCmd = &cobra.Command{
 		Use:   "server",
 		Short: "controls the gray torrent server",
-		// Args:  cobra.MinimumNArgs(1),
-		// Run: func(cmd *cobra.Command, args []string) {
-		// 	// session, err := torrent.NewSession()
-		// 	// if err != nil {
-		// 	// 	log.WithField("error", err).Info("Error when starting a new session for download")
-		// 	// }
-		// 	// session.Download(context.Background(), args[0])
-		// 	for {
-		// 		fmt.Println("server")
-		// 		time.Sleep(1 * time.Second)
-		// 	}
-		// },
 	}
 
 	serverMainCmd = &cobra.Command{
 		Use:    "main",
 		Hidden: true,
 		Run: func(cmd *cobra.Command, args []string) {
+			session, err := torrent.NewSession()
+			if err != nil {
+				log.WithField("error", err).Info("Error when starting a new session for server")
+			}
+			// TODO: start peerListener
+
 			// Initialize signal catching
 			signalChan := make(chan os.Signal, 1)
 			signal.Notify(signalChan, os.Interrupt, os.Kill, syscall.SIGTERM)
@@ -54,6 +52,7 @@ var (
 
 				// this is a good place to flush everything to disk
 				// before terminating.
+				session.Close()
 
 				// remove PID file
 				os.Remove(pidFile)
@@ -61,9 +60,19 @@ var (
 				os.Exit(0)
 
 			}()
-			mux := http.NewServeMux()
-			mux.HandleFunc("/", sayHelloWorld)
-			log.Fatalln(http.ListenAndServe(":8080", mux))
+
+			// Setup grpc server
+			// TODO: Want to use TLS for encrypting communication
+			serverAddr := ":" + strconv.Itoa(int(viper.GetInt("server.port")))
+			serverListener, err := net.Listen("tcp", serverAddr)
+			if err != nil {
+				log.WithFields(log.Fields{"error": err.Error(), "port": serverAddr[1:]}).Fatal("Failed to listen for rpc")
+			}
+			server := grpc.NewServer()
+			pb.RegisterTorrentServer(server, &session)
+			if err = server.Serve(serverListener); err != nil {
+				log.WithField("error", err).Debug("Error with serving rpc client")
+			}
 		},
 	}
 
@@ -144,10 +153,4 @@ func savePID(pid int) {
 		log.Fatalf("Unable to create pid file : %v\n", err)
 	}
 	file.Sync() // flush to disk
-}
-
-func sayHelloWorld(w http.ResponseWriter, r *http.Request) {
-	html := "Hello World"
-
-	w.Write([]byte(html))
 }

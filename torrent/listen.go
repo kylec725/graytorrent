@@ -18,7 +18,7 @@ var ErrListener = errors.New("use of closed network connection")
 
 // initListener initializes a listener and gets an open port for incoming peers
 func initListener() (net.Listener, uint16, error) {
-	portRange := viper.GetIntSlice("network.portrange")
+	portRange := viper.GetViper().GetIntSlice("network.portrange")
 	port, err := connect.OpenPort(portRange)
 	if err != nil {
 		log.WithFields(log.Fields{

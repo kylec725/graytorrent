@@ -10,9 +10,9 @@ import (
 	"time"
 
 	"github.com/kylec725/gray/internal/common"
+	pb "github.com/kylec725/gray/rpc"
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
-	"google.golang.org/grpc"
 )
 
 // Session is an instance of gray
@@ -20,7 +20,8 @@ type Session struct {
 	torrentList  map[[20]byte]*Torrent
 	peerListener net.Listener
 	port         uint16
-	server       *grpc.Server
+	// server       *grpc.Server
+	pb.UnimplementedTorrentServer
 }
 
 // NewSession returns a new gray session
@@ -38,7 +39,7 @@ func NewSession() (Session, error) {
 		torrentList:  make(map[[20]byte]*Torrent),
 		peerListener: listener,
 		port:         port,
-		server:       grpc.NewServer(),
+		// server:       grpc.NewServer(),
 	}, nil
 }
 
@@ -51,7 +52,7 @@ func (s *Session) Close() {
 		log.WithField("error", err.Error()).Debug("Problem occurred while saving torrent management data")
 	}
 	s.peerListener.Close()
-	s.server.Stop()
+	// s.server.Stop()
 	log.Info("Gray stopped")
 }
 
@@ -69,6 +70,7 @@ func (s *Session) AddTorrent(ctx context.Context, filename string) (*Torrent, er
 func (s *Session) RemoveTorrent(to Torrent) {
 	to.Stop()
 	delete(s.torrentList, to.InfoHash)
+	// TODO: remove save data of torrent
 }
 
 // TODO: add an option to resume a torrent if it matches this one

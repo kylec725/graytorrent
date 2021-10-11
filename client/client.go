@@ -11,15 +11,14 @@ import (
 	"google.golang.org/grpc"
 )
 
-var (
-	address = "localhost:" + strconv.Itoa(int(viper.GetInt("server.port")))
-)
-
-func main() {
+// Add a new torrent
+func Add() error {
 	// Set up a connection to the server.
-	conn, err := grpc.Dial(address, grpc.WithInsecure(), grpc.WithBlock())
+	serverAddr := "localhost:" + strconv.Itoa(int(viper.GetViper().GetInt("server.port")))
+	conn, err := grpc.Dial(serverAddr, grpc.WithInsecure(), grpc.WithBlock())
 	if err != nil {
 		log.Fatalf("Did not connect: %v", err)
+		return err
 	}
 	defer conn.Close()
 	client := pb.NewTorrentClient(conn)
@@ -27,9 +26,11 @@ func main() {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	reply, err := client.List(ctx, &pb.ListRequest{})
+	reply, err := client.Add(ctx, &pb.AddRequest{})
 	if err != nil {
 		log.Fatalf("Failed to connect: %v", err)
+		return err
 	}
-	fmt.Println(reply)
+	fmt.Println("response:", reply.Message)
+	return nil
 }

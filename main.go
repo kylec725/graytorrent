@@ -12,7 +12,7 @@ func main() {
 	// TODO: Want to use TLS for encrypting communication
 	// serverListener, err := net.Listen("tcp", serverPort)
 	// if err != nil {
-	// 	log.WithFields(log.Fields{"error": err, "port": serverPort[1:]}).Fatal("Failed to listen for rpc")
+	// 	log.WithFields(log.Fields{"error": err.Error(), "port": serverPort[1:]}).Fatal("Failed to listen for rpc")
 	// }
 	// server = grpc.NewServer()
 	// pb.RegisterTorrentServer(server, &torrentServer{})
