@@ -9,7 +9,9 @@ BitTorrent engine implemented in [Go](https://golang.org)
 ## Installation
 ### Go
 Make sure [Go is installed](https://golang.org/doc/install)
-`go install github.com/kylec725/graytorrent/cmd/gray`
+```
+go install github.com/kylec725/graytorrent/cmd/gray`
+```
 
 Alternatively
 ```
