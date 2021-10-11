@@ -49,35 +49,36 @@ type Torrent struct {
 // TODO: add mutex to Info and pass pointer directly to the Info field (so that we don't need to pass Info into ctx)
 // start by remove KeyInfo to lint where we need to change it
 
-// Setup gets and sets up necessary properties of a new torrent object
-func (to *Torrent) Setup(ctx context.Context) error {
-	// NOTE: may want to handle magnet links here too
-	// Get metainfo
-	meta, err := metainfo.Meta(to.File)
-	if err != nil {
-		return errors.Wrap(err, "Setup")
+// Init initializes any necessary fields of torrents
+func (to *Torrent) Init() error {
+	// TODO: use either file or magnet link
+	if to.Info == nil {
+		// Get metainfo
+		meta, err := metainfo.Meta(to.File)
+		if err != nil {
+			return errors.Wrap(err, "Init")
+		}
+
+		// Convert to a TorrentInfo struct
+		to.Info, err = common.GetInfo(meta)
+		if err != nil {
+			return errors.Wrap(err, "Init")
+		}
+
+		// Create trackers list from metainfo announce or announce-list
+		to.Trackers, err = tracker.GetTrackers(meta)
+		if err != nil {
+			return errors.Wrap(err, "Setup")
+		}
+
+		// Initialize files for writing
+		if err := write.NewWrite(to.Info); err != nil { // Should fail if torrent already is being managed
+			return errors.Wrap(err, "Setup")
+		}
+
+		to.InfoHash = to.Info.InfoHash
 	}
 
-	// Convert to a TorrentInfo struct
-	to.Info, err = common.GetInfo(meta)
-	if err != nil {
-		return errors.Wrap(err, "Setup")
-	}
-
-	to.InfoHash = to.Info.InfoHash
-
-	// Create trackers list from metainfo announce or announce-list
-	to.Trackers, err = tracker.GetTrackers(meta)
-	if err != nil {
-		return errors.Wrap(err, "Setup")
-	}
-
-	// Initialize files for writing
-	if err := write.NewWrite(to.Info); err != nil { // Should fail if torrent already is being managed
-		return errors.Wrap(err, "Setup")
-	}
-
-	// Make channel for incoming peers
 	to.NewPeers = make(chan peer.Peer)
 
 	to.Started = false

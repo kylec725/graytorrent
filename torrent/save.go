@@ -76,6 +76,11 @@ func LoadAll() (map[[20]byte]*Torrent, error) {
 		if err != nil {
 			return err
 		}
+
+		if err = to.Init(); err != nil {
+			return err
+		}
+
 		torrentList[to.InfoHash] = &to
 
 		return nil
