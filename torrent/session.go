@@ -26,7 +26,7 @@ type Session struct {
 
 // NewSession returns a new gray session
 func NewSession() (Session, error) {
-	log.Info("Gray Started")
+	log.Info("Graytorrent Started")
 	// torrentList, err := LoadAll() // NOTE: only LoadAll if we are starting a server
 	// if err != nil {
 	// 	return Session{}, errors.Wrap(err, "NewSession")
@@ -45,6 +45,7 @@ func NewSession() (Session, error) {
 
 // Close performs clean up for a session
 func (s *Session) Close() {
+	log.Info("Graytorrent stopped")
 	for _, to := range s.torrentList {
 		to.Stop()
 	}
@@ -53,7 +54,6 @@ func (s *Session) Close() {
 	}
 	s.peerListener.Close()
 	// s.server.Stop()
-	log.Info("Gray stopped")
 }
 
 // AddTorrent adds a new torrent to be managed

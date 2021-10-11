@@ -20,10 +20,10 @@ import (
 const peerID = "-GR0100-"
 
 var (
-	// GrayPath is the config directory of gray
-	GrayPath = filepath.Join(os.Getenv("HOME"), ".config", "gray")
+	// GrayTorrentPath is the config directory of graytorrent
+	GrayTorrentPath = filepath.Join(os.Getenv("HOME"), ".config", "graytorrent")
 	// SavePath is the directory to store data about managed torrents
-	SavePath = filepath.Join(GrayPath, ".torrents")
+	SavePath = filepath.Join(GrayTorrentPath, ".torrents")
 )
 
 // TorrentInfo contains information about a torrent

@@ -7,7 +7,7 @@ import (
 	// "fmt"
 	"context"
 
-	"github.com/kylec725/gray/internal/common"
+	"github.com/kylec725/graytorrent/internal/common"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -17,7 +17,7 @@ func TestSetup(t *testing.T) {
 	assert := assert.New(t)
 
 	ctx := context.WithValue(context.Background(), common.KeyPort, uint16(6881))
-	var to Torrent = Torrent{Path: "../tmp/change.torrent"}
+	var to Torrent = Torrent{File: "../tmp/change.torrent"}
 	err := to.Setup(ctx)
 	if assert.Nil(err) {
 		assert.Equal("[Nipponsei] BLEACH OP12 Single - chAngE [miwa].zip", to.Info.Name, "Name is incorrect")

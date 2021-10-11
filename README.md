@@ -1,4 +1,4 @@
-# gray
+# graytorrent
 BitTorrent engine implemented in [Go](https://golang.org)
 
 ## Features
@@ -7,23 +7,26 @@ BitTorrent engine implemented in [Go](https://golang.org)
 - [UDP Trackers](https://www.bittorrent.org/beps/bep_0015.html)
 
 ## Installation
+### Go
+`go install github.com/kylec725/graytorrent/cmd/gray`
+
 ### Compile
 Make sure [Go is installed](https://golang.org/doc/install)
 ```
-git clone https://github.com/kylec725/gray.git
-cd gray
+git clone https://github.com/kylec725/graytorrent.git
+cd graytorrent/cmd/gray
 go install
 ```
 Could alternatively use `go build` or `go run main.go`
 
 ## Usage
-Currently, gray does not have a complete client. To use the torrenting functionality you will have to run gray in single torrent download mode.
-First, download the `.torrent` file for the torrent you want to use, then run `gray download pathtofile/examplefile.torrent` and gray will start the torrent.
+Currently, graytorrent does not have a complete client. To use the torrenting functionality you will have to run graytorrent in single torrent download mode.
+First, download the `.torrent` file for the torrent you want to use, then run `gray download pathtofile/examplefile.torrent` and graytorrent will start the torrent.
 
 ## Current Work
 - Command line interface
 - [Magnet Links](https://www.bittorrent.org/beps/bep_0009.html)
-- Set-up gray as a GRPC server
+- Set-up graytorrent as a GRPC server
 - Limit global number of connections
 
 ## Potential Features
