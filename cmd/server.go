@@ -10,8 +10,8 @@ import (
 	"strconv"
 	"syscall"
 
-	pb "github.com/kylec725/gray/rpc"
-	"github.com/kylec725/gray/torrent"
+	pb "github.com/kylec725/graytorrent/rpc"
+	"github.com/kylec725/graytorrent/torrent"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"

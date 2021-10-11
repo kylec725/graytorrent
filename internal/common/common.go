@@ -12,8 +12,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/kylec725/gray/internal/bitfield"
-	"github.com/kylec725/gray/internal/metainfo"
+	"github.com/kylec725/graytorrent/internal/bitfield"
+	"github.com/kylec725/graytorrent/internal/metainfo"
 	"github.com/pkg/errors"
 )
 

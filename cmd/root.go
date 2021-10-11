@@ -5,7 +5,7 @@ import (
 	"io"
 	"os"
 
-	"github.com/kylec725/gray/internal/common"
+	"github.com/kylec725/graytorrent/internal/common"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"

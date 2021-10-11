@@ -9,8 +9,8 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/kylec725/gray/internal/common"
-	pb "github.com/kylec725/gray/rpc"
+	"github.com/kylec725/graytorrent/internal/common"
+	pb "github.com/kylec725/graytorrent/rpc"
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 )

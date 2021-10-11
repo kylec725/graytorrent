@@ -6,7 +6,7 @@ import (
 	"strconv"
 	"time"
 
-	pb "github.com/kylec725/gray/rpc"
+	pb "github.com/kylec725/graytorrent/rpc"
 	viper "github.com/spf13/viper"
 )
 

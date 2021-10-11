@@ -6,9 +6,9 @@ import (
 	"math"
 	"time"
 
-	"github.com/kylec725/gray/internal/common"
-	"github.com/kylec725/gray/internal/peer/message"
-	"github.com/kylec725/gray/internal/write"
+	"github.com/kylec725/graytorrent/internal/common"
+	"github.com/kylec725/graytorrent/internal/peer/message"
+	"github.com/kylec725/graytorrent/internal/write"
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 )

@@ -5,9 +5,9 @@ import (
 	"net"
 	"strconv"
 
-	"github.com/kylec725/gray/internal/connect"
-	"github.com/kylec725/gray/internal/peer"
-	"github.com/kylec725/gray/internal/peer/handshake"
+	"github.com/kylec725/graytorrent/internal/connect"
+	"github.com/kylec725/graytorrent/internal/peer"
+	"github.com/kylec725/graytorrent/internal/peer/handshake"
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 	viper "github.com/spf13/viper"

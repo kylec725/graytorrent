@@ -3,7 +3,7 @@ package cmd
 import (
 	"context"
 
-	"github.com/kylec725/gray/torrent"
+	"github.com/kylec725/graytorrent/torrent"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 )

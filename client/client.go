@@ -6,7 +6,7 @@ import (
 	"log"
 	"strconv"
 
-	pb "github.com/kylec725/gray/rpc"
+	pb "github.com/kylec725/graytorrent/rpc"
 	"github.com/spf13/viper"
 	"google.golang.org/grpc"
 )

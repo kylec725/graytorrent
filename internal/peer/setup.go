@@ -6,10 +6,10 @@ import (
 	"net"
 	"strconv"
 
-	"github.com/kylec725/gray/internal/common"
-	"github.com/kylec725/gray/internal/connect"
-	"github.com/kylec725/gray/internal/peer/handshake"
-	"github.com/kylec725/gray/internal/peer/message"
+	"github.com/kylec725/graytorrent/internal/common"
+	"github.com/kylec725/graytorrent/internal/connect"
+	"github.com/kylec725/graytorrent/internal/peer/handshake"
+	"github.com/kylec725/graytorrent/internal/peer/message"
 	"github.com/pkg/errors"
 )
 

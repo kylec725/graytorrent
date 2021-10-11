@@ -7,9 +7,9 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/kylec725/gray/internal/common"
-	"github.com/kylec725/gray/internal/metainfo"
-	"github.com/kylec725/gray/internal/peer"
+	"github.com/kylec725/graytorrent/internal/common"
+	"github.com/kylec725/graytorrent/internal/metainfo"
+	"github.com/kylec725/graytorrent/internal/peer"
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 )
