@@ -6,6 +6,7 @@ import (
 	"net"
 	"os"
 	"os/signal"
+	"syscall"
 	"time"
 
 	"github.com/kylec725/gray/internal/common"
@@ -75,7 +76,7 @@ func (s *Session) RemoveTorrent(to Torrent) {
 // Download begins a download for a single torrent
 func (s *Session) Download(ctx context.Context, filename string) {
 	defer s.Close()
-	go s.catchInterrupt()
+	go s.catchSignal()
 	go s.peerListen()
 
 	ctx = context.WithValue(ctx, common.KeyPort, s.port)
@@ -95,9 +96,9 @@ func (s *Session) Download(ctx context.Context, filename string) {
 	fmt.Println("Torrent done:", to.Info.Name)
 }
 
-func (s *Session) catchInterrupt() {
+func (s *Session) catchSignal() {
 	signalChan := make(chan os.Signal, 1)
-	signal.Notify(signalChan, os.Interrupt)
+	signal.Notify(signalChan, os.Interrupt, os.Kill, syscall.SIGTERM)
 	select {
 	case <-signalChan: // Cleanup on interrupt signal
 		signal.Stop(signalChan)
