@@ -81,7 +81,7 @@ var (
 		Short: "starts the graytorrent server",
 		Run: func(cmd *cobra.Command, args []string) {
 			// check if daemon already running.
-			if _, err := os.Stat(pidFile); os.IsExist(err) {
+			if _, err := os.Stat(pidFile); !os.IsNotExist(err) {
 				data, err := ioutil.ReadFile(pidFile)
 				if err != nil {
 					fmt.Println("Unable to read process ID found in ", pidFile)
@@ -94,7 +94,8 @@ var (
 					os.Exit(1)
 				}
 
-				if _, err = os.FindProcess(pid); err == nil {
+				process, err := os.FindProcess(pid)
+				if err := process.Signal(syscall.Signal(0)); err == nil {
 					fmt.Println("graytorrent is already running")
 					os.Exit(1)
 				}
@@ -132,10 +133,6 @@ var (
 				os.Exit(1)
 			}
 
-			if _, err = os.FindProcess(pid); err != nil {
-				fmt.Printf("Unable to find process ID [%v] with error %v \n", pid, err)
-				os.Exit(1)
-			}
 			// remove PID file
 			// os.Remove(pidFile)
 

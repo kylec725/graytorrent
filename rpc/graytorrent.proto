@@ -43,10 +43,13 @@ message TorrentInfo {
 }
 
 message AddRequest {
+  string file = 1;
+  string magnet = 2;
 }
 
 message AddReply {
-  string message = 1;
+  string error = 1;
+  bytes infoHash = 2;
 }
 
 message RemoveRequest {
