@@ -40,17 +40,7 @@ func List() error {
 			return errors.Wrap(err, "Error while listing torrents")
 		}
 
-		curr := torrentInfo.GetTotalLength() - torrentInfo.GetLeft()
-		progress := float64(curr) / float64(torrentInfo.GetTotalLength())
-
-		fmt.Printf("%-50s %s %s %s %s %s\n",
-			torrentInfo.GetName(),
-			fmt.Sprintf("infohash: %s", hex.EncodeToString(torrentInfo.GetInfoHash())),
-			fmt.Sprintf("progress: %.1f%%", progress),
-			fmt.Sprintf("download: %s", ratePretty(torrentInfo.GetDownRate())),
-			fmt.Sprintf("upload: %s", ratePretty(torrentInfo.GetUpRate())),
-			fmt.Sprintf("state: %s", torrentInfo.GetState().String()),
-		)
+		torrentPrint(torrentInfo)
 	}
 	return nil
 }
@@ -80,6 +70,20 @@ func Add(file string) error {
 	}
 	fmt.Printf("Added %s %s\n", reply.GetName(), hex.EncodeToString(reply.GetInfoHash()))
 	return nil
+}
+
+func torrentPrint(torrentInfo *pb.TorrentInfo) {
+	curr := torrentInfo.GetTotalLength() - torrentInfo.GetLeft()
+	progress := float64(curr) / float64(torrentInfo.GetTotalLength())
+
+	fmt.Printf("%-50s %s %s %s %s %s\n",
+		torrentInfo.GetName(),
+		fmt.Sprintf("infohash: %s", hex.EncodeToString(torrentInfo.GetInfoHash())),
+		fmt.Sprintf("progress: %.1f%%", progress),
+		fmt.Sprintf("download: %s", ratePretty(torrentInfo.GetDownRate())),
+		fmt.Sprintf("upload: %s", ratePretty(torrentInfo.GetUpRate())),
+		fmt.Sprintf("state: %s", torrentInfo.GetState().String()),
+	)
 }
 
 func ratePretty(rate uint32) string {

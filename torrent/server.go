@@ -2,20 +2,12 @@ package torrent
 
 import (
 	"context"
-	"strconv"
 
 	"github.com/kylec725/graytorrent/rpc"
 	pb "github.com/kylec725/graytorrent/rpc"
-	viper "github.com/spf13/viper"
 )
 
-var (
-	serverAddr = ":" + strconv.Itoa(int(viper.GetViper().GetInt("server.port")))
-)
-
-// type torrentServer struct {
-// 	pb.UnimplementedTorrentServer
-// }
+// server.go contains implementations of the required grpc server functions
 
 // List current managed torrents
 func (s *Session) List(in *pb.ListRequest, stream pb.Torrent_ListServer) error {

@@ -17,7 +17,6 @@ var (
 	listCmd = &cobra.Command{
 		Use:   "ls",
 		Short: "list the currently managed torrents",
-		// Args:  cobra.MinimumNArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
 			if err := client.List(); err != nil {
 				fmt.Println(err)
