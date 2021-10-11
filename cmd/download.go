@@ -14,9 +14,6 @@ func init() {
 }
 
 var (
-	// Flags
-	magnetLink string
-
 	downloadCmd = &cobra.Command{
 		Use:   "download",
 		Short: "download a single torrent from a .torrent file or magnet link",

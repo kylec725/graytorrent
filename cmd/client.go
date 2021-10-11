@@ -1,7 +1,7 @@
 package cmd
 
 import (
-	"log"
+	"fmt"
 
 	"github.com/kylec725/graytorrent/client"
 	"github.com/spf13/cobra"
@@ -9,16 +9,29 @@ import (
 
 func init() {
 	rootCmd.AddCommand(addCmd)
+	addCmd.Flags().StringVarP(&magnetLink, "magnet", "m", "", "use a magnet link instead of a .torrent file to add a torrent")
+	rootCmd.AddCommand(listCmd)
 }
 
 var (
-	addCmd = &cobra.Command{
-		Use:   "add",
-		Short: "adds a new torrent to be managed",
+	listCmd = &cobra.Command{
+		Use:   "ls",
+		Short: "list the currently managed torrents",
 		// Args:  cobra.MinimumNArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
-			if err := client.Add(); err != nil {
-				log.Fatal(err)
+			if err := client.List(); err != nil {
+				fmt.Println(err)
+			}
+		},
+	}
+
+	addCmd = &cobra.Command{
+		Use:   "add",
+		Short: "adds a new torrent from a .torrent file or magnet link",
+		Args:  cobra.MinimumNArgs(1),
+		Run: func(cmd *cobra.Command, args []string) {
+			if err := client.Add(args[0]); err != nil {
+				fmt.Println(err)
 			}
 		},
 	}

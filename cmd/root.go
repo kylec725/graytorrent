@@ -22,7 +22,8 @@ var (
 	logFile  *os.File
 
 	// Flags
-	verbose bool
+	verbose    bool
+	magnetLink string
 
 	rootCmd = &cobra.Command{
 		Use:     "gray",

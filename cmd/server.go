@@ -28,6 +28,8 @@ func init() {
 }
 
 var (
+	// server *grpc.Server
+
 	serverCmd = &cobra.Command{
 		Use:   "server",
 		Short: "controls the graytorrent server",
@@ -137,7 +139,7 @@ var (
 			os.Remove(pidFile)
 
 			if err = syscall.Kill(pid, syscall.SIGTERM); err != nil {
-				fmt.Printf("Unable to kill process ID [%v] with error %v \n", pid, err)
+				fmt.Printf("Unable to kill process ID [%v] with error %v \n", pid, err) // Change to graytorrent is not running in the future
 				os.Exit(1)
 			}
 

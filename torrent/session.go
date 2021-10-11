@@ -2,6 +2,7 @@ package torrent
 
 import (
 	"context"
+	"encoding/hex"
 	"fmt"
 	"net"
 	"os"
@@ -26,17 +27,17 @@ type Session struct {
 
 // NewSession returns a new gray session
 func NewSession() (Session, error) {
-	log.Info("Graytorrent Started")
-	// torrentList, err := LoadAll() // NOTE: only LoadAll if we are starting a server
-	// if err != nil {
-	// 	return Session{}, errors.Wrap(err, "NewSession")
-	// }
+	log.Info("Graytorrent started")
+	torrentList, err := LoadAll()
+	if err != nil {
+		return Session{}, errors.Wrap(err, "NewSession")
+	}
 	listener, port, err := initListener()
 	if err != nil {
 		return Session{}, errors.Wrap(err, "NewSession")
 	}
 	return Session{
-		torrentList:  make(map[[20]byte]*Torrent),
+		torrentList:  torrentList,
 		peerListener: listener,
 		port:         port,
 		// server:       grpc.NewServer(),
@@ -52,17 +53,19 @@ func (s *Session) Close() {
 		log.WithField("error", err.Error()).Debug("Problem occurred while saving torrent management data")
 	}
 	s.peerListener.Close()
-	// s.server.Stop()
+
 	log.Info("Graytorrent stopped")
 }
 
 // AddTorrent adds a new torrent to be managed
 func (s *Session) AddTorrent(ctx context.Context, filename string) (*Torrent, error) {
 	to := Torrent{File: filename}
-	if err := to.Setup(ctx); err != nil {
-		return nil, errors.Wrap(err, "AddTorrent")
+	if err := to.Init(); err != nil {
+		log.WithFields(log.Fields{"filename": filename, "error": err.Error()}).Info("Failed to add torrent")
+		return nil, err
 	}
 	s.torrentList[to.InfoHash] = &to
+	log.WithFields(log.Fields{"name": to.Info.Name, "infohash": hex.EncodeToString(to.InfoHash[:])}).Info("Torrent added")
 	return &to, nil
 }
 
@@ -100,7 +103,7 @@ func (s *Session) Download(ctx context.Context, filename string) {
 
 func (s *Session) catchSignal() {
 	signalChan := make(chan os.Signal, 1)
-	signal.Notify(signalChan, os.Interrupt, os.Kill, syscall.SIGTERM)
+	signal.Notify(signalChan, os.Interrupt, os.Kill, syscall.SIGTERM, syscall.SIGKILL)
 	_ = <-signalChan // Cleanup on interrupt signal
 	signal.Stop(signalChan)
 	s.Close()
