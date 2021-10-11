@@ -25,9 +25,10 @@ var (
 	verbose bool
 
 	rootCmd = &cobra.Command{
-		Use:   "gray",
-		Short: "gray is a BitTorrent engine",
-		Long:  `An engine that implements the BitTorrent Protocol and allows for the management of torrents.`,
+		Use:     "gray",
+		Short:   "gray is a BitTorrent engine",
+		Long:    `An engine that implements the BitTorrent Protocol and allows for the management of torrents.`,
+		Version: "0.20",
 		// Run: func(cmd *cobra.Command, args []string) {
 		// 	// Do Stuff Here
 		// 	fmt.Println("hello root command")
