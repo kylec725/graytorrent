@@ -14,7 +14,7 @@ import (
 
 func init() {
 	rootCmd.PersistentFlags().BoolVarP(&verbose, "verbose", "v", false, "print events to stdout")
-	// cobra.OnInitialize(initLog, initConfig, viper.WatchConfig)
+	cobra.OnInitialize(initLog, initConfig)
 }
 
 var (
@@ -27,7 +27,7 @@ var (
 	rootCmd = &cobra.Command{
 		Use:     "gray",
 		Short:   "graytorrent is a BitTorrent engine",
-		Long:    `An engine that implements the BitTorrent Protocol and allows for the management of torrents.`,
+		Long:    `graytorrent is an engine that implements the BitTorrent Protocol and allows for the management of torrents.`,
 		Version: "0.20",
 	}
 )
@@ -35,8 +35,8 @@ var (
 // Execute runs the root command
 func Execute() {
 	initDirs()
-	initLog()
-	initConfig()
+	// initLog()
+	// initConfig()
 	defer logFile.Close()
 
 	if err := rootCmd.Execute(); err != nil {
