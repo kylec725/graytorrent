@@ -21,7 +21,6 @@ type Session struct {
 	torrentList  map[[20]byte]*Torrent
 	peerListener net.Listener
 	port         uint16
-	// server       *grpc.Server
 	pb.UnimplementedTorrentServer
 }
 
@@ -40,7 +39,6 @@ func NewSession() (Session, error) {
 		torrentList:  torrentList,
 		peerListener: listener,
 		port:         port,
-		// server:       grpc.NewServer(),
 	}
 	go session.peerListen()
 
@@ -78,8 +76,6 @@ func (s *Session) RemoveTorrent(to *Torrent) {
 	delete(s.torrentList, to.InfoHash)
 	// TODO: remove save data of torrent
 }
-
-// TODO: add an option to resume a torrent if it matches this one
 
 // Download begins a download for a single torrent
 func (s *Session) Download(ctx context.Context, filename string) {
