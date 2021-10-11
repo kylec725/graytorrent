@@ -45,7 +45,6 @@ func NewSession() (Session, error) {
 
 // Close performs clean up for a session
 func (s *Session) Close() {
-	log.Info("Graytorrent stopped")
 	for _, to := range s.torrentList {
 		to.Stop()
 	}
@@ -54,6 +53,7 @@ func (s *Session) Close() {
 	}
 	s.peerListener.Close()
 	// s.server.Stop()
+	log.Info("Graytorrent stopped")
 }
 
 // AddTorrent adds a new torrent to be managed

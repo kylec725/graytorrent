@@ -26,7 +26,7 @@ var (
 
 	rootCmd = &cobra.Command{
 		Use:     "gray",
-		Short:   "gray is a BitTorrent engine",
+		Short:   "graytorrent is a BitTorrent engine",
 		Long:    `An engine that implements the BitTorrent Protocol and allows for the management of torrents.`,
 		Version: "0.20",
 	}
@@ -37,11 +37,7 @@ func Execute() {
 	initDirs()
 	initLog()
 	initConfig()
-	// log.Info("Gray started")
-	defer func() {
-		// log.Info("Gray stopped")
-		logFile.Close()
-	}()
+	defer logFile.Close()
 
 	if err := rootCmd.Execute(); err != nil {
 		fmt.Fprintln(os.Stderr, err)
@@ -91,14 +87,14 @@ func initConfig() {
 	viper.SetConfigName("config")
 	viper.SetConfigType("toml")
 	// viper.AddConfigPath(".") // Remove in the future
-	viper.AddConfigPath(common.GrayPath)
+	viper.AddConfigPath(common.GrayTorrentPath)
 	// viper.AddConfigPath("/etc/gray")
 
 	if err := viper.ReadInConfig(); err != nil {
 		if _, ok := err.(viper.ConfigFileNotFoundError); ok {
 			// Config file not found, create default config
 			viper.SafeWriteConfig()
-			log.Info("Config file written at " + common.GrayPath)
+			log.Info("Config file written at " + common.GrayTorrentPath)
 		} else {
 			// Some other error was found
 			log.Panic("Fatal error reading config file:", err)
