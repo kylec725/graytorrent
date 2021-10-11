@@ -3,14 +3,16 @@ package torrent
 import (
 	"context"
 
+	"github.com/kylec725/graytorrent/internal/common"
 	"github.com/kylec725/graytorrent/rpc"
 	pb "github.com/kylec725/graytorrent/rpc"
+	"github.com/pkg/errors"
 )
 
 // server.go contains implementations of the required grpc server functions
 
 // List current managed torrents
-func (s *Session) List(in *pb.ListRequest, stream pb.Torrent_ListServer) error {
+func (s *Session) List(in *pb.Empty, stream pb.Torrent_ListServer) error {
 	for _, to := range s.torrentList {
 		stream.Send(&pb.TorrentInfo{
 			Name:        to.Info.Name,
@@ -38,16 +40,38 @@ func (s *Session) Add(ctx context.Context, in *pb.AddRequest) (*pb.AddReply, err
 }
 
 // Remove a torrent from being managed
-func (s *Session) Remove(ctx context.Context, in *pb.RemoveRequest) (*pb.RemoveReply, error) {
-	return nil, nil
+func (s *Session) Remove(ctx context.Context, in *pb.SelectedTorrent) (*pb.Empty, error) {
+	var infoHash [20]byte
+	copy(infoHash[:], in.GetInfoHash())
+	if to, ok := s.torrentList[infoHash]; ok {
+		s.RemoveTorrent(to)
+	} else {
+		return nil, errors.New("Torrent not found")
+	}
+	return &pb.Empty{}, nil
 }
 
 // Start a torrent's download/upload
-func (s *Session) Start(ctx context.Context, in *pb.StartRequest) (*pb.StartReply, error) {
-	return nil, nil
+func (s *Session) Start(ctx context.Context, in *pb.SelectedTorrent) (*pb.Empty, error) {
+	var infoHash [20]byte
+	copy(infoHash[:], in.GetInfoHash())
+	if to, ok := s.torrentList[infoHash]; ok {
+		ctx := context.WithValue(ctx, common.KeyPort, s.port)
+		to.Start(ctx)
+	} else {
+		return nil, errors.New("Torrent not found")
+	}
+	return &pb.Empty{}, nil
 }
 
 // Stop a torrent's download/upload
-func (s *Session) Stop(ctx context.Context, in *pb.StopRequest) (*pb.StopReply, error) {
-	return nil, nil
+func (s *Session) Stop(ctx context.Context, in *pb.SelectedTorrent) (*pb.Empty, error) {
+	var infoHash [20]byte
+	copy(infoHash[:], in.GetInfoHash())
+	if to, ok := s.torrentList[infoHash]; ok {
+		to.Stop()
+	} else {
+		return nil, errors.New("Torrent not found")
+	}
+	return &pb.Empty{}, nil
 }

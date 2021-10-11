@@ -28,7 +28,7 @@ func List() error {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	stream, err := client.List(ctx, &pb.ListRequest{})
+	stream, err := client.List(ctx, &pb.Empty{})
 	if err != nil {
 		return errors.WithMessage(err, "Failed to list torrents")
 	}
@@ -69,6 +69,23 @@ func Add(file string) error {
 		return errors.WithMessage(err, "Failed to add torrent")
 	}
 	fmt.Printf("Added %s %s\n", reply.GetName(), hex.EncodeToString(reply.GetInfoHash()))
+	return nil
+}
+
+// Remove a managed torrent
+func Remove(infoHash string) error {
+
+	return nil
+}
+
+// Start a torrent's download/upload
+func Start(infoHash string) error {
+
+	return nil
+}
+
+// Stop a torrent's download/upload
+func Stop(infoHash string) error {
 	return nil
 }
 
