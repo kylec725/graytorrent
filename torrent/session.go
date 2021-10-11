@@ -27,19 +27,23 @@ type Session struct {
 // NewSession returns a new gray session
 func NewSession() (Session, error) {
 	log.Info("Graytorrent started")
+
 	torrentList, err := LoadAll()
 	if err != nil {
 		return Session{}, errors.Wrap(err, "NewSession")
 	}
+
 	listener, port, err := initListener()
 	if err != nil {
 		return Session{}, errors.Wrap(err, "NewSession")
 	}
+
 	session := Session{
 		torrentList:  torrentList,
 		peerListener: listener,
 		port:         port,
 	}
+
 	go session.peerListen()
 
 	return session, nil
@@ -50,9 +54,11 @@ func (s *Session) Close() {
 	for _, to := range s.torrentList {
 		to.Stop()
 	}
+
 	if err := s.SaveAll(); err != nil {
 		log.WithField("error", err.Error()).Debug("Problem occurred while saving torrent management data")
 	}
+
 	s.peerListener.Close()
 
 	log.Info("Graytorrent stopped")
@@ -65,6 +71,7 @@ func (s *Session) AddTorrent(ctx context.Context, filename string) (*Torrent, er
 		log.WithFields(log.Fields{"filename": filename, "error": err.Error()}).Info("Failed to add torrent")
 		return nil, err
 	}
+
 	s.torrentList[to.InfoHash] = &to
 	log.WithFields(log.Fields{"name": to.Info.Name, "infohash": hex.EncodeToString(to.InfoHash[:])}).Info("Torrent added")
 	return &to, nil
@@ -80,6 +87,7 @@ func (s *Session) RemoveTorrent(to *Torrent) {
 // Download begins a download for a single torrent
 func (s *Session) Download(ctx context.Context, filename string) {
 	defer s.Close()
+
 	go s.catchSignal()
 
 	ctx = context.WithValue(ctx, common.KeyPort, s.port)

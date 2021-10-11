@@ -32,6 +32,7 @@ func List() error {
 	if err != nil {
 		return errors.WithMessage(err, "Failed to list torrents")
 	}
+
 	for {
 		torrentInfo, err := stream.Recv()
 		if err == io.EOF {
@@ -42,6 +43,7 @@ func List() error {
 
 		torrentPrint(torrentInfo)
 	}
+
 	return nil
 }
 
@@ -69,18 +71,17 @@ func Add(file string) error {
 		return errors.WithMessage(err, "Failed to add torrent")
 	}
 	fmt.Printf("Added %s %s\n", reply.GetName(), hex.EncodeToString(reply.GetInfoHash()))
+
 	return nil
 }
 
 // Remove a managed torrent
 func Remove(infoHash string) error {
-
 	return nil
 }
 
 // Start a torrent's download/upload
 func Start(infoHash string) error {
-
 	return nil
 }
 
