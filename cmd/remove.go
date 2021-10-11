@@ -8,15 +8,16 @@ import (
 )
 
 func init() {
-	rootCmd.AddCommand(listCmd)
+	rootCmd.AddCommand(removeCmd)
 }
 
 var (
-	listCmd = &cobra.Command{
-		Use:   "ls",
-		Short: "list the currently managed torrents",
+	removeCmd = &cobra.Command{
+		Use:   "rm",
+		Short: "removes a managed torrent",
+		Args:  cobra.MinimumNArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
-			if err := client.List(); err != nil {
+			if err := client.Remove(args[0]); err != nil {
 				fmt.Println(err)
 			}
 		},

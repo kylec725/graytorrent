@@ -8,15 +8,16 @@ import (
 )
 
 func init() {
-	rootCmd.AddCommand(listCmd)
+	rootCmd.AddCommand(stopCmd)
 }
 
 var (
-	listCmd = &cobra.Command{
-		Use:   "ls",
-		Short: "list the currently managed torrents",
+	stopCmd = &cobra.Command{
+		Use:   "stop",
+		Short: "stops a torrent's download/upload",
+		Args:  cobra.MinimumNArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
-			if err := client.List(); err != nil {
+			if err := client.Stop(args[0]); err != nil {
 				fmt.Println(err)
 			}
 		},
