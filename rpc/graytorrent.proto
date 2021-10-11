@@ -6,23 +6,26 @@ option go_package = "github.com/kylec725/graytorrent/rpc";
 
 service Torrent {
   // Requests a list of all managed torrents
-  rpc List (ListRequest) returns (stream TorrentInfo) {}
+  rpc List (Empty) returns (stream TorrentInfo) {}
 
   // Adds another torrent to be managed
   rpc Add (AddRequest) returns (AddReply) {}
 
   // Removes a torrent from being managed
-  rpc Remove (RemoveRequest) returns (RemoveReply) {}
+  rpc Remove (SelectedTorrent) returns (Empty) {}
 
   // Starts a torrent's download/upload
-  rpc Start (StartRequest) returns (StartReply) {}
+  rpc Start (SelectedTorrent) returns (Empty) {}
 
   // Stops a torrent's download/upload
-  rpc Stop (StopRequest) returns (StopReply) {}
+  rpc Stop (SelectedTorrent) returns (Empty) {}
 }
 
-message ListRequest {
-  string key = 1;
+message Empty {
+}
+
+message SelectedTorrent {
+  bytes infoHash = 1;
 }
 
 message TorrentInfo {
@@ -50,22 +53,4 @@ message AddRequest {
 message AddReply {
   string name = 1;
   bytes infoHash = 2;
-}
-
-message RemoveRequest {
-}
-
-message RemoveReply {
-}
-
-message StartRequest {
-}
-
-message StartReply {
-}
-
-message StopRequest {
-}
-
-message StopReply {
 }
