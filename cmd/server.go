@@ -134,7 +134,7 @@ var (
 			}
 
 			// remove PID file
-			// os.Remove(pidFile)
+			os.Remove(pidFile)
 
 			if err = syscall.Kill(pid, syscall.SIGTERM); err != nil {
 				fmt.Printf("Unable to kill process ID [%v] with error %v \n", pid, err)
