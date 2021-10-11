@@ -99,10 +99,8 @@ func (s *Session) Download(ctx context.Context, filename string) {
 func (s *Session) catchSignal() {
 	signalChan := make(chan os.Signal, 1)
 	signal.Notify(signalChan, os.Interrupt, os.Kill, syscall.SIGTERM)
-	select {
-	case <-signalChan: // Cleanup on interrupt signal
-		signal.Stop(signalChan)
-		s.Close()
-		os.Exit(1)
-	}
+	_ = <-signalChan // Cleanup on interrupt signal
+	signal.Stop(signalChan)
+	s.Close()
+	os.Exit(0)
 }
