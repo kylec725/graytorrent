@@ -35,7 +35,7 @@ var (
 type Torrent struct {
 	File     string              `json:"File"`   // .torrent file
 	Magnet   string              `json:"Magnet"` // magnet link
-	Info     *common.TorrentInfo `json:"Info"`   // Contains meta data of the torrent
+	Info     *common.TorrentInfo `json:"Info"`   // Contains meta data of the torrent // TODO: embed Info
 	InfoHash [20]byte            `json:"InfoHash"`
 	Trackers []tracker.Tracker   `json:"Trackers"`
 	Peers    []peer.Peer         `json:"-"`
