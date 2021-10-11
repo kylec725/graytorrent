@@ -88,6 +88,7 @@ func initConfig() {
 	viper.SetDefault("network.portrange", [2]int{6881, 6889})
 	viper.SetDefault("network.connections.globalMax", 300)
 	viper.SetDefault("network.connections.torrentMax", 30)
+	viper.SetDefault("server.port", 7001)
 
 	viper.SetConfigName("config")
 	viper.SetConfigType("toml")

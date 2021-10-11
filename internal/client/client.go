@@ -4,13 +4,15 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"strconv"
 
 	pb "github.com/kylec725/gray/rpc"
+	"github.com/spf13/viper"
 	"google.golang.org/grpc"
 )
 
-const (
-	address = "localhost:7001" // TODO: get server port from config
+var (
+	address = "localhost:" + strconv.Itoa(int(viper.GetInt("server.port")))
 )
 
 func main() {

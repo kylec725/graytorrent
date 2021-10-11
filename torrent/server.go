@@ -2,11 +2,15 @@ package torrent
 
 import (
 	"context"
+	"strconv"
 
 	pb "github.com/kylec725/gray/rpc"
+	viper "github.com/spf13/viper"
 )
 
-const serverPort = ":7001" // GRPC server port
+var (
+	serverAddr = ":" + strconv.Itoa(int(viper.GetInt("server.port")))
+)
 
 // TODO: move the serverPort to config
 
