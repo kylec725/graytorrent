@@ -3,7 +3,7 @@ package cmd
 import (
 	"log"
 
-	"github.com/kylec725/gray/internal/client"
+	"github.com/kylec725/gray/client"
 	"github.com/spf13/cobra"
 )
 
