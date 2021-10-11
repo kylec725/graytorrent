@@ -8,16 +8,16 @@ BitTorrent engine implemented in [Go](https://golang.org)
 
 ## Installation
 ### Go
+Make sure [Go is installed](https://golang.org/doc/install)
 `go install github.com/kylec725/graytorrent/cmd/gray`
 
-### Compile
-Make sure [Go is installed](https://golang.org/doc/install)
+Alternatively
 ```
 git clone https://github.com/kylec725/graytorrent.git
 cd graytorrent/cmd/gray
 go install
 ```
-Could alternatively use `go build` or `go run main.go`
+Could also use `go build` or `go run main.go`
 
 ## Usage
 Currently, graytorrent does not have a complete client. To use the torrenting functionality you will have to run graytorrent in single torrent download mode.
