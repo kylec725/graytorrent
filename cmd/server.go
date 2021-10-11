@@ -17,14 +17,14 @@ import (
 const pidFile = "/tmp/gray.pid"
 
 func init() {
-	rootCmd.AddCommand(serverCommand)
-	serverCommand.AddCommand(serverMainCommand)
-	serverCommand.AddCommand(serverStartCommand)
-	serverCommand.AddCommand(serverStopCommand)
+	rootCmd.AddCommand(serverCmd)
+	serverCmd.AddCommand(serverMainCmd)
+	serverCmd.AddCommand(serverStartCmd)
+	serverCmd.AddCommand(serverStopCmd)
 }
 
 var (
-	serverCommand = &cobra.Command{
+	serverCmd = &cobra.Command{
 		Use:   "server",
 		Short: "controls the gray torrent server",
 		// Args:  cobra.MinimumNArgs(1),
@@ -41,7 +41,7 @@ var (
 		// },
 	}
 
-	serverMainCommand = &cobra.Command{
+	serverMainCmd = &cobra.Command{
 		Use:    "main",
 		Hidden: true,
 		Run: func(cmd *cobra.Command, args []string) {
@@ -67,7 +67,7 @@ var (
 		},
 	}
 
-	serverStartCommand = &cobra.Command{
+	serverStartCmd = &cobra.Command{
 		Use:   "start",
 		Short: "starts the gray torrent server",
 		Run: func(cmd *cobra.Command, args []string) {
@@ -77,7 +77,7 @@ var (
 				os.Exit(1)
 			}
 
-			daemon := exec.Command(os.Args[0], serverCommand.Use, serverMainCommand.Use)
+			daemon := exec.Command(os.Args[0], serverCmd.Use, serverMainCmd.Use)
 			daemon.Start()
 			savePID(daemon.Process.Pid)
 
@@ -88,7 +88,7 @@ var (
 		},
 	}
 
-	serverStopCommand = &cobra.Command{
+	serverStopCmd = &cobra.Command{
 		Use:   "stop",
 		Short: "stops the gray torrent server",
 		Run: func(cmd *cobra.Command, args []string) {

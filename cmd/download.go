@@ -9,15 +9,15 @@ import (
 )
 
 func init() {
-	rootCmd.AddCommand(downloadCommand)
-	rootCmd.Flags().StringVarP(&magnetLink, "magnet", "m", "", "use a magnet link instead of a .torrent file to join a swarm")
+	rootCmd.AddCommand(downloadCmd)
+	downloadCmd.Flags().StringVarP(&magnetLink, "magnet", "m", "", "use a magnet link instead of a .torrent file to download")
 }
 
 var (
 	// Flags
 	magnetLink string
 
-	downloadCommand = &cobra.Command{
+	downloadCmd = &cobra.Command{
 		Use:   "download",
 		Short: "download a single torrent from a .torrent file or magnet link",
 		Args:  cobra.MinimumNArgs(1),
