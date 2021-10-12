@@ -11,8 +11,11 @@ import (
 
 // server.go contains implementations of the required grpc server functions
 
-// ErrTorrentNotFound indicates that a torrent was not found
-var ErrTorrentNotFound = errors.New("Torrent not found")
+// Errors
+var (
+	ErrTorrentStarted  = errors.New("Torrent already started")
+	ErrTorrentNotFound = errors.New("Torrent not found")
+)
 
 // List current managed torrents
 func (s *Session) List(in *pb.Empty, stream pb.TorrentService_ListServer) error {
@@ -66,15 +69,19 @@ func (s *Session) Start(ctx context.Context, in *pb.TorrentRequest) (*pb.Torrent
 	copy(infoHash[:], in.GetInfoHash())
 
 	if to, ok := s.torrentList[infoHash]; ok {
-		newCtx := context.WithValue(context.Background(), common.KeyPort, s.port) // NOTE: using ctx causes to.Start() to end immediately
-		go to.Start(newCtx)
+		if !to.Started {
+			newCtx := context.WithValue(context.Background(), common.KeyPort, s.port) // NOTE: using ctx causes to.Start() to end immediately
+			go to.Start(newCtx)
+		}
 		return &pb.TorrentReply{Id: to.ID, Name: to.Info.Name, InfoHash: to.InfoHash[:]}, nil
 	}
 	// Check ID instead
 	for _, to := range s.torrentList {
 		if to.ID == in.GetId() {
-			newCtx := context.WithValue(context.Background(), common.KeyPort, s.port) // NOTE: using ctx causes to.Start() to end immediately
-			go to.Start(newCtx)
+			if !to.Started {
+				newCtx := context.WithValue(context.Background(), common.KeyPort, s.port) // NOTE: using ctx causes to.Start() to end immediately
+				go to.Start(newCtx)
+			}
 			return &pb.TorrentReply{Id: to.ID, Name: to.Info.Name, InfoHash: to.InfoHash[:]}, nil
 		}
 	}
