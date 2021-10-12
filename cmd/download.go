@@ -18,7 +18,11 @@ var (
 		Use:   "download",
 		Short: "download a single torrent from a .torrent file or magnet link",
 		Args:  cobra.MinimumNArgs(1),
+		PreRun: func(cmd *cobra.Command, args []string) {
+			initLog()
+		},
 		Run: func(cmd *cobra.Command, args []string) {
+			defer logFile.Close()
 			session, err := torrent.NewSession()
 			if err != nil {
 				log.WithField("error", err).Info("Error when starting a new session for download")

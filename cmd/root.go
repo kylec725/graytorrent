@@ -14,7 +14,7 @@ import (
 
 func init() {
 	rootCmd.PersistentFlags().BoolVarP(&verbose, "verbose", "v", false, "print events to stdout")
-	cobra.OnInitialize(initLog, initConfig)
+	cobra.OnInitialize(initConfig, initDirs)
 }
 
 var (
@@ -37,11 +37,6 @@ var (
 
 // Execute runs the root command
 func Execute() {
-	initDirs()
-	// initLog()
-	// initConfig()
-	defer logFile.Close()
-
 	if err := rootCmd.Execute(); err != nil {
 		fmt.Fprintln(os.Stderr, err)
 		os.Exit(1)
@@ -59,7 +54,7 @@ func initDirs() {
 func initLog() {
 	// Logging file
 	logFile, err := os.OpenFile("info.log", os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0644)
-	// logFile, err = os.OpenFile(filepath.Join(grayPath, "info.log"), os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0644)
+	// logFile, err = os.OpenFile(filepath.Join(common.GrayTorrentPath, "info.log"), os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0644)
 	if err != nil {
 		log.WithField("error", err.Error()).Fatal("Could not open log file")
 	}
@@ -93,7 +88,6 @@ func initConfig() {
 
 	viper.SetConfigName("config")
 	viper.SetConfigType("toml")
-	// viper.AddConfigPath(".") // Remove in the future
 	viper.AddConfigPath(common.GrayTorrentPath)
 	// viper.AddConfigPath("/etc/gray")
 

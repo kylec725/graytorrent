@@ -25,7 +25,8 @@ func init() {
 	serverCmd.AddCommand(serverMainCmd)
 	serverCmd.AddCommand(serverStartCmd)
 	serverCmd.AddCommand(serverStopCmd)
-	serverCmd.PersistentFlags().BoolVarP(&debug, "debug", "d", false, "logs additional information for debugging")
+	serverMainCmd.PersistentFlags().BoolVarP(&debug, "debug", "d", false, "logs additional information for debugging")
+	serverStartCmd.PersistentFlags().BoolVarP(&debug, "debug", "d", false, "logs additional information for debugging")
 }
 
 var (
@@ -39,6 +40,9 @@ var (
 	serverMainCmd = &cobra.Command{
 		Use:    "main",
 		Hidden: true,
+		PreRun: func(cmd *cobra.Command, args []string) {
+			initLog()
+		},
 		Run: func(cmd *cobra.Command, args []string) {
 			session, err := torrent.NewSession()
 			if err != nil {
@@ -57,6 +61,7 @@ var (
 				// before terminating.
 				session.Close()
 				server.Stop()
+				logFile.Close()
 
 				// remove PID file
 				os.Remove(pidFile)
@@ -105,7 +110,13 @@ var (
 				}
 			}
 
-			daemon := exec.Command(os.Args[0], serverCmd.Use, serverMainCmd.Use)
+			// Use string slice to forward flags
+			serverMain := []string{serverCmd.Use, serverMainCmd.Use}
+			if debug {
+				serverMain = append(serverMain, "-d")
+			}
+
+			daemon := exec.Command(os.Args[0], serverMain...)
 			daemon.Start()
 			savePID(daemon.Process.Pid)
 
