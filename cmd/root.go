@@ -14,14 +14,16 @@ import (
 
 func init() {
 	rootCmd.PersistentFlags().BoolVarP(&verbose, "verbose", "v", false, "print events to stdout")
+	rootCmd.PersistentFlags().BoolVarP(&debug, "debug", "d", false, "logs additional information for debugging")
 	cobra.OnInitialize(initLog, initConfig)
 }
 
 var (
-	logLevel = log.TraceLevel // InfoLevel || DebugLevel || TraceLevel
+	logLevel = log.InfoLevel
 	logFile  *os.File
 
 	// Flags
+	debug      bool
 	verbose    bool
 	magnetLink string
 	isInfoHash bool
@@ -71,9 +73,13 @@ func initLog() {
 		FullTimestamp:   true,
 		ForceFormatting: true,
 	})
+	// Set flags
 	if verbose {
 		dualOutput := io.MultiWriter(os.Stdout, logFile)
 		log.SetOutput(dualOutput)
+	}
+	if debug {
+		logLevel = log.TraceLevel
 	}
 	log.SetLevel(logLevel)
 }
