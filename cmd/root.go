@@ -24,6 +24,7 @@ var (
 	// Flags
 	verbose    bool
 	magnetLink string
+	isInfoHash bool
 
 	rootCmd = &cobra.Command{
 		Use:     "gray",

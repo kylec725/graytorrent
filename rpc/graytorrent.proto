@@ -4,37 +4,30 @@ package graytorrent;
 
 option go_package = "github.com/kylec725/graytorrent/rpc";
 
-service Torrent {
+service TorrentService {
   // Requests a list of all managed torrents
-  rpc List (Empty) returns (stream TorrentInfo) {}
-
+  rpc List (Empty) returns (stream Torrent) {}
   // Adds another torrent to be managed
-  rpc Add (AddRequest) returns (AddReply) {}
-
+  rpc Add (AddRequest) returns (TorrentReply) {}
   // Removes a torrent from being managed
-  rpc Remove (SelectedTorrent) returns (Empty) {}
-
+  rpc Remove (TorrentRequest) returns (TorrentReply) {}
   // Starts a torrent's download/upload
-  rpc Start (SelectedTorrent) returns (Empty) {}
-
+  rpc Start (TorrentRequest) returns (TorrentReply) {}
   // Stops a torrent's download/upload
-  rpc Stop (SelectedTorrent) returns (Empty) {}
+  rpc Stop (TorrentRequest) returns (TorrentReply) {}
 }
 
 message Empty {
 }
 
-message SelectedTorrent {
-  bytes infoHash = 1;
-}
-
-message TorrentInfo {
-  string name = 1;
-  bytes infoHash = 2;
-  uint32 totalLength = 3;
-  uint32 left = 4;
-  uint32 downRate = 5;
-  uint32 upRate = 6;
+message Torrent {
+  uint32 id = 1;
+  string name = 2;
+  bytes infoHash = 3;
+  uint32 totalLength = 4;
+  uint32 left = 5;
+  uint32 downRate = 6;
+  uint32 upRate = 7;
   enum State {
     DOWNLOADING = 0;
     STOPPED = 1;
@@ -42,15 +35,21 @@ message TorrentInfo {
     SEEDING = 3;
     COMPLETE = 4;
   }
-  State state = 7;
+  State state = 8;
+}
+
+message TorrentRequest {
+  uint32 id = 1;
+  bytes infoHash = 2;
+}
+
+message TorrentReply {
+  uint32 id = 1;
+  string name = 2;
+  bytes infoHash = 3;
 }
 
 message AddRequest {
   string file = 1;
   string magnet = 2;
-}
-
-message AddReply {
-  string name = 1;
-  bytes infoHash = 2;
 }

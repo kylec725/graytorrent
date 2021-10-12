@@ -14,36 +14,36 @@ import (
 // Requires gRPC-Go v1.32.0 or later.
 const _ = grpc.SupportPackageIsVersion7
 
-// TorrentClient is the client API for Torrent service.
+// TorrentServiceClient is the client API for TorrentService service.
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
-type TorrentClient interface {
+type TorrentServiceClient interface {
 	// Requests a list of all managed torrents
-	List(ctx context.Context, in *Empty, opts ...grpc.CallOption) (Torrent_ListClient, error)
+	List(ctx context.Context, in *Empty, opts ...grpc.CallOption) (TorrentService_ListClient, error)
 	// Adds another torrent to be managed
-	Add(ctx context.Context, in *AddRequest, opts ...grpc.CallOption) (*AddReply, error)
+	Add(ctx context.Context, in *AddRequest, opts ...grpc.CallOption) (*TorrentReply, error)
 	// Removes a torrent from being managed
-	Remove(ctx context.Context, in *SelectedTorrent, opts ...grpc.CallOption) (*Empty, error)
+	Remove(ctx context.Context, in *TorrentRequest, opts ...grpc.CallOption) (*TorrentReply, error)
 	// Starts a torrent's download/upload
-	Start(ctx context.Context, in *SelectedTorrent, opts ...grpc.CallOption) (*Empty, error)
+	Start(ctx context.Context, in *TorrentRequest, opts ...grpc.CallOption) (*TorrentReply, error)
 	// Stops a torrent's download/upload
-	Stop(ctx context.Context, in *SelectedTorrent, opts ...grpc.CallOption) (*Empty, error)
+	Stop(ctx context.Context, in *TorrentRequest, opts ...grpc.CallOption) (*TorrentReply, error)
 }
 
-type torrentClient struct {
+type torrentServiceClient struct {
 	cc grpc.ClientConnInterface
 }
 
-func NewTorrentClient(cc grpc.ClientConnInterface) TorrentClient {
-	return &torrentClient{cc}
+func NewTorrentServiceClient(cc grpc.ClientConnInterface) TorrentServiceClient {
+	return &torrentServiceClient{cc}
 }
 
-func (c *torrentClient) List(ctx context.Context, in *Empty, opts ...grpc.CallOption) (Torrent_ListClient, error) {
-	stream, err := c.cc.NewStream(ctx, &Torrent_ServiceDesc.Streams[0], "/graytorrent.Torrent/List", opts...)
+func (c *torrentServiceClient) List(ctx context.Context, in *Empty, opts ...grpc.CallOption) (TorrentService_ListClient, error) {
+	stream, err := c.cc.NewStream(ctx, &TorrentService_ServiceDesc.Streams[0], "/graytorrent.TorrentService/List", opts...)
 	if err != nil {
 		return nil, err
 	}
-	x := &torrentListClient{stream}
+	x := &torrentServiceListClient{stream}
 	if err := x.ClientStream.SendMsg(in); err != nil {
 		return nil, err
 	}
@@ -53,229 +53,229 @@ func (c *torrentClient) List(ctx context.Context, in *Empty, opts ...grpc.CallOp
 	return x, nil
 }
 
-type Torrent_ListClient interface {
-	Recv() (*TorrentInfo, error)
+type TorrentService_ListClient interface {
+	Recv() (*Torrent, error)
 	grpc.ClientStream
 }
 
-type torrentListClient struct {
+type torrentServiceListClient struct {
 	grpc.ClientStream
 }
 
-func (x *torrentListClient) Recv() (*TorrentInfo, error) {
-	m := new(TorrentInfo)
+func (x *torrentServiceListClient) Recv() (*Torrent, error) {
+	m := new(Torrent)
 	if err := x.ClientStream.RecvMsg(m); err != nil {
 		return nil, err
 	}
 	return m, nil
 }
 
-func (c *torrentClient) Add(ctx context.Context, in *AddRequest, opts ...grpc.CallOption) (*AddReply, error) {
-	out := new(AddReply)
-	err := c.cc.Invoke(ctx, "/graytorrent.Torrent/Add", in, out, opts...)
+func (c *torrentServiceClient) Add(ctx context.Context, in *AddRequest, opts ...grpc.CallOption) (*TorrentReply, error) {
+	out := new(TorrentReply)
+	err := c.cc.Invoke(ctx, "/graytorrent.TorrentService/Add", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *torrentClient) Remove(ctx context.Context, in *SelectedTorrent, opts ...grpc.CallOption) (*Empty, error) {
-	out := new(Empty)
-	err := c.cc.Invoke(ctx, "/graytorrent.Torrent/Remove", in, out, opts...)
+func (c *torrentServiceClient) Remove(ctx context.Context, in *TorrentRequest, opts ...grpc.CallOption) (*TorrentReply, error) {
+	out := new(TorrentReply)
+	err := c.cc.Invoke(ctx, "/graytorrent.TorrentService/Remove", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *torrentClient) Start(ctx context.Context, in *SelectedTorrent, opts ...grpc.CallOption) (*Empty, error) {
-	out := new(Empty)
-	err := c.cc.Invoke(ctx, "/graytorrent.Torrent/Start", in, out, opts...)
+func (c *torrentServiceClient) Start(ctx context.Context, in *TorrentRequest, opts ...grpc.CallOption) (*TorrentReply, error) {
+	out := new(TorrentReply)
+	err := c.cc.Invoke(ctx, "/graytorrent.TorrentService/Start", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *torrentClient) Stop(ctx context.Context, in *SelectedTorrent, opts ...grpc.CallOption) (*Empty, error) {
-	out := new(Empty)
-	err := c.cc.Invoke(ctx, "/graytorrent.Torrent/Stop", in, out, opts...)
+func (c *torrentServiceClient) Stop(ctx context.Context, in *TorrentRequest, opts ...grpc.CallOption) (*TorrentReply, error) {
+	out := new(TorrentReply)
+	err := c.cc.Invoke(ctx, "/graytorrent.TorrentService/Stop", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-// TorrentServer is the server API for Torrent service.
-// All implementations must embed UnimplementedTorrentServer
+// TorrentServiceServer is the server API for TorrentService service.
+// All implementations must embed UnimplementedTorrentServiceServer
 // for forward compatibility
-type TorrentServer interface {
+type TorrentServiceServer interface {
 	// Requests a list of all managed torrents
-	List(*Empty, Torrent_ListServer) error
+	List(*Empty, TorrentService_ListServer) error
 	// Adds another torrent to be managed
-	Add(context.Context, *AddRequest) (*AddReply, error)
+	Add(context.Context, *AddRequest) (*TorrentReply, error)
 	// Removes a torrent from being managed
-	Remove(context.Context, *SelectedTorrent) (*Empty, error)
+	Remove(context.Context, *TorrentRequest) (*TorrentReply, error)
 	// Starts a torrent's download/upload
-	Start(context.Context, *SelectedTorrent) (*Empty, error)
+	Start(context.Context, *TorrentRequest) (*TorrentReply, error)
 	// Stops a torrent's download/upload
-	Stop(context.Context, *SelectedTorrent) (*Empty, error)
-	mustEmbedUnimplementedTorrentServer()
+	Stop(context.Context, *TorrentRequest) (*TorrentReply, error)
+	mustEmbedUnimplementedTorrentServiceServer()
 }
 
-// UnimplementedTorrentServer must be embedded to have forward compatible implementations.
-type UnimplementedTorrentServer struct {
+// UnimplementedTorrentServiceServer must be embedded to have forward compatible implementations.
+type UnimplementedTorrentServiceServer struct {
 }
 
-func (UnimplementedTorrentServer) List(*Empty, Torrent_ListServer) error {
+func (UnimplementedTorrentServiceServer) List(*Empty, TorrentService_ListServer) error {
 	return status.Errorf(codes.Unimplemented, "method List not implemented")
 }
-func (UnimplementedTorrentServer) Add(context.Context, *AddRequest) (*AddReply, error) {
+func (UnimplementedTorrentServiceServer) Add(context.Context, *AddRequest) (*TorrentReply, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Add not implemented")
 }
-func (UnimplementedTorrentServer) Remove(context.Context, *SelectedTorrent) (*Empty, error) {
+func (UnimplementedTorrentServiceServer) Remove(context.Context, *TorrentRequest) (*TorrentReply, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Remove not implemented")
 }
-func (UnimplementedTorrentServer) Start(context.Context, *SelectedTorrent) (*Empty, error) {
+func (UnimplementedTorrentServiceServer) Start(context.Context, *TorrentRequest) (*TorrentReply, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Start not implemented")
 }
-func (UnimplementedTorrentServer) Stop(context.Context, *SelectedTorrent) (*Empty, error) {
+func (UnimplementedTorrentServiceServer) Stop(context.Context, *TorrentRequest) (*TorrentReply, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Stop not implemented")
 }
-func (UnimplementedTorrentServer) mustEmbedUnimplementedTorrentServer() {}
+func (UnimplementedTorrentServiceServer) mustEmbedUnimplementedTorrentServiceServer() {}
 
-// UnsafeTorrentServer may be embedded to opt out of forward compatibility for this service.
-// Use of this interface is not recommended, as added methods to TorrentServer will
+// UnsafeTorrentServiceServer may be embedded to opt out of forward compatibility for this service.
+// Use of this interface is not recommended, as added methods to TorrentServiceServer will
 // result in compilation errors.
-type UnsafeTorrentServer interface {
-	mustEmbedUnimplementedTorrentServer()
+type UnsafeTorrentServiceServer interface {
+	mustEmbedUnimplementedTorrentServiceServer()
 }
 
-func RegisterTorrentServer(s grpc.ServiceRegistrar, srv TorrentServer) {
-	s.RegisterService(&Torrent_ServiceDesc, srv)
+func RegisterTorrentServiceServer(s grpc.ServiceRegistrar, srv TorrentServiceServer) {
+	s.RegisterService(&TorrentService_ServiceDesc, srv)
 }
 
-func _Torrent_List_Handler(srv interface{}, stream grpc.ServerStream) error {
+func _TorrentService_List_Handler(srv interface{}, stream grpc.ServerStream) error {
 	m := new(Empty)
 	if err := stream.RecvMsg(m); err != nil {
 		return err
 	}
-	return srv.(TorrentServer).List(m, &torrentListServer{stream})
+	return srv.(TorrentServiceServer).List(m, &torrentServiceListServer{stream})
 }
 
-type Torrent_ListServer interface {
-	Send(*TorrentInfo) error
+type TorrentService_ListServer interface {
+	Send(*Torrent) error
 	grpc.ServerStream
 }
 
-type torrentListServer struct {
+type torrentServiceListServer struct {
 	grpc.ServerStream
 }
 
-func (x *torrentListServer) Send(m *TorrentInfo) error {
+func (x *torrentServiceListServer) Send(m *Torrent) error {
 	return x.ServerStream.SendMsg(m)
 }
 
-func _Torrent_Add_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _TorrentService_Add_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(AddRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(TorrentServer).Add(ctx, in)
+		return srv.(TorrentServiceServer).Add(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/graytorrent.Torrent/Add",
+		FullMethod: "/graytorrent.TorrentService/Add",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(TorrentServer).Add(ctx, req.(*AddRequest))
+		return srv.(TorrentServiceServer).Add(ctx, req.(*AddRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Torrent_Remove_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(SelectedTorrent)
+func _TorrentService_Remove_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(TorrentRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(TorrentServer).Remove(ctx, in)
+		return srv.(TorrentServiceServer).Remove(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/graytorrent.Torrent/Remove",
+		FullMethod: "/graytorrent.TorrentService/Remove",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(TorrentServer).Remove(ctx, req.(*SelectedTorrent))
+		return srv.(TorrentServiceServer).Remove(ctx, req.(*TorrentRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Torrent_Start_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(SelectedTorrent)
+func _TorrentService_Start_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(TorrentRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(TorrentServer).Start(ctx, in)
+		return srv.(TorrentServiceServer).Start(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/graytorrent.Torrent/Start",
+		FullMethod: "/graytorrent.TorrentService/Start",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(TorrentServer).Start(ctx, req.(*SelectedTorrent))
+		return srv.(TorrentServiceServer).Start(ctx, req.(*TorrentRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Torrent_Stop_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(SelectedTorrent)
+func _TorrentService_Stop_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(TorrentRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(TorrentServer).Stop(ctx, in)
+		return srv.(TorrentServiceServer).Stop(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/graytorrent.Torrent/Stop",
+		FullMethod: "/graytorrent.TorrentService/Stop",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(TorrentServer).Stop(ctx, req.(*SelectedTorrent))
+		return srv.(TorrentServiceServer).Stop(ctx, req.(*TorrentRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-// Torrent_ServiceDesc is the grpc.ServiceDesc for Torrent service.
+// TorrentService_ServiceDesc is the grpc.ServiceDesc for TorrentService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
-var Torrent_ServiceDesc = grpc.ServiceDesc{
-	ServiceName: "graytorrent.Torrent",
-	HandlerType: (*TorrentServer)(nil),
+var TorrentService_ServiceDesc = grpc.ServiceDesc{
+	ServiceName: "graytorrent.TorrentService",
+	HandlerType: (*TorrentServiceServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
 			MethodName: "Add",
-			Handler:    _Torrent_Add_Handler,
+			Handler:    _TorrentService_Add_Handler,
 		},
 		{
 			MethodName: "Remove",
-			Handler:    _Torrent_Remove_Handler,
+			Handler:    _TorrentService_Remove_Handler,
 		},
 		{
 			MethodName: "Start",
-			Handler:    _Torrent_Start_Handler,
+			Handler:    _TorrentService_Start_Handler,
 		},
 		{
 			MethodName: "Stop",
-			Handler:    _Torrent_Stop_Handler,
+			Handler:    _TorrentService_Stop_Handler,
 		},
 	},
 	Streams: []grpc.StreamDesc{
 		{
 			StreamName:    "List",
-			Handler:       _Torrent_List_Handler,
+			Handler:       _TorrentService_List_Handler,
 			ServerStreams: true,
 		},
 	},

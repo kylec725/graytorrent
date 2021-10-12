@@ -72,7 +72,7 @@ var (
 				log.WithFields(log.Fields{"error": err.Error(), "port": serverAddr[1:]}).Fatal("Failed to listen for rpc")
 			}
 			server = grpc.NewServer()
-			pb.RegisterTorrentServer(server, &session)
+			pb.RegisterTorrentServiceServer(server, &session)
 			if err = server.Serve(serverListener); err != nil {
 				log.WithField("error", err).Debug("Error with serving rpc client")
 			}

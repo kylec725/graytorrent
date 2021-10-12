@@ -9,6 +9,7 @@ import (
 
 func init() {
 	rootCmd.AddCommand(removeCmd)
+	removeCmd.Flags().BoolVarP(&isInfoHash, "infohash", "i", false, "select a torrent with its infohash")
 }
 
 var (
@@ -17,7 +18,7 @@ var (
 		Short: "removes a managed torrent",
 		Args:  cobra.MinimumNArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
-			if err := client.Remove(args[0]); err != nil {
+			if err := client.Remove(args[0], isInfoHash); err != nil {
 				fmt.Println(err)
 			}
 		},

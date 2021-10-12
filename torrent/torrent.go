@@ -30,10 +30,13 @@ import (
 var (
 	ErrPeerNotFound  = errors.New("Peer not found")
 	ErrTorrentExists = errors.New("Torrent is already being managed")
+
+	currID uint32 = 1 // 0 is reserved for an unset ID
 )
 
 // Torrent stores metainfo and current progress on a torrent
 type Torrent struct {
+	ID       uint32              `json:"-"`      // ID used by grpc client to select a torrent
 	File     string              `json:"File"`   // .torrent file
 	Magnet   string              `json:"Magnet"` // magnet link
 	Info     *common.TorrentInfo `json:"Info"`   // Contains meta data of the torrent // TODO: embed Info
@@ -85,6 +88,9 @@ func (to *Torrent) Init() error {
 	to.Started = false
 
 	_, to.cancel = context.WithCancel(context.Background()) // Dummy function so that stopping a torrent does not fail
+
+	to.ID = currID
+	currID++
 
 	return nil
 }

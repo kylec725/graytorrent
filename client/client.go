@@ -24,7 +24,7 @@ func List() error {
 	}
 	defer conn.Close()
 
-	client := pb.NewTorrentClient(conn)
+	client := pb.NewTorrentServiceClient(conn)
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
@@ -34,14 +34,14 @@ func List() error {
 	}
 
 	for {
-		torrentInfo, err := stream.Recv()
+		to, err := stream.Recv()
 		if err == io.EOF {
 			break
 		} else if err != nil {
 			return errors.Wrap(err, "Error while listing torrents")
 		}
 
-		torrentPrint(torrentInfo)
+		torrentPrint(to)
 	}
 
 	return nil
@@ -57,7 +57,7 @@ func Add(file string) error {
 	}
 	defer conn.Close()
 
-	client := pb.NewTorrentClient(conn)
+	client := pb.NewTorrentServiceClient(conn)
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
@@ -70,13 +70,13 @@ func Add(file string) error {
 	if err != nil {
 		return errors.WithMessage(err, "Failed to add torrent")
 	}
-	fmt.Printf("Added %s %s\n", reply.GetName(), hex.EncodeToString(reply.GetInfoHash()))
+	fmt.Printf("Added %d: %s %s\n", reply.GetId(), reply.GetName(), hex.EncodeToString(reply.GetInfoHash()))
 
 	return nil
 }
 
 // Remove a managed torrent
-func Remove(infoHashStr string) error {
+func Remove(input string, isInfoHash bool) error {
 	// Set up a connection to the server.
 	serverAddr := "localhost:" + strconv.Itoa(int(viper.GetViper().GetInt("server.port")))
 	conn, err := grpc.Dial(serverAddr, grpc.WithInsecure(), grpc.WithBlock())
@@ -85,22 +85,39 @@ func Remove(infoHashStr string) error {
 	}
 	defer conn.Close()
 
-	client := pb.NewTorrentClient(conn)
+	client := pb.NewTorrentServiceClient(conn)
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	infoHash, err := hex.DecodeString(infoHashStr)
+	var id int
+	var infoHash []byte
+	var torrentRequest pb.TorrentRequest
 
-	_, err = client.Remove(ctx, &pb.SelectedTorrent{InfoHash: infoHash})
-	if err != nil {
-		return errors.WithMessage(err, "Failed to start torrent")
+	if isInfoHash {
+		infoHash, err = hex.DecodeString(input)
+		if err != nil {
+			return errors.WithMessage(err, "Could not parse infohash")
+		}
+		torrentRequest.InfoHash = infoHash
+	} else {
+		id, err = strconv.Atoi(input)
+		if err != nil {
+			return errors.WithMessage(err, "Could not parse ID")
+		}
+		torrentRequest.Id = uint32(id)
 	}
+
+	reply, err := client.Remove(ctx, &torrentRequest)
+	if err != nil {
+		return errors.WithMessage(err, "Failed to remove torrent")
+	}
+	fmt.Printf("Removed %d: %s %s\n", reply.GetId(), reply.GetName(), hex.EncodeToString(reply.GetInfoHash()))
 
 	return nil
 }
 
 // Start a torrent's download/upload
-func Start(infoHashStr string) error {
+func Start(input string, isInfoHash bool) error {
 	// Set up a connection to the server.
 	serverAddr := "localhost:" + strconv.Itoa(int(viper.GetViper().GetInt("server.port")))
 	conn, err := grpc.Dial(serverAddr, grpc.WithInsecure(), grpc.WithBlock())
@@ -109,22 +126,39 @@ func Start(infoHashStr string) error {
 	}
 	defer conn.Close()
 
-	client := pb.NewTorrentClient(conn)
+	client := pb.NewTorrentServiceClient(conn)
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	infoHash, err := hex.DecodeString(infoHashStr)
+	var id int
+	var infoHash []byte
+	var torrentRequest pb.TorrentRequest
 
-	_, err = client.Start(ctx, &pb.SelectedTorrent{InfoHash: infoHash})
+	if isInfoHash {
+		infoHash, err = hex.DecodeString(input)
+		if err != nil {
+			return errors.WithMessage(err, "Could not parse infohash")
+		}
+		torrentRequest.InfoHash = infoHash
+	} else {
+		id, err = strconv.Atoi(input)
+		if err != nil {
+			return errors.WithMessage(err, "Could not parse ID")
+		}
+		torrentRequest.Id = uint32(id)
+	}
+
+	reply, err := client.Start(ctx, &torrentRequest)
 	if err != nil {
 		return errors.WithMessage(err, "Failed to start torrent")
 	}
+	fmt.Printf("Started %d: %s %s\n", reply.GetId(), reply.GetName(), hex.EncodeToString(reply.GetInfoHash()))
 
 	return nil
 }
 
 // Stop a torrent's download/upload
-func Stop(infoHashStr string) error {
+func Stop(input string, isInfoHash bool) error {
 	// Set up a connection to the server.
 	serverAddr := "localhost:" + strconv.Itoa(int(viper.GetViper().GetInt("server.port")))
 	conn, err := grpc.Dial(serverAddr, grpc.WithInsecure(), grpc.WithBlock())
@@ -133,30 +167,49 @@ func Stop(infoHashStr string) error {
 	}
 	defer conn.Close()
 
-	client := pb.NewTorrentClient(conn)
+	client := pb.NewTorrentServiceClient(conn)
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	infoHash, err := hex.DecodeString(infoHashStr)
+	var id int
+	var infoHash []byte
+	var torrentRequest pb.TorrentRequest
 
-	_, err = client.Stop(ctx, &pb.SelectedTorrent{InfoHash: infoHash})
+	if isInfoHash {
+		infoHash, err = hex.DecodeString(input)
+		if err != nil {
+			return errors.WithMessage(err, "Could not parse infohash")
+		}
+		torrentRequest.InfoHash = infoHash
+	} else {
+		id, err = strconv.Atoi(input)
+		if err != nil {
+			return errors.WithMessage(err, "Could not parse ID")
+		}
+		torrentRequest.Id = uint32(id)
+	}
+
+	reply, err := client.Stop(ctx, &torrentRequest)
 	if err != nil {
 		return errors.WithMessage(err, "Failed to start torrent")
 	}
+	fmt.Printf("Stopped %d: %s %s\n", reply.GetId(), reply.GetName(), hex.EncodeToString(reply.GetInfoHash()))
+
 	return nil
 }
 
-func torrentPrint(torrentInfo *pb.TorrentInfo) {
-	curr := torrentInfo.GetTotalLength() - torrentInfo.GetLeft()
-	progress := float64(curr) / float64(torrentInfo.GetTotalLength()) * 100
+func torrentPrint(to *pb.Torrent) {
+	curr := to.GetTotalLength() - to.GetLeft()
+	progress := float64(curr) / float64(to.GetTotalLength()) * 100
 
-	fmt.Printf("%-50s %s %s %s %s %s\n",
-		torrentInfo.GetName(),
-		fmt.Sprintf("infohash: %s", hex.EncodeToString(torrentInfo.GetInfoHash())),
+	fmt.Printf("%d: %-50s %s %s %s %s %s\n",
+		to.Id,
+		to.GetName(),
+		fmt.Sprintf("infohash: %s", hex.EncodeToString(to.GetInfoHash())),
 		fmt.Sprintf("progress: %.1f%%", progress),
-		fmt.Sprintf("download: %s", ratePretty(torrentInfo.GetDownRate())),
-		fmt.Sprintf("upload: %s", ratePretty(torrentInfo.GetUpRate())),
-		fmt.Sprintf("state: %s", torrentInfo.GetState().String()),
+		fmt.Sprintf("download: %s", ratePretty(to.GetDownRate())),
+		fmt.Sprintf("upload: %s", ratePretty(to.GetUpRate())),
+		fmt.Sprintf("state: %s", to.GetState().String()),
 	)
 }
 
@@ -173,3 +226,8 @@ func ratePretty(rate uint32) string {
 	}
 	return fmt.Sprintf("%.2f "+suffix, floatRate)
 }
+
+// func sizePretty(size uint32) string {
+// 	floatSize := float64(size)
+// 	return ""
+// }

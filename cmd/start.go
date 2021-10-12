@@ -9,6 +9,7 @@ import (
 
 func init() {
 	rootCmd.AddCommand(startCmd)
+	startCmd.Flags().BoolVarP(&isInfoHash, "infohash", "i", false, "select a torrent with its infohash")
 }
 
 var (
@@ -17,7 +18,7 @@ var (
 		Short: "starts a torrent's download/upload",
 		Args:  cobra.MinimumNArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
-			if err := client.Start(args[0]); err != nil {
+			if err := client.Start(args[0], isInfoHash); err != nil {
 				fmt.Println(err)
 			}
 		},
