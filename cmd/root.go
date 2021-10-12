@@ -14,7 +14,6 @@ import (
 
 func init() {
 	rootCmd.PersistentFlags().BoolVarP(&verbose, "verbose", "v", false, "print events to stdout")
-	rootCmd.PersistentFlags().BoolVarP(&debug, "debug", "d", false, "logs additional information for debugging")
 	cobra.OnInitialize(initLog, initConfig)
 }
 

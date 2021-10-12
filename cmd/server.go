@@ -25,6 +25,7 @@ func init() {
 	serverCmd.AddCommand(serverMainCmd)
 	serverCmd.AddCommand(serverStartCmd)
 	serverCmd.AddCommand(serverStopCmd)
+	serverCmd.PersistentFlags().BoolVarP(&debug, "debug", "d", false, "logs additional information for debugging")
 }
 
 var (
