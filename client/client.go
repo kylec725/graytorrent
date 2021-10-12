@@ -76,23 +76,79 @@ func Add(file string) error {
 }
 
 // Remove a managed torrent
-func Remove(infoHash string) error {
+func Remove(infoHashStr string) error {
+	// Set up a connection to the server.
+	serverAddr := "localhost:" + strconv.Itoa(int(viper.GetViper().GetInt("server.port")))
+	conn, err := grpc.Dial(serverAddr, grpc.WithInsecure(), grpc.WithBlock())
+	if err != nil {
+		return errors.WithMessage(err, "Did not connect")
+	}
+	defer conn.Close()
+
+	client := pb.NewTorrentClient(conn)
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	infoHash, err := hex.DecodeString(infoHashStr)
+
+	_, err = client.Remove(ctx, &pb.SelectedTorrent{InfoHash: infoHash})
+	if err != nil {
+		return errors.WithMessage(err, "Failed to start torrent")
+	}
+
 	return nil
 }
 
 // Start a torrent's download/upload
-func Start(infoHash string) error {
+func Start(infoHashStr string) error {
+	// Set up a connection to the server.
+	serverAddr := "localhost:" + strconv.Itoa(int(viper.GetViper().GetInt("server.port")))
+	conn, err := grpc.Dial(serverAddr, grpc.WithInsecure(), grpc.WithBlock())
+	if err != nil {
+		return errors.WithMessage(err, "Did not connect")
+	}
+	defer conn.Close()
+
+	client := pb.NewTorrentClient(conn)
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	infoHash, err := hex.DecodeString(infoHashStr)
+
+	_, err = client.Start(ctx, &pb.SelectedTorrent{InfoHash: infoHash})
+	if err != nil {
+		return errors.WithMessage(err, "Failed to start torrent")
+	}
+
 	return nil
 }
 
 // Stop a torrent's download/upload
-func Stop(infoHash string) error {
+func Stop(infoHashStr string) error {
+	// Set up a connection to the server.
+	serverAddr := "localhost:" + strconv.Itoa(int(viper.GetViper().GetInt("server.port")))
+	conn, err := grpc.Dial(serverAddr, grpc.WithInsecure(), grpc.WithBlock())
+	if err != nil {
+		return errors.WithMessage(err, "Did not connect")
+	}
+	defer conn.Close()
+
+	client := pb.NewTorrentClient(conn)
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	infoHash, err := hex.DecodeString(infoHashStr)
+
+	_, err = client.Stop(ctx, &pb.SelectedTorrent{InfoHash: infoHash})
+	if err != nil {
+		return errors.WithMessage(err, "Failed to start torrent")
+	}
 	return nil
 }
 
 func torrentPrint(torrentInfo *pb.TorrentInfo) {
 	curr := torrentInfo.GetTotalLength() - torrentInfo.GetLeft()
-	progress := float64(curr) / float64(torrentInfo.GetTotalLength())
+	progress := float64(curr) / float64(torrentInfo.GetTotalLength()) * 100
 
 	fmt.Printf("%-50s %s %s %s %s %s\n",
 		torrentInfo.GetName(),

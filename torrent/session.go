@@ -81,6 +81,7 @@ func (s *Session) AddTorrent(ctx context.Context, filename string) (*Torrent, er
 func (s *Session) RemoveTorrent(to *Torrent) {
 	to.Stop()
 	delete(s.torrentList, to.InfoHash)
+	log.WithFields(log.Fields{"name": to.Info.Name, "infohash": hex.EncodeToString(to.InfoHash[:])}).Info("Torrent removed")
 	// TODO: remove save data of torrent
 }
 

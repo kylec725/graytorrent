@@ -56,8 +56,8 @@ func (s *Session) Start(ctx context.Context, in *pb.SelectedTorrent) (*pb.Empty,
 	var infoHash [20]byte
 	copy(infoHash[:], in.GetInfoHash())
 	if to, ok := s.torrentList[infoHash]; ok {
-		ctx := context.WithValue(ctx, common.KeyPort, s.port)
-		to.Start(ctx)
+		newCtx := context.WithValue(context.Background(), common.KeyPort, s.port) // NOTE: using ctx causes to.Start() to end immediately
+		go to.Start(newCtx)
 	} else {
 		return nil, errors.New("Torrent not found")
 	}

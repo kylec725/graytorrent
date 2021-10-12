@@ -12,6 +12,7 @@ package torrent
 
 import (
 	"context"
+	"encoding/hex"
 	"time"
 
 	"github.com/kylec725/graytorrent/internal/common"
@@ -37,8 +38,8 @@ type Torrent struct {
 	Magnet   string              `json:"Magnet"` // magnet link
 	Info     *common.TorrentInfo `json:"Info"`   // Contains meta data of the torrent // TODO: embed Info
 	InfoHash [20]byte            `json:"InfoHash"`
-	Trackers []tracker.Tracker   `json:"Trackers"`
-	Peers    []peer.Peer         `json:"-"`
+	Trackers []tracker.Tracker   `json:"Trackers"` // TODO: make this a slice of pointers
+	Peers    []*peer.Peer        `json:"-"`
 	NewPeers chan peer.Peer      `json:"-"` // Used by main and trackers to send in new peers
 	Started  bool                `json:"-"` // Flag to see if torrent goroutine is running
 
@@ -91,7 +92,7 @@ func (to *Torrent) Init() error {
 // Start initiates a routine to download a torrent from peers
 func (to *Torrent) Start(ctx context.Context) {
 	to.Started = true
-	log.WithField("name", to.Info.Name).Info("Torrent started")
+	log.WithFields(log.Fields{"name": to.Info.Name, "infohash": hex.EncodeToString(to.InfoHash[:])}).Info("Torrent started")
 	work := make(chan int, to.Info.TotalPieces)       // Piece indices we need
 	results := make(chan int, to.Info.TotalPieces)    // Notification that a piece is done
 	deadPeers := make(chan string)                    // For peers to notify they should be removed from our list
@@ -125,7 +126,7 @@ func (to *Torrent) Start(ctx context.Context) {
 	for {
 		select {
 		case <-ctx.Done(): // TODO: use a waitgroup to make sure trackers and peers properly close out
-			log.WithField("name", to.Info.Name).Info("Torrent stopped")
+			log.WithFields(log.Fields{"name": to.Info.Name, "infohash": hex.EncodeToString(to.InfoHash[:])}).Info("Torrent stopped")
 			return
 		case deadPeer := <-deadPeers: // Don't exit since trackers may find peers
 			to.removePeer(deadPeer)
@@ -141,8 +142,8 @@ func (to *Torrent) Start(ctx context.Context) {
 				to.Peers[i].Send <- msg
 			}
 
-			if to.Info.Left == 0 {
-				log.WithField("name", to.Info.Name).Info("Torrent completed")
+			if to.Info.Left == 0 { // WARNING: memory leak when seeding begins
+				log.WithFields(log.Fields{"name": to.Info.Name, "infohash": hex.EncodeToString(to.InfoHash[:])}).Info("Torrent completed")
 				close(complete) // Notify trackers to send completed message
 			}
 		case <-unchokeTicker.C:
@@ -172,7 +173,7 @@ func (to *Torrent) addPeer(ctx context.Context, p *peer.Peer, work chan int, res
 		}
 	}
 	log.WithField("peer", p.String()).Debug("Handshake successful")
-	to.Peers = append(to.Peers, *p)
+	to.Peers = append(to.Peers, p)
 	p.StartWork(ctx, to.Info, work, results, deadPeers)
 }
 
