@@ -15,6 +15,10 @@ import (
 
 const saveType = ".gz"
 
+func (to *Torrent) saveFile() string {
+	return path.Join(common.SavePath, to.Info.Name+saveType)
+}
+
 // Save saves the progress of a torrent
 func (to *Torrent) Save() error {
 	// TODO: only save a file if the current last modified time matches our last modified time
@@ -23,7 +27,7 @@ func (to *Torrent) Save() error {
 		return errors.Wrap(err, "Save")
 	}
 
-	file, err := os.Create(path.Join(common.SavePath, to.Info.Name+saveType)) // os.Create creates or truncates the named file
+	file, err := os.Create(to.saveFile()) // os.Create creates or truncates the named file
 	if err != nil {
 		return errors.Wrap(err, "Save")
 	}

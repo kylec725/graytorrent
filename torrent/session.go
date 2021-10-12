@@ -21,7 +21,7 @@ type Session struct {
 	torrentList  map[[20]byte]*Torrent
 	peerListener net.Listener
 	port         uint16
-	pb.UnimplementedTorrentServer
+	pb.UnimplementedTorrentServiceServer
 }
 
 // NewSession returns a new gray session
@@ -80,6 +80,7 @@ func (s *Session) AddTorrent(ctx context.Context, filename string) (*Torrent, er
 // RemoveTorrent removes a currently managed torrent
 func (s *Session) RemoveTorrent(to *Torrent) {
 	to.Stop()
+	os.Remove(to.saveFile())
 	delete(s.torrentList, to.InfoHash)
 	log.WithFields(log.Fields{"name": to.Info.Name, "infohash": hex.EncodeToString(to.InfoHash[:])}).Info("Torrent removed")
 	// TODO: remove save data of torrent
