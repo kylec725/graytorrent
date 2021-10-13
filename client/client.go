@@ -210,10 +210,11 @@ func torrentPrint(to *pb.Torrent) {
 	curr := to.GetTotalLength() - to.GetLeft()
 	progress := float64(curr) / float64(to.GetTotalLength()) * 100
 
-	fmt.Printf("%d: %-50s %s %s %s %s %s\n",
+	fmt.Printf("%d: %-50s %s %s %s %s %s %s\n",
 		to.Id,
 		to.GetName(),
 		fmt.Sprintf("infohash: %s", hex.EncodeToString(to.GetInfoHash())),
+		fmt.Sprintf("size: %s", sizePretty(to.GetTotalLength())),
 		fmt.Sprintf("progress: %.1f%%", progress),
 		fmt.Sprintf("download: %s", ratePretty(to.GetDownRate())),
 		fmt.Sprintf("upload: %s", ratePretty(to.GetUpRate())),
@@ -224,18 +225,35 @@ func torrentPrint(to *pb.Torrent) {
 func ratePretty(rate uint32) string {
 	floatRate := float64(rate)
 	suffix := "B/s"
-	if floatRate > 1024 {
+	if floatRate >= 1024 {
 		floatRate /= 1024
 		suffix = "KiB/s"
 	}
-	if floatRate > 1024 {
+	if floatRate >= 1024 {
 		floatRate /= 1024
 		suffix = "MiB/s"
 	}
 	return fmt.Sprintf("%.2f "+suffix, floatRate)
 }
 
-// func sizePretty(size uint32) string {
-// 	floatSize := float64(size)
-// 	return ""
-// }
+func sizePretty(size uint32) string {
+	floatSize := float64(size)
+	suffix := "B"
+	if floatSize >= 1024 {
+		floatSize /= 1024
+		suffix = "KiB"
+	}
+	if floatSize >= 1024 {
+		floatSize /= 1024
+		suffix = "MiB"
+	}
+	if floatSize >= 1024 {
+		floatSize /= 1024
+		suffix = "GiB"
+	}
+	if floatSize >= 1024 {
+		floatSize /= 1024
+		suffix = "TiB"
+	}
+	return fmt.Sprintf("%.1f "+suffix, floatSize)
+}
