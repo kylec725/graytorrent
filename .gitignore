@@ -11,9 +11,6 @@
 # Output of the go coverage tool, specifically when used with LiteIDE
 *.out
 
-# Gray binary
-gray
-
 # Log file
 info.log
 
