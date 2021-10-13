@@ -18,7 +18,7 @@ import (
 func List() error {
 	// Set up a connection to the server.
 	serverAddr := "localhost:" + strconv.Itoa(int(viper.GetViper().GetInt("server.port")))
-	conn, err := grpc.Dial(serverAddr, grpc.WithInsecure(), grpc.WithBlock())
+	conn, err := grpc.Dial(serverAddr, grpc.WithInsecure())
 	if err != nil {
 		return errors.WithMessage(err, "Did not connect")
 	}
@@ -44,7 +44,7 @@ func List() error {
 func Add(name string, magnet bool, directory string) error {
 	// Set up a connection to the server.
 	serverAddr := "localhost:" + strconv.Itoa(int(viper.GetViper().GetInt("server.port")))
-	conn, err := grpc.Dial(serverAddr, grpc.WithInsecure(), grpc.WithBlock())
+	conn, err := grpc.Dial(serverAddr, grpc.WithInsecure())
 	if err != nil {
 		return errors.WithMessage(err, "Did not connect")
 	}
@@ -80,7 +80,7 @@ func Add(name string, magnet bool, directory string) error {
 func Remove(input string, isInfoHash bool) error {
 	// Set up a connection to the server.
 	serverAddr := "localhost:" + strconv.Itoa(int(viper.GetViper().GetInt("server.port")))
-	conn, err := grpc.Dial(serverAddr, grpc.WithInsecure(), grpc.WithBlock())
+	conn, err := grpc.Dial(serverAddr, grpc.WithInsecure())
 	if err != nil {
 		return errors.WithMessage(err, "Did not connect")
 	}
@@ -121,7 +121,7 @@ func Remove(input string, isInfoHash bool) error {
 func Start(input string, isInfoHash bool) error {
 	// Set up a connection to the server.
 	serverAddr := "localhost:" + strconv.Itoa(int(viper.GetViper().GetInt("server.port")))
-	conn, err := grpc.Dial(serverAddr, grpc.WithInsecure(), grpc.WithBlock())
+	conn, err := grpc.Dial(serverAddr, grpc.WithInsecure())
 	if err != nil {
 		return errors.WithMessage(err, "Did not connect")
 	}
@@ -162,7 +162,7 @@ func Start(input string, isInfoHash bool) error {
 func Stop(input string, isInfoHash bool) error {
 	// Set up a connection to the server.
 	serverAddr := "localhost:" + strconv.Itoa(int(viper.GetViper().GetInt("server.port")))
-	conn, err := grpc.Dial(serverAddr, grpc.WithInsecure(), grpc.WithBlock())
+	conn, err := grpc.Dial(serverAddr, grpc.WithInsecure())
 	if err != nil {
 		return errors.WithMessage(err, "Did not connect")
 	}
