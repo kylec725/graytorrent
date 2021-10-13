@@ -33,16 +33,15 @@ var (
 
 // Torrent stores metainfo and current progress on a torrent
 type Torrent struct {
-	ID        uint32              `json:"-"`      // Can be used by grpc client to select a torrent
-	File      string              `json:"File"`   // .torrent file
-	Magnet    string              `json:"Magnet"` // Magnet link
-	Info      *common.TorrentInfo `json:"Info"`   // Contains meta data of the torrent // TODO: embed Info
-	InfoHash  [20]byte            `json:"InfoHash"`
-	Trackers  []*tracker.Tracker  `json:"Trackers"` // TODO: make this a slice of pointers
-	Peers     []*peer.Peer        `json:"-"`
-	NewPeers  chan peer.Peer      `json:"-"`         // Used by main and trackers to send in new peers
-	Started   bool                `json:"-"`         // Flag to see if torrent goroutine is running
-	Directory string              `json:"Directory"` // What directory the torrent's file(s) will be
+	ID       uint32              `json:"-"`      // Can be used by grpc client to select a torrent
+	File     string              `json:"File"`   // .torrent file
+	Magnet   string              `json:"Magnet"` // Magnet link
+	Info     *common.TorrentInfo `json:"Info"`   // Contains meta data of the torrent // TODO: embed Info
+	InfoHash [20]byte            `json:"InfoHash"`
+	Trackers []*tracker.Tracker  `json:"Trackers"` // TODO: make this a slice of pointers
+	Peers    []*peer.Peer        `json:"-"`
+	NewPeers chan peer.Peer      `json:"-"` // Used by main and trackers to send in new peers
+	Started  bool                `json:"-"` // Flag to see if torrent goroutine is running
 
 	cancel            context.CancelFunc `json:"-"` // Cancel function for context, we can use it to see if the Start goroutine is running
 	optimisticUnchoke *peer.Peer         `json:"-"` // The peer that is currently optimistically unchoked

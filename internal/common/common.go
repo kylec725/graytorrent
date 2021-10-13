@@ -36,6 +36,7 @@ type TorrentInfo struct {
 	InfoHash    [20]byte          `json:"InfoHash"`
 	PieceHashes [][20]byte        `json:"PieceHashes"`
 	PeerID      [20]byte          `json:"PeerID"`
+	Directory   string            `json:"Directory"` // What directory the torrent's file(s) will be
 	sync.Mutex
 }
 

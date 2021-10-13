@@ -21,9 +21,9 @@ var (
 )
 
 // NewWrite sets up the files a torrent needs info write info
-func NewWrite(info *common.TorrentInfo, directory string) error {
+func NewWrite(info *common.TorrentInfo) error {
 	for _, path := range info.Paths {
-		currPath := filepath.Join(directory, path.Path)
+		currPath := filepath.Join(info.Directory, path.Path)
 
 		// Return an error if the file already exists
 		if _, err := os.Stat(currPath); err == nil {
@@ -31,8 +31,8 @@ func NewWrite(info *common.TorrentInfo, directory string) error {
 		}
 
 		// Create directories recursively if necessary
-		if directory := filepath.Dir(currPath); directory != "" {
-			err := os.MkdirAll(directory, 0755)
+		if makeDir := filepath.Dir(currPath); makeDir != "" {
+			err := os.MkdirAll(makeDir, 0755)
 			if err != nil {
 				return errors.Wrap(err, "NewWrite")
 			}
@@ -92,7 +92,7 @@ func readOffset(filename string, size int, offset int) ([]byte, error) {
 	return data, nil
 }
 
-// AddBlock adds a block info a piece
+// AddBlock adds a block into a piece
 func AddBlock(info *common.TorrentInfo, index, begin int, block, piece []byte) error {
 	if index < 0 || index >= info.TotalPieces {
 		return errors.Wrap(ErrPieceIndex, "AddBlock")
@@ -123,15 +123,17 @@ func AddPiece(info *common.TorrentInfo, index int, piece []byte) error {
 	offset, _ := pieceBounds(info, index) // Offset starts at the start bound of the piece
 	pieceLeft := info.PieceSize(index)    // Keep track of how much more of the piece we have info write
 
-	for _, file := range info.Paths {
-		if offset < file.Length { // Piece is part of the file
-			bytesToWrite := file.Length - offset // Figure out how much of the piece to write
+	for _, path := range info.Paths {
+		currPath := filepath.Join(info.Directory, path.Path)
+
+		if offset < path.Length { // Piece is part of the file
+			bytesToWrite := path.Length - offset // Figure out how much of the piece to write
 			bytesToWrite = common.Min(bytesToWrite, pieceLeft)
 			pieceEnd = pieceStart + bytesToWrite
 
-			err := writeOffset(file.Path, piece[pieceStart:pieceEnd], offset)
+			err := writeOffset(currPath, piece[pieceStart:pieceEnd], offset)
 			if err != nil {
-				err = errors.WithMessagef(err, "index %d path %s", index, file.Path)
+				err = errors.WithMessagef(err, "index %d path %s", index, currPath)
 				return errors.Wrap(err, "AddPiece")
 			}
 
@@ -142,7 +144,7 @@ func AddPiece(info *common.TorrentInfo, index int, piece []byte) error {
 			pieceStart += bytesToWrite
 			pieceLeft -= bytesToWrite
 		}
-		offset -= file.Length // Decrement the offset so we know where info start writing in the file
+		offset -= path.Length // Decrement the offset so we know where info start writing in the file
 		if offset < 0 {       // Only happens if piece was written info the end of the file
 			offset = 0
 		}
@@ -161,13 +163,15 @@ func ReadPiece(info *common.TorrentInfo, index int) ([]byte, error) {
 	pieceLeft := info.PieceSize(index)    // Keep track of how much more of the piece we have info write
 	piece := make([]byte, pieceLeft)
 
-	for _, file := range info.Paths {
-		if offset < file.Length { // Piece is part of the file
-			bytesToRead := file.Length - offset // Figure out how much of the piece to read
+	for _, path := range info.Paths {
+		currPath := filepath.Join(info.Directory, path.Path)
+
+		if offset < path.Length { // Piece is part of the file
+			bytesToRead := path.Length - offset // Figure out how much of the piece to read
 			bytesToRead = common.Min(bytesToRead, pieceLeft)
 			pieceEnd = pieceStart + bytesToRead
 
-			data, err := readOffset(file.Path, bytesToRead, offset)
+			data, err := readOffset(currPath, bytesToRead, offset)
 			if err != nil {
 				return nil, errors.Wrap(err, "ReadPiece")
 			}
@@ -185,7 +189,7 @@ func ReadPiece(info *common.TorrentInfo, index int) ([]byte, error) {
 			pieceStart += bytesToRead
 			pieceLeft -= bytesToRead
 		}
-		offset -= file.Length // Decrement the offset so we know where info start writing in the file
+		offset -= path.Length // Decrement the offset so we know where info start writing in the file
 		if offset < 0 {       // Only happens if piece was written info the end of the file
 			offset = 0
 		}

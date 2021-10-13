@@ -89,11 +89,11 @@ func (s *Session) AddTorrent(ctx context.Context, name string, magnet bool, dire
 	}
 
 	// Initialize files for writing
-	to.Directory = directory
+	to.Info.Directory = directory
 	if directory == "" {
-		to.Directory = viper.GetViper().GetString("torrent.defaultpath")
+		to.Info.Directory = viper.GetViper().GetString("torrent.defaultpath")
 	}
-	if err := write.NewWrite(to.Info, to.Directory); err != nil { // Should fail if torrent already is being managed
+	if err := write.NewWrite(to.Info); err != nil { // Should fail if torrent already is being managed
 		return nil, errors.Wrap(err, "AddTorrent")
 	}
 
