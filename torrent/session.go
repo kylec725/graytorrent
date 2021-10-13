@@ -15,6 +15,7 @@ import (
 	pb "github.com/kylec725/graytorrent/rpc"
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
+	viper "github.com/spf13/viper"
 )
 
 // Errors
@@ -71,10 +72,15 @@ func (s *Session) Close() {
 }
 
 // AddTorrent adds a new torrent to be managed
-func (s *Session) AddTorrent(ctx context.Context, filename string, dir string) (*Torrent, error) {
-	to := Torrent{File: filename}
+func (s *Session) AddTorrent(ctx context.Context, name string, magnet bool, directory string) (*Torrent, error) {
+	var to Torrent
+	if magnet {
+		to = Torrent{Magnet: name}
+	} else {
+		to = Torrent{File: name}
+	}
 	if err := to.Init(); err != nil {
-		log.WithFields(log.Fields{"filename": filename, "error": err.Error()}).Info("Failed to add torrent")
+		log.WithFields(log.Fields{"name": name, "error": err.Error()}).Info("Failed to add torrent")
 		return nil, err
 	}
 
@@ -83,7 +89,10 @@ func (s *Session) AddTorrent(ctx context.Context, filename string, dir string) (
 	}
 
 	// Initialize files for writing
-	to.Directory = dir
+	to.Directory = directory
+	if directory == "" {
+		to.Directory = viper.GetViper().GetString("torrent.defaultpath")
+	}
 	if err := write.NewWrite(to.Info, to.Directory); err != nil { // Should fail if torrent already is being managed
 		return nil, errors.Wrap(err, "AddTorrent")
 	}
@@ -103,17 +112,17 @@ func (s *Session) RemoveTorrent(to *Torrent) {
 }
 
 // Download begins a download for a single torrent
-func (s *Session) Download(ctx context.Context, filename string, dir string) {
+func (s *Session) Download(ctx context.Context, name string, magnet bool, directory string) {
 	defer s.Close()
 
 	go s.catchSignal()
 
 	ctx = context.WithValue(ctx, common.KeyPort, s.port)
 
-	to, err := s.AddTorrent(ctx, filename, dir)
+	to, err := s.AddTorrent(ctx, name, magnet, directory)
 	if err != nil {
 		fmt.Println("Single torrent failed:", err)
-		log.WithFields(log.Fields{"filename": filename, "error": err.Error()}).Info("Failed to add torrent")
+		log.WithFields(log.Fields{"name": name, "error": err.Error()}).Info("Failed to add torrent")
 		return
 	}
 	log.WithField("name", to.Info.Name).Info("Torrent added")

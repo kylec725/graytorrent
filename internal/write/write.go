@@ -21,9 +21,9 @@ var (
 )
 
 // NewWrite sets up the files a torrent needs info write info
-func NewWrite(info *common.TorrentInfo, dir string) error {
+func NewWrite(info *common.TorrentInfo, directory string) error {
 	for _, path := range info.Paths {
-		currPath := filepath.Join(dir, path.Path)
+		currPath := filepath.Join(directory, path.Path)
 
 		// Return an error if the file already exists
 		if _, err := os.Stat(currPath); err == nil {
@@ -31,8 +31,8 @@ func NewWrite(info *common.TorrentInfo, dir string) error {
 		}
 
 		// Create directories recursively if necessary
-		if dir := filepath.Dir(currPath); dir != "" {
-			err := os.MkdirAll(dir, 0755)
+		if directory := filepath.Dir(currPath); directory != "" {
+			err := os.MkdirAll(directory, 0755)
 			if err != nil {
 				return errors.Wrap(err, "NewWrite")
 			}
