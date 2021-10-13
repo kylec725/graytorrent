@@ -145,7 +145,6 @@ func (tr *Tracker) sendAnnounce(info *common.TorrentInfo, port uint16, uploaded,
 
 // Run starts a tracker and gets peers for a torrent
 func (tr *Tracker) Run(ctx context.Context, info *common.TorrentInfo, peers chan peer.Peer, complete chan bool) {
-	// info := common.Info(ctx)
 	startLeft := info.Left
 	port := common.Port(ctx)
 	trackerLog := log.WithField("tracker", tr.Announce)
@@ -163,7 +162,6 @@ func (tr *Tracker) Run(ctx context.Context, info *common.TorrentInfo, peers chan
 
 	// Cleanup
 	defer func() {
-		// currInfo := common.Info(ctx) // Need to get this because original info is a copy
 		if tr.Working { // Send stopped message if necessary
 			uploaded := 0
 			downloaded := info.Left - startLeft
@@ -186,7 +184,6 @@ func (tr *Tracker) Run(ctx context.Context, info *common.TorrentInfo, peers chan
 		case <-ctx.Done():
 			return
 		case <-time.After(time.Duration(tr.Interval) * time.Second): // Send announce at intervals
-			// currInfo := common.Info(ctx)
 			uploaded := 0
 			downloaded := info.Left - startLeft
 			if peerList, err = tr.sendAnnounce(info, port, uploaded, downloaded, info.Left); err != nil {
@@ -206,7 +203,6 @@ func (tr *Tracker) Run(ctx context.Context, info *common.TorrentInfo, peers chan
 			}
 		case _, ok := <-complete: // WARNING: if we don't return here, this case will loop
 			if !ok && tr.Working {
-				// currInfo := common.Info(ctx)
 				uploaded := 0
 				downloaded := info.Left - startLeft
 				if err = tr.sendCompleted(info, port, uploaded, downloaded, info.Left); err != nil {
