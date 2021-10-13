@@ -7,6 +7,7 @@ import (
 	"net"
 	"os"
 	"os/signal"
+	"path/filepath"
 	"syscall"
 	"time"
 
@@ -85,7 +86,7 @@ func (s *Session) AddTorrent(ctx context.Context, name string, magnet bool, dire
 	}
 
 	if _, ok := s.torrentList[to.InfoHash]; ok {
-		return nil, ErrTorrentExists
+		return nil, errors.Wrap(ErrTorrentExists, "AddTorrent")
 	}
 
 	// Initialize files for writing
@@ -93,6 +94,12 @@ func (s *Session) AddTorrent(ctx context.Context, name string, magnet bool, dire
 	if directory == "" {
 		to.Info.Directory = viper.GetViper().GetString("torrent.defaultpath")
 	}
+	absDir, err := filepath.Abs(to.Info.Directory)
+	if err != nil {
+		return nil, errors.Wrap(err, "AddTorrent")
+	}
+	to.Info.Directory = absDir
+	log.Info(to.Info.Directory)
 	if err := write.NewWrite(to.Info); err != nil { // Should fail if torrent already is being managed
 		return nil, errors.Wrap(err, "AddTorrent")
 	}
