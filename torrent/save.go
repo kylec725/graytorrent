@@ -85,7 +85,7 @@ func LoadAll() (map[[20]byte]*Torrent, error) {
 			return err
 		}
 
-		torrentList[to.InfoHash] = &to
+		torrentList[to.Info.InfoHash] = &to
 
 		return nil
 	})

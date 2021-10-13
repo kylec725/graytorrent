@@ -48,8 +48,6 @@ var (
 			if err != nil {
 				log.WithField("error", err).Info("Error when starting a new session for server")
 			}
-			// TODO: start peerListener
-
 			// Initialize signal catching
 			signalChan := make(chan os.Signal, 1)
 			signal.Notify(signalChan, os.Interrupt, os.Kill, syscall.SIGTERM, syscall.SIGKILL)

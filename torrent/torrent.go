@@ -36,9 +36,8 @@ type Torrent struct {
 	ID       uint32              `json:"-"`      // Can be used by grpc client to select a torrent
 	File     string              `json:"File"`   // .torrent file
 	Magnet   string              `json:"Magnet"` // Magnet link
-	Info     *common.TorrentInfo `json:"Info"`   // Contains meta data of the torrent // TODO: embed Info
-	InfoHash [20]byte            `json:"InfoHash"`
-	Trackers []*tracker.Tracker  `json:"Trackers"` // TODO: make this a slice of pointers
+	Info     *common.TorrentInfo `json:"Info"`   // Contains meta data of the torrent
+	Trackers []*tracker.Tracker  `json:"Trackers"`
 	Peers    []*peer.Peer        `json:"-"`
 	NewPeers chan peer.Peer      `json:"-"` // Used by main and trackers to send in new peers
 	Started  bool                `json:"-"` // Flag to see if torrent goroutine is running
@@ -46,9 +45,6 @@ type Torrent struct {
 	cancel            context.CancelFunc `json:"-"` // Cancel function for context, we can use it to see if the Start goroutine is running
 	optimisticUnchoke *peer.Peer         `json:"-"` // The peer that is currently optimistically unchoked
 }
-
-// TODO: add mutex to Info and pass pointer directly to the Info field (so that we don't need to pass Info into ctx)
-// start by remove KeyInfo to lint where we need to change it
 
 // Init initializes a torrent so that it is ready to download or seed
 func (to *Torrent) Init() error {
@@ -60,8 +56,6 @@ func (to *Torrent) Init() error {
 		if err != nil {
 			return errors.Wrap(err, "Init")
 		}
-
-		to.InfoHash = to.Info.InfoHash
 	}
 
 	to.NewPeers = make(chan peer.Peer)
@@ -79,7 +73,8 @@ func (to *Torrent) Init() error {
 // Start initiates a routine to download a torrent from peers
 func (to *Torrent) Start(ctx context.Context) {
 	to.Started = true
-	log.WithFields(log.Fields{"name": to.Info.Name, "infohash": hex.EncodeToString(to.InfoHash[:])}).Info("Torrent started")
+	torrentLog := log.WithFields(log.Fields{"name": to.Info.Name, "infohash": hex.EncodeToString(to.Info.InfoHash[:])})
+	torrentLog.Info("Torrent started")
 	work := make(chan int, to.Info.TotalPieces)       // Piece indices we need
 	results := make(chan int, to.Info.TotalPieces)    // Notification that a piece is done
 	complete := make(chan bool)                       // Notify trackers that the torrent is complete
@@ -113,7 +108,7 @@ func (to *Torrent) Start(ctx context.Context) {
 	for {
 		select {
 		case <-ctx.Done(): // TODO: use a waitgroup to make sure trackers and peers properly close out
-			log.WithFields(log.Fields{"name": to.Info.Name, "infohash": hex.EncodeToString(to.InfoHash[:])}).Info("Torrent stopped")
+			torrentLog.Info("Torrent stopped")
 			return
 		case deadPeer := <-deadPeers: // Don't exit since trackers may find peers
 			to.removePeer(deadPeer)
@@ -130,7 +125,7 @@ func (to *Torrent) Start(ctx context.Context) {
 			}
 
 			if to.Info.Left == 0 { // WARNING: goroutine leak when seeding begins (high cpu usage)
-				log.WithFields(log.Fields{"name": to.Info.Name, "infohash": hex.EncodeToString(to.InfoHash[:])}).Info("Torrent completed")
+				torrentLog.Info("Torrent completed")
 				close(complete)
 			}
 		case <-unchokeTicker.C:

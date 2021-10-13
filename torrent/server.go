@@ -23,7 +23,7 @@ func (s *Session) List(in *pb.Empty, stream pb.TorrentService_ListServer) error 
 		stream.Send(&pb.Torrent{
 			Id:          to.ID,
 			Name:        to.Info.Name,
-			InfoHash:    to.InfoHash[:], // NOTE: may need to check if infohash is set first
+			InfoHash:    to.Info.InfoHash[:], // NOTE: may need to check if infohash is set first
 			TotalLength: uint32(to.Info.TotalLength),
 			Left:        uint32(to.Info.Left),
 			DownRate:    uint32(to.DownRate()),
@@ -40,7 +40,7 @@ func (s *Session) Add(ctx context.Context, in *pb.AddRequest) (*pb.TorrentReply,
 	if err != nil {
 		return nil, err
 	}
-	return &pb.TorrentReply{Id: to.ID, Name: to.Info.Name, InfoHash: to.InfoHash[:]}, nil
+	return &pb.TorrentReply{Id: to.ID, Name: to.Info.Name, InfoHash: to.Info.InfoHash[:]}, nil
 }
 
 // Remove a torrent from being managed
@@ -50,13 +50,13 @@ func (s *Session) Remove(ctx context.Context, in *pb.TorrentRequest) (*pb.Torren
 
 	if to, ok := s.torrentList[infoHash]; ok {
 		s.RemoveTorrent(to)
-		return &pb.TorrentReply{Id: to.ID, Name: to.Info.Name, InfoHash: to.InfoHash[:]}, nil
+		return &pb.TorrentReply{Id: to.ID, Name: to.Info.Name, InfoHash: to.Info.InfoHash[:]}, nil
 	}
 	// Check ID instead
 	for _, to := range s.torrentList {
 		if to.ID == in.GetId() {
 			s.RemoveTorrent(to)
-			return &pb.TorrentReply{Id: to.ID, Name: to.Info.Name, InfoHash: to.InfoHash[:]}, nil
+			return &pb.TorrentReply{Id: to.ID, Name: to.Info.Name, InfoHash: to.Info.InfoHash[:]}, nil
 		}
 	}
 
@@ -73,7 +73,7 @@ func (s *Session) Start(ctx context.Context, in *pb.TorrentRequest) (*pb.Torrent
 			newCtx := context.WithValue(context.Background(), common.KeyPort, s.port) // NOTE: using ctx causes to.Start() to end immediately
 			go to.Start(newCtx)
 		}
-		return &pb.TorrentReply{Id: to.ID, Name: to.Info.Name, InfoHash: to.InfoHash[:]}, nil
+		return &pb.TorrentReply{Id: to.ID, Name: to.Info.Name, InfoHash: to.Info.InfoHash[:]}, nil
 	}
 	// Check ID instead
 	for _, to := range s.torrentList {
@@ -82,7 +82,7 @@ func (s *Session) Start(ctx context.Context, in *pb.TorrentRequest) (*pb.Torrent
 				newCtx := context.WithValue(context.Background(), common.KeyPort, s.port)
 				go to.Start(newCtx)
 			}
-			return &pb.TorrentReply{Id: to.ID, Name: to.Info.Name, InfoHash: to.InfoHash[:]}, nil
+			return &pb.TorrentReply{Id: to.ID, Name: to.Info.Name, InfoHash: to.Info.InfoHash[:]}, nil
 		}
 	}
 
@@ -96,13 +96,13 @@ func (s *Session) Stop(ctx context.Context, in *pb.TorrentRequest) (*pb.TorrentR
 
 	if to, ok := s.torrentList[infoHash]; ok {
 		to.Stop()
-		return &pb.TorrentReply{Id: to.ID, Name: to.Info.Name, InfoHash: to.InfoHash[:]}, nil
+		return &pb.TorrentReply{Id: to.ID, Name: to.Info.Name, InfoHash: to.Info.InfoHash[:]}, nil
 	}
 	// Check ID instead
 	for _, to := range s.torrentList {
 		if to.ID == in.GetId() {
 			to.Stop()
-			return &pb.TorrentReply{Id: to.ID, Name: to.Info.Name, InfoHash: to.InfoHash[:]}, nil
+			return &pb.TorrentReply{Id: to.ID, Name: to.Info.Name, InfoHash: to.Info.InfoHash[:]}, nil
 		}
 	}
 

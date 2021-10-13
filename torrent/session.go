@@ -85,7 +85,7 @@ func (s *Session) AddTorrent(ctx context.Context, name string, magnet bool, dire
 		return nil, err
 	}
 
-	if _, ok := s.torrentList[to.InfoHash]; ok {
+	if _, ok := s.torrentList[to.Info.InfoHash]; ok {
 		return nil, errors.Wrap(ErrTorrentExists, "AddTorrent")
 	}
 
@@ -103,8 +103,8 @@ func (s *Session) AddTorrent(ctx context.Context, name string, magnet bool, dire
 		return nil, errors.Wrap(err, "AddTorrent")
 	}
 
-	s.torrentList[to.InfoHash] = &to
-	log.WithFields(log.Fields{"name": to.Info.Name, "infohash": hex.EncodeToString(to.InfoHash[:])}).Info("Torrent added")
+	s.torrentList[to.Info.InfoHash] = &to
+	log.WithFields(log.Fields{"name": to.Info.Name, "infohash": hex.EncodeToString(to.Info.InfoHash[:])}).Info("Torrent added")
 	return &to, nil
 }
 
@@ -112,8 +112,8 @@ func (s *Session) AddTorrent(ctx context.Context, name string, magnet bool, dire
 func (s *Session) RemoveTorrent(to *Torrent) {
 	to.Stop()
 	os.Remove(to.saveFile())
-	delete(s.torrentList, to.InfoHash)
-	log.WithFields(log.Fields{"name": to.Info.Name, "infohash": hex.EncodeToString(to.InfoHash[:])}).Info("Torrent removed")
+	delete(s.torrentList, to.Info.InfoHash)
+	log.WithFields(log.Fields{"name": to.Info.Name, "infohash": hex.EncodeToString(to.Info.InfoHash[:])}).Info("Torrent removed")
 	// TODO: remove save data of torrent
 }
 

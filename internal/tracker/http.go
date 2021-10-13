@@ -50,7 +50,6 @@ func (tr Tracker) buildURL(event string, info *common.TorrentInfo, port uint16, 
 	return base.String(), nil
 }
 
-// NOTE: still get a connection reset by peer error from some trackers
 func (tr *Tracker) httpStarted(info *common.TorrentInfo, port uint16, uploaded, downloaded, left int) ([]peer.Peer, error) {
 	// Request
 	req, err := tr.buildURL("started", info, port, uploaded, downloaded, left)
