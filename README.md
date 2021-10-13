@@ -48,14 +48,14 @@ You can view all managed torrents with
 gray ls
 ```
 
-### Controlling the managed torrents
-To start or stop the upload/download of the torrents you can use the number IDs that are listed or their infohash (with the `-i` flag) to select them.
+### Controlling torrents
+To start or stop the upload/download of the torrents, you can use the number IDs that are listed or their infohash (with the `-i` flag) to select them.
 ```
 gray start ID
 gray stop ID
 ```
 
-### Remove a manged torrent with
+### Remove a managed torrent with
 ```
 gray rm ID
 ```
