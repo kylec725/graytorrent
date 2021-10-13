@@ -113,7 +113,7 @@ func (to *Torrent) Start(ctx context.Context) {
 		case deadPeer := <-deadPeers: // Don't exit since trackers may find peers
 			to.removePeer(deadPeer)
 		case newPeer := <-to.NewPeers: // Incoming peers that contacted us
-			if !to.hasPeer(newPeer.String()) && len(to.Peers) < viper.GetViper().GetInt("network.connections.torrentMax") {
+			if !to.hasPeer(newPeer.String()) && len(to.Peers) < viper.GetViper().GetInt("network.connections.max.torrent") {
 				go to.addPeer(ctx, &newPeer, work, results, deadPeers)
 			}
 		case index := <-results:

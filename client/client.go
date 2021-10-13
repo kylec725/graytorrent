@@ -208,9 +208,9 @@ func torrentPrint(to *pb.Torrent) {
 		fmt.Sprintf("infohash: %s", hex.EncodeToString(to.GetInfoHash())),
 		fmt.Sprintf("size: %s", sizePretty(to.GetTotalLength())),
 		fmt.Sprintf("progress: %.1f%%", progress),
+		fmt.Sprintf("state: %s", to.GetState().String()),
 		fmt.Sprintf("download: %s", ratePretty(to.GetDownRate())),
 		fmt.Sprintf("upload: %s", ratePretty(to.GetUpRate())),
-		fmt.Sprintf("state: %s", to.GetState().String()),
 	)
 }
 
