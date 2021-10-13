@@ -25,6 +25,7 @@ Could also use `go build` or `go run main.go`
 
 ## Usage
 graytorrent has a command line interface. You can see the available commands by entering `gray`
+
 (Note: graytorrent is still in development, not all functionality is complete)
 
 ### Starting graytorrent
