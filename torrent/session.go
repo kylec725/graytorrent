@@ -3,7 +3,6 @@ package torrent
 import (
 	"context"
 	"encoding/hex"
-	"fmt"
 	"net"
 	"os"
 	"os/signal"
@@ -46,15 +45,15 @@ func NewSession() (Session, error) {
 		return Session{}, errors.Wrap(err, "NewSession")
 	}
 
-	session := Session{
+	s := Session{
 		torrentList:  torrentList,
 		peerListener: listener,
 		port:         port,
 	}
 
-	go session.peerListen()
+	go s.peerListen()
 
-	return session, nil
+	return s, nil
 }
 
 // Close performs clean up for a session
@@ -86,6 +85,7 @@ func (s *Session) AddTorrent(ctx context.Context, name string, magnet bool, dire
 	}
 
 	if _, ok := s.torrentList[to.Info.InfoHash]; ok {
+		log.WithFields(log.Fields{"name": name, "error": ErrTorrentExists.Error()}).Info("Failed to add torrent")
 		return nil, errors.Wrap(ErrTorrentExists, "AddTorrent")
 	}
 
@@ -112,32 +112,47 @@ func (s *Session) AddTorrent(ctx context.Context, name string, magnet bool, dire
 func (s *Session) RemoveTorrent(to *Torrent) {
 	to.Stop()
 	os.Remove(to.saveFile())
+	// TODO: have to option to remove torrent's files
 	delete(s.torrentList, to.Info.InfoHash)
 	log.WithFields(log.Fields{"name": to.Info.Name, "infohash": hex.EncodeToString(to.Info.InfoHash[:])}).Info("Torrent removed")
-	// TODO: remove save data of torrent
 }
 
 // Download begins a download for a single torrent
-func (s *Session) Download(ctx context.Context, name string, magnet bool, directory string) {
-	defer s.Close()
+func Download(ctx context.Context, name string, magnet bool, directory string) error {
+	log.Info("Graytorrent started")
+	listener, port, err := initListener()
+	if err != nil {
+		return err
+	}
 
+	s := Session{
+		torrentList:  make(map[[20]byte]*Torrent),
+		peerListener: listener,
+		port:         port,
+	}
+
+	go s.peerListen()
+	defer s.peerListener.Close()
 	go s.catchSignal()
-
 	ctx = context.WithValue(ctx, common.KeyPort, s.port)
 
 	to, err := s.AddTorrent(ctx, name, magnet, directory)
 	if err != nil {
-		fmt.Println("Single torrent failed:", err)
 		log.WithFields(log.Fields{"name": name, "error": err.Error()}).Info("Failed to add torrent")
-		return
+		return err
 	}
-	log.WithField("name", to.Info.Name).Info("Torrent added")
 
 	go to.Start(ctx) // NOTE: maybe add an option to seed after download is complete
 	for to.Info.Left > 0 {
 		time.Sleep(time.Second)
 	}
-	fmt.Println("Torrent done:", to.Info.Name)
+
+	if err := to.Save(); err != nil {
+		return err
+	}
+
+	log.Info("Graytorrent stopped")
+	return nil
 }
 
 func (s *Session) catchSignal() {

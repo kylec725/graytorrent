@@ -63,6 +63,12 @@ gray stop ID
 gray rm ID
 ```
 
+### Download a single torrent
+You can download a single torrent, and you do not need the server to be running.
+```
+gray download filepath/example.torrent
+```
+
 ## Current Work
 - [Magnet Links](https://www.bittorrent.org/beps/bep_0009.html)
 - Limit global number of connections

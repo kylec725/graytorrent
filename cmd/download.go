@@ -2,9 +2,9 @@ package cmd
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/kylec725/graytorrent/torrent"
-	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 )
 
@@ -24,11 +24,10 @@ var (
 		},
 		Run: func(cmd *cobra.Command, args []string) {
 			defer logFile.Close()
-			session, err := torrent.NewSession()
-			if err != nil {
-				log.WithField("error", err).Info("Error when starting a new session for download")
+			if err := torrent.Download(context.Background(), args[0], magnet, directory); err != nil {
+				fmt.Println("Download failed:", err)
 			}
-			session.Download(context.Background(), args[0], magnet, directory)
+			fmt.Println("Download done")
 		},
 	}
 )
