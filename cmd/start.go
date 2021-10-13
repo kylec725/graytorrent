@@ -3,7 +3,7 @@ package cmd
 import (
 	"fmt"
 
-	"github.com/kylec725/graytorrent/client"
+	"github.com/kylec725/graytorrent/internal/client"
 	"github.com/spf13/cobra"
 )
 
