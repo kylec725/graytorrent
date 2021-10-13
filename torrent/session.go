@@ -99,7 +99,6 @@ func (s *Session) AddTorrent(ctx context.Context, name string, magnet bool, dire
 		return nil, errors.Wrap(err, "AddTorrent")
 	}
 	to.Info.Directory = absDir
-	log.Info(to.Info.Directory)
 	if err := write.NewWrite(to.Info); err != nil { // Should fail if torrent already is being managed
 		return nil, errors.Wrap(err, "AddTorrent")
 	}
