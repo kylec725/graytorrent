@@ -84,7 +84,6 @@ func New(addr string, conn net.Conn, info *common.TorrentInfo) Peer {
 
 // StartWork makes a peer wait for pieces to download
 func (p *Peer) StartWork(ctx context.Context, info *common.TorrentInfo, work chan int, results chan<- int, deadPeers chan<- string) {
-	// info := common.Info(ctx)
 	peerLog := log.WithField("peer", p.String())
 
 	// Setup peer connection
@@ -122,7 +121,6 @@ func (p *Peer) StartWork(ctx context.Context, info *common.TorrentInfo, work cha
 				return
 			}
 			p.lastMsgRcvd = time.Now()
-			// currInfo := common.Info(ctx)
 			msg := message.Decode(data)
 			if err := p.handleMessage(msg, info, work, results); err != nil {
 				peerLog.WithFields(log.Fields{"type": msg.String(), "size": len(msg.Payload), "error": err.Error()}).Debug("Error handling message")
