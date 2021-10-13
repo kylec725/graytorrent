@@ -1,3 +1,4 @@
+// Package client handles command line interface calls to control the server
 package client
 
 import (
