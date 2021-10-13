@@ -52,4 +52,5 @@ message TorrentReply {
 message AddRequest {
   string file = 1;
   string magnet = 2;
+  string dir = 3;
 }

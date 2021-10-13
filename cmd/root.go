@@ -79,7 +79,7 @@ func initLog() {
 }
 
 func initConfig() {
-	viper.SetDefault("torrent.path", ".")
+	viper.SetDefault("torrent.defaultpath", ".")
 	viper.SetDefault("torrent.autoseed", true)
 	viper.SetDefault("network.portrange", [2]int{6881, 6889})
 	viper.SetDefault("network.connections.globalMax", 300)
