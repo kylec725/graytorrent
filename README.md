@@ -58,10 +58,18 @@ gray start ID
 gray stop ID
 ```
 
+### Monitor torrents
+You can monitor the status of torrents.
+```
+gray mon
+```
+Exit by sending an interrupt signal (ctrl-c).
+
 ### Remove a torrent
 ```
 gray rm ID
 ```
+Add the `-r` flag to remove the torrent's file(s).
 
 ### Download a single torrent
 You can download a single torrent, and you do not need the server to be running.
