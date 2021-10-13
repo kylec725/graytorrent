@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/hex"
 	"fmt"
-	"io"
 	"path/filepath"
 	"strconv"
 
@@ -28,19 +27,12 @@ func List() error {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	stream, err := client.List(ctx, &pb.Empty{})
+	reply, err := client.List(ctx, &pb.Empty{})
 	if err != nil {
 		return errors.WithMessage(err, "Failed to list torrents")
 	}
 
-	for {
-		to, err := stream.Recv()
-		if err == io.EOF {
-			break
-		} else if err != nil {
-			return errors.Wrap(err, "Error while listing torrents")
-		}
-
+	for _, to := range reply.TorrentList {
 		torrentPrint(to)
 	}
 

@@ -18,20 +18,23 @@ var (
 )
 
 // List current managed torrents
-func (s *Session) List(in *pb.Empty, stream pb.TorrentService_ListServer) error {
+func (s *Session) List(ctx context.Context, in *pb.Empty) (*pb.ListReply, error) {
+	torrentList := make([]*pb.Torrent, 0)
 	for _, to := range s.torrentList {
-		stream.Send(&pb.Torrent{
-			Id:          to.ID,
-			Name:        to.Info.Name,
-			InfoHash:    to.Info.InfoHash[:], // NOTE: may need to check if infohash is set first
-			TotalLength: uint32(to.Info.TotalLength),
-			Left:        uint32(to.Info.Left),
-			DownRate:    uint32(to.DownRate()),
-			UpRate:      uint32(to.UpRate()),
-			State:       rpc.Torrent_State(to.State()),
-		})
+		torrentList = append(torrentList,
+			&pb.Torrent{
+				Id:          to.ID,
+				Name:        to.Info.Name,
+				InfoHash:    to.Info.InfoHash[:],
+				TotalLength: uint32(to.Info.TotalLength),
+				Left:        uint32(to.Info.Left),
+				DownRate:    uint32(to.DownRate()),
+				UpRate:      uint32(to.UpRate()),
+				State:       rpc.Torrent_State(to.State()),
+			})
 	}
-	return nil
+	reply := pb.ListReply{TorrentList: torrentList}
+	return &reply, nil
 }
 
 // Add a new torrent to be managed
