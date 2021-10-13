@@ -26,24 +26,24 @@ Could also use `go build` or `go run main.go`
 graytorrent has a command line interface. You can see the available commands by entering `gray`.
 
 ### Starting gray
-To start the gray torrent server
+First, start the gray torrent server.
 ```
 gray server start
 ```
-Stop the server with
+You can stop the server in similar way.
 ```
 gray server stop
 ```
 
 ### Adding torrents
 Currently, graytorrent only handles `.torrent` files. First, download the `.torrent` file for the torrent you want to use,
-then add it to graytorrent's list of managed torrents with
+then add it to graytorrent.
 ```
 gray add filepath/example.torrent
 ```
 
 ### List managed torrents
-You can view all managed torrents with helpful output about their status
+You can view all managed torrents with helpful output about their status.
 ```
 gray ls
 ```
