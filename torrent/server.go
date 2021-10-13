@@ -36,7 +36,7 @@ func (s *Session) List(in *pb.Empty, stream pb.TorrentService_ListServer) error 
 
 // Add a new torrent to be managed
 func (s *Session) Add(ctx context.Context, in *pb.AddRequest) (*pb.TorrentReply, error) {
-	to, err := s.AddTorrent(ctx, in.File, in.GetDir())
+	to, err := s.AddTorrent(ctx, in.GetName(), in.GetMagnet(), in.GetDirectory())
 	if err != nil {
 		return nil, err
 	}

@@ -48,7 +48,7 @@ func List() error {
 }
 
 // Add a new torrent
-func Add(file string) error {
+func Add(name string, magnet bool, directory string) error {
 	// Set up a connection to the server.
 	serverAddr := "localhost:" + strconv.Itoa(int(viper.GetViper().GetInt("server.port")))
 	conn, err := grpc.Dial(serverAddr, grpc.WithInsecure(), grpc.WithBlock())
@@ -61,12 +61,20 @@ func Add(file string) error {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	fileAbsPath, err := filepath.Abs(file)
-	if err != nil {
-		return errors.WithMessage(err, "Could not resolve filepath")
+	var request pb.AddRequest
+	request.Magnet = magnet
+	if magnet {
+		request.Name = name
+	} else {
+		fileAbsPath, err := filepath.Abs(name)
+		if err != nil {
+			return errors.WithMessage(err, "Could not resolve filepath")
+		}
+		request.Name = fileAbsPath
 	}
+	request.Directory = directory
 
-	reply, err := client.Add(ctx, &pb.AddRequest{File: fileAbsPath})
+	reply, err := client.Add(ctx, &request)
 	if err != nil {
 		return errors.WithMessage(err, "Failed to add torrent")
 	}
