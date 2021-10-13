@@ -31,7 +31,7 @@ func (p *Peer) sendMessage(msg *message.Message) error {
 	return errors.Wrap(err, "sendMessage")
 }
 
-func (p *Peer) handleMessage(msg *message.Message, info *common.TorrentInfo, work chan int, results chan int) error {
+func (p *Peer) handleMessage(msg *message.Message, info *common.TorrentInfo, work chan int, results chan<- int) error {
 	if msg == nil {
 		return nil // keep-alive message
 	}
@@ -117,7 +117,7 @@ func (p *Peer) handleRequest(msg *message.Message, info *common.TorrentInfo) err
 }
 
 // handlePiece adds a block to a piece we are getting
-func (p *Peer) handlePiece(msg *message.Message, info *common.TorrentInfo, work chan int, results chan int) error {
+func (p *Peer) handlePiece(msg *message.Message, info *common.TorrentInfo, work chan int, results chan<- int) error {
 	index := binary.BigEndian.Uint32(msg.Payload[0:4])
 	begin := binary.BigEndian.Uint32(msg.Payload[4:8])
 	block := msg.Payload[8:]

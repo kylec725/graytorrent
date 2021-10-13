@@ -80,8 +80,10 @@ func New(addr string, conn net.Conn, info *common.TorrentInfo) Peer {
 	}
 }
 
+// TODO: high cpu usage when torrent is stalled
+
 // StartWork makes a peer wait for pieces to download
-func (p *Peer) StartWork(ctx context.Context, info *common.TorrentInfo, work chan int, results chan int, deadPeers chan string) {
+func (p *Peer) StartWork(ctx context.Context, info *common.TorrentInfo, work chan int, results chan<- int, deadPeers chan<- string) {
 	// info := common.Info(ctx)
 	peerLog := log.WithField("peer", p.String())
 
@@ -101,6 +103,14 @@ func (p *Peer) StartWork(ctx context.Context, info *common.TorrentInfo, work cha
 		adapRateTicker.Stop()
 		peerLog.Debug("Peer shutdown")
 	}()
+
+	// Figure out if we're interested // TODO: only pull new work pieces when we're interested
+	for i := 0; i < info.TotalPieces; i++ {
+		if !info.Bitfield.Has(i) && p.bitfield.Has(i) {
+			p.AmInterested = true
+			break
+		}
+	}
 
 	// Work loop
 	for {
@@ -149,6 +159,8 @@ func (p *Peer) StartWork(ctx context.Context, info *common.TorrentInfo, work cha
 			peerLog.WithField("error", err.Error()).Debug("Error filling queue")
 			return
 		}
+
+		// WARNING: peer might be endlessly grabbing pieces if it is choked
 
 		// Find new work piece if queue is open
 		if p.queue < p.queueSize {
