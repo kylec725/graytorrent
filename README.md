@@ -43,19 +43,19 @@ gray add filepath/example.torrent
 ```
 
 ### List managed torrents
-You can view all managed torrents with
+You can view all managed torrents with helpful output about their status
 ```
 gray ls
 ```
 
-### Controlling torrents
+### Start or stop a torrent
 To start or stop the upload/download of the torrents, you can use the number IDs that are listed or their infohash (with the `-i` flag) to select them.
 ```
 gray start ID
 gray stop ID
 ```
 
-### Remove a managed torrent with
+### Remove a torrent
 ```
 gray rm ID
 ```
