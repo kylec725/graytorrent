@@ -4,6 +4,7 @@ BitTorrent engine implemented in [Go](https://golang.org)
 ## Features
 - [BitTorrent Protocol](https://www.bittorrent.org/beps/bep_0003.html)
 - Command line interface
+- Runs as a [gRPC](https://www.grpc.io/) server
 - [Multitracker Metadata Extension](https://www.bittorrent.org/beps/bep_0012.html)
 - [UDP Trackers](https://www.bittorrent.org/beps/bep_0015.html)
 
@@ -24,6 +25,7 @@ Could also use `go build` or `go run main.go`
 
 ## Usage
 graytorrent has a command line interface. You can see the available commands by entering `gray`
+(Note: graytorrent is still in development, not all functionality is complete)
 
 ### Starting graytorrent
 First, start the graytorrent server.
@@ -62,7 +64,6 @@ gray rm ID
 
 ## Current Work
 - [Magnet Links](https://www.bittorrent.org/beps/bep_0009.html)
-- Set-up graytorrent as a GRPC server
 - Limit global number of connections
 
 ## Potential Features
