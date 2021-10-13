@@ -23,22 +23,22 @@ var (
 // NewWrite sets up the files a torrent needs info write info
 func NewWrite(info *common.TorrentInfo) error {
 	for _, path := range info.Paths {
-		currPath := filepath.Join(info.Directory, path.Path)
+		fullPath := filepath.Join(info.Directory, path.Path)
 
 		// Return an error if the file already exists
-		if _, err := os.Stat(currPath); err == nil {
+		if _, err := os.Stat(fullPath); err == nil {
 			return errors.Wrap(ErrFileExists, "NewWrite")
 		}
 
 		// Create directories recursively if necessary
-		if makeDir := filepath.Dir(currPath); makeDir != "" {
+		if makeDir := filepath.Dir(fullPath); makeDir != "" {
 			err := os.MkdirAll(makeDir, 0755)
 			if err != nil {
 				return errors.Wrap(err, "NewWrite")
 			}
 		}
 
-		_, err := os.Create(currPath)
+		_, err := os.Create(fullPath)
 		if err != nil {
 			return errors.Wrap(err, "NewWrite")
 		}
@@ -124,16 +124,16 @@ func AddPiece(info *common.TorrentInfo, index int, piece []byte) error {
 	pieceLeft := info.PieceSize(index)    // Keep track of how much more of the piece we have info write
 
 	for _, path := range info.Paths {
-		currPath := filepath.Join(info.Directory, path.Path)
+		fullPath := filepath.Join(info.Directory, path.Path)
 
 		if offset < path.Length { // Piece is part of the file
 			bytesToWrite := path.Length - offset // Figure out how much of the piece to write
 			bytesToWrite = common.Min(bytesToWrite, pieceLeft)
 			pieceEnd = pieceStart + bytesToWrite
 
-			err := writeOffset(currPath, piece[pieceStart:pieceEnd], offset)
+			err := writeOffset(fullPath, piece[pieceStart:pieceEnd], offset)
 			if err != nil {
-				err = errors.WithMessagef(err, "index %d path %s", index, currPath)
+				err = errors.WithMessagef(err, "index %d path %s", index, fullPath)
 				return errors.Wrap(err, "AddPiece")
 			}
 
@@ -164,14 +164,14 @@ func ReadPiece(info *common.TorrentInfo, index int) ([]byte, error) {
 	piece := make([]byte, pieceLeft)
 
 	for _, path := range info.Paths {
-		currPath := filepath.Join(info.Directory, path.Path)
+		fullPath := filepath.Join(info.Directory, path.Path)
 
 		if offset < path.Length { // Piece is part of the file
 			bytesToRead := path.Length - offset // Figure out how much of the piece to read
 			bytesToRead = common.Min(bytesToRead, pieceLeft)
 			pieceEnd = pieceStart + bytesToRead
 
-			data, err := readOffset(currPath, bytesToRead, offset)
+			data, err := readOffset(fullPath, bytesToRead, offset)
 			if err != nil {
 				return nil, errors.Wrap(err, "ReadPiece")
 			}

@@ -10,7 +10,7 @@ service TorrentService {
   // Adds another torrent to be managed
   rpc Add (AddRequest) returns (TorrentReply) {}
   // Removes a torrent from being managed
-  rpc Remove (TorrentRequest) returns (TorrentReply) {}
+  rpc Remove (RemoveRequest) returns (TorrentReply) {}
   // Starts a torrent's download/upload
   rpc Start (TorrentRequest) returns (TorrentReply) {}
   // Stops a torrent's download/upload
@@ -57,4 +57,9 @@ message AddRequest {
   string name = 1;
   bool magnet = 2;
   string directory = 3;
+}
+
+message RemoveRequest {
+  TorrentRequest torrentRequest = 1;
+  bool rmFiles = 2;
 }

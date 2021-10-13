@@ -24,6 +24,7 @@ var (
 	magnet     bool
 	isInfoHash bool
 	directory  string
+	rmFiles    bool
 
 	rootCmd = &cobra.Command{
 		Use:     "gray",

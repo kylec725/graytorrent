@@ -47,18 +47,18 @@ func (s *Session) Add(ctx context.Context, in *pb.AddRequest) (*pb.TorrentReply,
 }
 
 // Remove a torrent from being managed
-func (s *Session) Remove(ctx context.Context, in *pb.TorrentRequest) (*pb.TorrentReply, error) {
+func (s *Session) Remove(ctx context.Context, in *pb.RemoveRequest) (*pb.TorrentReply, error) {
 	var infoHash [20]byte
-	copy(infoHash[:], in.GetInfoHash())
+	copy(infoHash[:], in.TorrentRequest.GetInfoHash())
 
 	if to, ok := s.torrentList[infoHash]; ok {
-		s.RemoveTorrent(to)
+		s.RemoveTorrent(to, in.RmFiles)
 		return &pb.TorrentReply{Id: to.ID, Name: to.Info.Name, InfoHash: to.Info.InfoHash[:]}, nil
 	}
 	// Check ID instead
 	for _, to := range s.torrentList {
-		if to.ID == in.GetId() {
-			s.RemoveTorrent(to)
+		if to.ID == in.TorrentRequest.GetId() {
+			s.RemoveTorrent(to, in.RmFiles)
 			return &pb.TorrentReply{Id: to.ID, Name: to.Info.Name, InfoHash: to.Info.InfoHash[:]}, nil
 		}
 	}

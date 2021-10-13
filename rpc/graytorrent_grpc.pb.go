@@ -23,7 +23,7 @@ type TorrentServiceClient interface {
 	// Adds another torrent to be managed
 	Add(ctx context.Context, in *AddRequest, opts ...grpc.CallOption) (*TorrentReply, error)
 	// Removes a torrent from being managed
-	Remove(ctx context.Context, in *TorrentRequest, opts ...grpc.CallOption) (*TorrentReply, error)
+	Remove(ctx context.Context, in *RemoveRequest, opts ...grpc.CallOption) (*TorrentReply, error)
 	// Starts a torrent's download/upload
 	Start(ctx context.Context, in *TorrentRequest, opts ...grpc.CallOption) (*TorrentReply, error)
 	// Stops a torrent's download/upload
@@ -56,7 +56,7 @@ func (c *torrentServiceClient) Add(ctx context.Context, in *AddRequest, opts ...
 	return out, nil
 }
 
-func (c *torrentServiceClient) Remove(ctx context.Context, in *TorrentRequest, opts ...grpc.CallOption) (*TorrentReply, error) {
+func (c *torrentServiceClient) Remove(ctx context.Context, in *RemoveRequest, opts ...grpc.CallOption) (*TorrentReply, error) {
 	out := new(TorrentReply)
 	err := c.cc.Invoke(ctx, "/graytorrent.TorrentService/Remove", in, out, opts...)
 	if err != nil {
@@ -92,7 +92,7 @@ type TorrentServiceServer interface {
 	// Adds another torrent to be managed
 	Add(context.Context, *AddRequest) (*TorrentReply, error)
 	// Removes a torrent from being managed
-	Remove(context.Context, *TorrentRequest) (*TorrentReply, error)
+	Remove(context.Context, *RemoveRequest) (*TorrentReply, error)
 	// Starts a torrent's download/upload
 	Start(context.Context, *TorrentRequest) (*TorrentReply, error)
 	// Stops a torrent's download/upload
@@ -110,7 +110,7 @@ func (UnimplementedTorrentServiceServer) List(context.Context, *Empty) (*ListRep
 func (UnimplementedTorrentServiceServer) Add(context.Context, *AddRequest) (*TorrentReply, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Add not implemented")
 }
-func (UnimplementedTorrentServiceServer) Remove(context.Context, *TorrentRequest) (*TorrentReply, error) {
+func (UnimplementedTorrentServiceServer) Remove(context.Context, *RemoveRequest) (*TorrentReply, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Remove not implemented")
 }
 func (UnimplementedTorrentServiceServer) Start(context.Context, *TorrentRequest) (*TorrentReply, error) {
@@ -169,7 +169,7 @@ func _TorrentService_Add_Handler(srv interface{}, ctx context.Context, dec func(
 }
 
 func _TorrentService_Remove_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(TorrentRequest)
+	in := new(RemoveRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -181,7 +181,7 @@ func _TorrentService_Remove_Handler(srv interface{}, ctx context.Context, dec fu
 		FullMethod: "/graytorrent.TorrentService/Remove",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(TorrentServiceServer).Remove(ctx, req.(*TorrentRequest))
+		return srv.(TorrentServiceServer).Remove(ctx, req.(*RemoveRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }

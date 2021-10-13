@@ -77,7 +77,7 @@ func Add(name string, magnet bool, directory string) error {
 }
 
 // Remove a managed torrent
-func Remove(input string, isInfoHash bool) error {
+func Remove(input string, isInfoHash, rmFiles bool) error {
 	// Set up a connection to the server.
 	serverAddr := "localhost:" + strconv.Itoa(int(viper.GetViper().GetInt("server.port")))
 	conn, err := grpc.Dial(serverAddr, grpc.WithInsecure())
@@ -108,7 +108,9 @@ func Remove(input string, isInfoHash bool) error {
 		torrentRequest.Id = uint32(id)
 	}
 
-	reply, err := client.Remove(ctx, &torrentRequest)
+	removeRequest := pb.RemoveRequest{TorrentRequest: &torrentRequest, RmFiles: rmFiles}
+
+	reply, err := client.Remove(ctx, &removeRequest)
 	if err != nil {
 		return errors.WithMessage(err, "Failed to remove torrent")
 	}

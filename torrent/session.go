@@ -109,10 +109,15 @@ func (s *Session) AddTorrent(ctx context.Context, name string, magnet bool, dire
 }
 
 // RemoveTorrent removes a currently managed torrent
-func (s *Session) RemoveTorrent(to *Torrent) {
+func (s *Session) RemoveTorrent(to *Torrent, rmFiles bool) {
 	to.Stop()
 	os.Remove(to.saveFile())
-	// TODO: have to option to remove torrent's files
+	if rmFiles {
+		fullPath := filepath.Join(to.Info.Directory, to.Info.Name)
+		if err := os.RemoveAll(fullPath); err != nil {
+			log.WithFields(log.Fields{"name": to.Info.Name, "infohash": hex.EncodeToString(to.Info.InfoHash[:])}).Info("Error when removing torrent's file(s)")
+		}
+	}
 	delete(s.torrentList, to.Info.InfoHash)
 	log.WithFields(log.Fields{"name": to.Info.Name, "infohash": hex.EncodeToString(to.Info.InfoHash[:])}).Info("Torrent removed")
 }
