@@ -25,8 +25,8 @@ Could also use `go build` or `go run main.go`
 ## Usage
 graytorrent has a command line interface. You can see the available commands by entering `gray`.
 
-### Starting gray
-First, start the gray torrent server.
+### Starting graytorrent
+First, start the graytorrent server.
 ```
 gray server start
 ```
