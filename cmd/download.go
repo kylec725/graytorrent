@@ -11,7 +11,7 @@ import (
 func init() {
 	rootCmd.AddCommand(downloadCmd)
 	downloadCmd.Flags().BoolVarP(&magnet, "magnet", "m", false, "use a magnet link instead of a .torrent file to download")
-	addCmd.Flags().StringVarP(&directory, "directory", "d", "", "specify the directory to save the torrent")
+	downloadCmd.Flags().StringVarP(&directory, "directory", "d", "", "specify the directory to save the torrent")
 }
 
 var (
