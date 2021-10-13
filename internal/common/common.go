@@ -8,7 +8,6 @@ import (
 	"math/rand"
 	"os"
 	"path/filepath"
-	"sync"
 	"time"
 
 	"github.com/kylec725/graytorrent/internal/bitfield"
@@ -37,7 +36,6 @@ type TorrentInfo struct {
 	PieceHashes [][20]byte        `json:"PieceHashes"`
 	PeerID      [20]byte          `json:"PeerID"`
 	Directory   string            `json:"Directory"` // What directory the torrent's file(s) will be
-	sync.Mutex
 }
 
 // Path stores info about each file in a torrent

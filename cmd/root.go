@@ -2,7 +2,6 @@ package cmd
 
 import (
 	"fmt"
-	"io"
 	"os"
 
 	"github.com/kylec725/graytorrent/internal/common"
@@ -13,7 +12,6 @@ import (
 )
 
 func init() {
-	rootCmd.PersistentFlags().BoolVarP(&verbose, "verbose", "v", false, "print events to stdout")
 	cobra.OnInitialize(initDirs, initConfig)
 }
 
@@ -23,7 +21,6 @@ var (
 
 	// Flags
 	debug      bool
-	verbose    bool
 	magnet     bool
 	isInfoHash bool
 	directory  string
@@ -32,7 +29,7 @@ var (
 		Use:     "gray",
 		Short:   "graytorrent is a BitTorrent engine",
 		Long:    `graytorrent is an engine that implements the BitTorrent Protocol and allows for the management of torrents.`,
-		Version: "0.20",
+		Version: "0.30",
 	}
 )
 
@@ -69,10 +66,6 @@ func initLog() {
 		ForceFormatting: true,
 	})
 	// Set flags
-	if verbose {
-		dualOutput := io.MultiWriter(os.Stdout, logFile)
-		log.SetOutput(dualOutput)
-	}
 	if debug {
 		logLevel = log.TraceLevel
 	}
