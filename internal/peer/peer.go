@@ -80,7 +80,7 @@ func New(addr string, conn net.Conn, info *common.TorrentInfo) Peer {
 	}
 }
 
-// WARNING: high cpu usage when torrent is stalled or seeding
+// TODO: in seeding mode, we should disconnect from peers with the full file
 
 // StartWork makes a peer wait for pieces to download
 func (p *Peer) StartWork(ctx context.Context, info *common.TorrentInfo, work chan int, results chan<- int, deadPeers chan<- string) {
