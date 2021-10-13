@@ -36,7 +36,7 @@ func (s *Session) List(in *pb.Empty, stream pb.TorrentService_ListServer) error 
 
 // Add a new torrent to be managed
 func (s *Session) Add(ctx context.Context, in *pb.AddRequest) (*pb.TorrentReply, error) {
-	to, err := s.AddTorrent(ctx, in.File) // TODO: need to check if torrent is already managed
+	to, err := s.AddTorrent(ctx, in.File, in.GetDir())
 	if err != nil {
 		return nil, err
 	}
@@ -79,7 +79,7 @@ func (s *Session) Start(ctx context.Context, in *pb.TorrentRequest) (*pb.Torrent
 	for _, to := range s.torrentList {
 		if to.ID == in.GetId() {
 			if !to.Started {
-				newCtx := context.WithValue(context.Background(), common.KeyPort, s.port) // NOTE: using ctx causes to.Start() to end immediately
+				newCtx := context.WithValue(context.Background(), common.KeyPort, s.port)
 				go to.Start(newCtx)
 			}
 			return &pb.TorrentReply{Id: to.ID, Name: to.Info.Name, InfoHash: to.InfoHash[:]}, nil

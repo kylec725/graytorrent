@@ -38,8 +38,8 @@ type Tracker struct {
 
 // NOTE: consider structuring trackers as an interface and separate http vs udp trackers
 
-func newTracker(announce string) Tracker {
-	return Tracker{
+func newTracker(announce string) *Tracker {
+	return &Tracker{
 		Announce: announce,
 		Working:  false,
 		Interval: 2,
@@ -51,7 +51,7 @@ func newTracker(announce string) Tracker {
 // TODO: change to use tiers of trackers
 
 // GetTrackers parses metainfo to retrieve a list of trackers
-func GetTrackers(meta metainfo.BencodeMeta) ([]Tracker, error) {
+func GetTrackers(meta metainfo.BencodeMeta) ([]*Tracker, error) {
 	// If announce-list is empty, use announce only
 	if len(meta.AnnounceList) == 0 {
 		// Check if no announce strings exist
@@ -59,13 +59,13 @@ func GetTrackers(meta metainfo.BencodeMeta) ([]Tracker, error) {
 			return nil, errors.Wrap(ErrNoAnnounce, "GetTrackers")
 		}
 
-		trackers := make([]Tracker, 1)
+		trackers := make([]*Tracker, 1)
 		trackers[0] = newTracker(meta.Announce)
 		return trackers, nil
 	}
 
 	// Make list of multiple trackers
-	var trackers []Tracker
+	var trackers []*Tracker
 	var numAnnounce int
 	// Add each announce in announce-list as a tracker
 	for _, group := range meta.AnnounceList {
@@ -181,7 +181,6 @@ func (tr *Tracker) Run(ctx context.Context, info *common.TorrentInfo, peers chan
 		peers <- peerList[i]
 	}
 
-	// TODO: request peerlist from tracker more persistently, some practice runs resulted in no peers being sent even when the tracker has the peers
 	for {
 		select {
 		case <-ctx.Done():
@@ -205,7 +204,7 @@ func (tr *Tracker) Run(ctx context.Context, info *common.TorrentInfo, peers chan
 				}
 				tr.Working = true
 			}
-		case _, ok := <-complete:
+		case _, ok := <-complete: // WARNING: if we don't return here, this case will loop
 			if !ok && tr.Working {
 				// currInfo := common.Info(ctx)
 				uploaded := 0
@@ -216,6 +215,7 @@ func (tr *Tracker) Run(ctx context.Context, info *common.TorrentInfo, peers chan
 				} else {
 					tr.Working = true
 				}
+				return // TODO: find way to have tracker continue sending messages when complete without loop
 			}
 		}
 	}

@@ -11,9 +11,15 @@ import (
 	"time"
 
 	"github.com/kylec725/graytorrent/internal/common"
+	"github.com/kylec725/graytorrent/internal/write"
 	pb "github.com/kylec725/graytorrent/rpc"
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
+)
+
+// Errors
+var (
+	ErrTorrentExists = errors.New("Torrent is already being managed")
 )
 
 // Session is an instance of gray
@@ -65,11 +71,21 @@ func (s *Session) Close() {
 }
 
 // AddTorrent adds a new torrent to be managed
-func (s *Session) AddTorrent(ctx context.Context, filename string) (*Torrent, error) {
+func (s *Session) AddTorrent(ctx context.Context, filename string, dir string) (*Torrent, error) {
 	to := Torrent{File: filename}
 	if err := to.Init(); err != nil {
 		log.WithFields(log.Fields{"filename": filename, "error": err.Error()}).Info("Failed to add torrent")
 		return nil, err
+	}
+
+	if _, ok := s.torrentList[to.InfoHash]; ok {
+		return nil, ErrTorrentExists
+	}
+
+	// Initialize files for writing
+	to.Directory = dir
+	if err := write.NewWrite(to.Info, to.Directory); err != nil { // Should fail if torrent already is being managed
+		return nil, errors.Wrap(err, "AddTorrent")
 	}
 
 	s.torrentList[to.InfoHash] = &to
@@ -87,14 +103,14 @@ func (s *Session) RemoveTorrent(to *Torrent) {
 }
 
 // Download begins a download for a single torrent
-func (s *Session) Download(ctx context.Context, filename string) {
+func (s *Session) Download(ctx context.Context, filename string, dir string) {
 	defer s.Close()
 
 	go s.catchSignal()
 
 	ctx = context.WithValue(ctx, common.KeyPort, s.port)
 
-	to, err := s.AddTorrent(ctx, filename)
+	to, err := s.AddTorrent(ctx, filename, dir)
 	if err != nil {
 		fmt.Println("Single torrent failed:", err)
 		log.WithFields(log.Fields{"filename": filename, "error": err.Error()}).Info("Failed to add torrent")

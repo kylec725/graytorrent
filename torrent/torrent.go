@@ -16,11 +16,9 @@ import (
 	"time"
 
 	"github.com/kylec725/graytorrent/internal/common"
-	"github.com/kylec725/graytorrent/internal/metainfo"
 	"github.com/kylec725/graytorrent/internal/peer"
 	"github.com/kylec725/graytorrent/internal/peer/message"
 	"github.com/kylec725/graytorrent/internal/tracker"
-	"github.com/kylec725/graytorrent/internal/write"
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 	viper "github.com/spf13/viper"
@@ -28,23 +26,23 @@ import (
 
 // Errors
 var (
-	ErrPeerNotFound  = errors.New("Peer not found")
-	ErrTorrentExists = errors.New("Torrent is already being managed")
+	ErrPeerNotFound = errors.New("Peer not found")
 
 	currID uint32 = 1 // 0 is reserved for an unset ID
 )
 
 // Torrent stores metainfo and current progress on a torrent
 type Torrent struct {
-	ID       uint32              `json:"-"`      // ID used by grpc client to select a torrent
-	File     string              `json:"File"`   // .torrent file
-	Magnet   string              `json:"Magnet"` // magnet link
-	Info     *common.TorrentInfo `json:"Info"`   // Contains meta data of the torrent // TODO: embed Info
-	InfoHash [20]byte            `json:"InfoHash"`
-	Trackers []tracker.Tracker   `json:"Trackers"` // TODO: make this a slice of pointers
-	Peers    []*peer.Peer        `json:"-"`
-	NewPeers chan peer.Peer      `json:"-"` // Used by main and trackers to send in new peers
-	Started  bool                `json:"-"` // Flag to see if torrent goroutine is running
+	ID        uint32              `json:"-"`      // Can be used by grpc client to select a torrent
+	File      string              `json:"File"`   // .torrent file
+	Magnet    string              `json:"Magnet"` // Magnet link
+	Info      *common.TorrentInfo `json:"Info"`   // Contains meta data of the torrent // TODO: embed Info
+	InfoHash  [20]byte            `json:"InfoHash"`
+	Trackers  []*tracker.Tracker  `json:"Trackers"` // TODO: make this a slice of pointers
+	Peers     []*peer.Peer        `json:"-"`
+	NewPeers  chan peer.Peer      `json:"-"`         // Used by main and trackers to send in new peers
+	Started   bool                `json:"-"`         // Flag to see if torrent goroutine is running
+	Directory string              `json:"Directory"` // What directory the torrent's file(s) will be
 
 	cancel            context.CancelFunc `json:"-"` // Cancel function for context, we can use it to see if the Start goroutine is running
 	optimisticUnchoke *peer.Peer         `json:"-"` // The peer that is currently optimistically unchoked
@@ -53,31 +51,15 @@ type Torrent struct {
 // TODO: add mutex to Info and pass pointer directly to the Info field (so that we don't need to pass Info into ctx)
 // start by remove KeyInfo to lint where we need to change it
 
-// Init initializes any necessary fields of torrents
+// Init initializes a torrent so that it is ready to download or seed
 func (to *Torrent) Init() error {
 	// TODO: use either file or magnet link
 	if to.Info == nil {
-		// Get metainfo
-		meta, err := metainfo.Meta(to.File)
-		if err != nil {
-			return errors.Wrap(err, "Init")
-		}
-
+		var err error
 		// Convert to a TorrentInfo struct
-		to.Info, err = common.GetInfo(meta)
+		to.Info, to.Trackers, err = InfoFromFile(to.File)
 		if err != nil {
 			return errors.Wrap(err, "Init")
-		}
-
-		// Create trackers list from metainfo announce or announce-list
-		to.Trackers, err = tracker.GetTrackers(meta)
-		if err != nil {
-			return errors.Wrap(err, "Setup")
-		}
-
-		// Initialize files for writing
-		if err := write.NewWrite(to.Info); err != nil { // Should fail if torrent already is being managed
-			return errors.Wrap(err, "Setup")
 		}
 
 		to.InfoHash = to.Info.InfoHash
@@ -87,7 +69,7 @@ func (to *Torrent) Init() error {
 
 	to.Started = false
 
-	_, to.cancel = context.WithCancel(context.Background()) // Dummy function so that stopping a torrent does not fail
+	_, to.cancel = context.WithCancel(context.Background()) // Dummy function so that stopping a torrent should always succeed
 
 	to.ID = currID
 	currID++
@@ -101,8 +83,8 @@ func (to *Torrent) Start(ctx context.Context) {
 	log.WithFields(log.Fields{"name": to.Info.Name, "infohash": hex.EncodeToString(to.InfoHash[:])}).Info("Torrent started")
 	work := make(chan int, to.Info.TotalPieces)       // Piece indices we need
 	results := make(chan int, to.Info.TotalPieces)    // Notification that a piece is done
+	complete := make(chan bool)                       // Notify trackers that the torrent is complete
 	deadPeers := make(chan string)                    // For peers to notify they should be removed from our list
-	complete := make(chan bool)                       // To notify trackers to send the completed message
 	unchokeTicker := time.NewTicker(10 * time.Second) // Change who is unchoked after a period of time
 	lastOpUnchoke := time.Now()                       // Keep track of when the optimistic unchoke was changed
 	ctx, cancel := context.WithCancel(ctx)
@@ -136,8 +118,8 @@ func (to *Torrent) Start(ctx context.Context) {
 			return
 		case deadPeer := <-deadPeers: // Don't exit since trackers may find peers
 			to.removePeer(deadPeer)
-		case newPeer := <-to.NewPeers: // Incoming peers from main
-			if !to.hasPeer(newPeer) && len(to.Peers) < viper.GetViper().GetInt("network.connections.torrentMax") {
+		case newPeer := <-to.NewPeers: // Incoming peers that contacted us
+			if !to.hasPeer(newPeer.String()) && len(to.Peers) < viper.GetViper().GetInt("network.connections.torrentMax") {
 				go to.addPeer(ctx, &newPeer, work, results, deadPeers)
 			}
 		case index := <-results:
@@ -148,9 +130,9 @@ func (to *Torrent) Start(ctx context.Context) {
 				to.Peers[i].Send <- msg
 			}
 
-			if to.Info.Left == 0 { // WARNING: memory leak when seeding begins
+			if to.Info.Left == 0 { // WARNING: goroutine leak when seeding begins (high cpu usage)
 				log.WithFields(log.Fields{"name": to.Info.Name, "infohash": hex.EncodeToString(to.InfoHash[:])}).Info("Torrent completed")
-				close(complete) // Notify trackers to send completed message
+				close(complete)
 			}
 		case <-unchokeTicker.C:
 			if len(to.Peers) > 0 {
@@ -193,9 +175,9 @@ func (to *Torrent) removePeer(p string) {
 	}
 }
 
-func (to *Torrent) hasPeer(p peer.Peer) bool {
+func (to *Torrent) hasPeer(p string) bool {
 	for i := range to.Peers {
-		if to.Peers[i].String() == p.String() {
+		if to.Peers[i].String() == p {
 			return true
 		}
 	}
