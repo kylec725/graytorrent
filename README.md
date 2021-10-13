@@ -3,6 +3,7 @@ BitTorrent engine implemented in [Go](https://golang.org)
 
 ## Features
 - [BitTorrent Protocol](https://www.bittorrent.org/beps/bep_0003.html)
+- Command line interface
 - [Multitracker Metadata Extension](https://www.bittorrent.org/beps/bep_0012.html)
 - [UDP Trackers](https://www.bittorrent.org/beps/bep_0015.html)
 
@@ -22,11 +23,44 @@ go install
 Could also use `go build` or `go run main.go`
 
 ## Usage
-Currently, graytorrent does not have a complete client. To use the torrenting functionality you will have to run graytorrent in single torrent download mode.
-First, download the `.torrent` file for the torrent you want to use, then run `gray download pathtofile/examplefile.torrent` and graytorrent will start the torrent.
+graytorrent has a command line interface. You can see the available commands by entering `gray`.
+
+### Starting gray
+To start the gray torrent server
+```
+gray server start
+```
+Stop the server with
+```
+gray server stop
+```
+
+### Adding torrents
+Currently, graytorrent only handles `.torrent` files. First, download the `.torrent` file for the torrent you want to use,
+then add it to graytorrent's list of managed torrents with
+```
+gray add filepath/example.torrent
+```
+
+### List managed torrents
+You can view all managed torrents with
+```
+gray ls
+```
+
+### Controlling the managed torrents
+To start or stop the upload/download of the torrents you can use the number IDs that are listed or their infohash (with the `-i` flag) to select them.
+```
+gray start ID
+gray stop ID
+```
+
+### Remove a manged torrent with
+```
+gray rm ID
+```
 
 ## Current Work
-- Command line interface
 - [Magnet Links](https://www.bittorrent.org/beps/bep_0009.html)
 - Set-up graytorrent as a GRPC server
 - Limit global number of connections
