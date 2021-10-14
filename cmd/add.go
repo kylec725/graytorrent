@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"fmt"
+	"os"
 
 	"github.com/kylec725/graytorrent/internal/cli"
 	"github.com/spf13/cobra"
@@ -20,8 +21,9 @@ var (
 		Args:  cobra.MinimumNArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
 			if err := cli.Add(args[0], magnet, directory); err != nil {
-				fmt.Println(err)
+				fmt.Fprintf(os.Stderr, "Adding torrent failed: %v", err)
 			}
+			fmt.Println("Added torrent")
 		},
 	}
 )

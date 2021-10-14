@@ -3,6 +3,7 @@ package cmd
 import (
 	"context"
 	"fmt"
+	"os"
 
 	"github.com/kylec725/graytorrent/torrent"
 	"github.com/spf13/cobra"
@@ -25,7 +26,7 @@ var (
 		Run: func(cmd *cobra.Command, args []string) {
 			defer logFile.Close()
 			if err := torrent.Download(context.Background(), args[0], magnet, directory); err != nil {
-				fmt.Println("Download failed:", err)
+				fmt.Fprintf(os.Stderr, "Download failed: %v", err)
 			}
 			fmt.Println("Download done")
 		},
