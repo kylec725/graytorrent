@@ -42,7 +42,7 @@ func (to *Torrent) Save() error {
 
 // SaveAll saves the states of all managed torrents
 func (s *Session) SaveAll() error {
-	for _, to := range s.torrentList {
+	for _, to := range s.torrents {
 		if err := to.Save(); err != nil {
 			return err // No need to wrap err
 		}
@@ -52,7 +52,7 @@ func (s *Session) SaveAll() error {
 
 // LoadAll retrieves a list of all managed torrents
 func LoadAll() (map[[20]byte]*Torrent, error) {
-	torrentList := make(map[[20]byte]*Torrent)
+	torrents := make(map[[20]byte]*Torrent)
 
 	err := filepath.WalkDir(common.SavePath, func(path string, d fs.DirEntry, err error) error {
 		if d.IsDir() { // Ignore directories
@@ -85,12 +85,12 @@ func LoadAll() (map[[20]byte]*Torrent, error) {
 			return err
 		}
 
-		torrentList[to.Info.InfoHash] = &to
+		torrents[to.Info.InfoHash] = &to
 
 		return nil
 	})
 
-	return torrentList, errors.Wrap(err, "LoadAll")
+	return torrents, errors.Wrap(err, "LoadAll")
 }
 
 // TODO: verify existing file's present pieces

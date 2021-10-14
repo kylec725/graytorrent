@@ -60,18 +60,18 @@ func (s *Session) peerListen() {
 		}
 
 		// Check if the infohash matches any torrents we are serving
-		for i := range s.torrentList {
+		for i := range s.torrents {
 			// Check if the torrent's goroutine is running first
-			if !s.torrentList[i].Started {
+			if !s.torrents[i].Started {
 				continue
 			}
-			if bytes.Equal(infoHash[:], s.torrentList[i].Info.InfoHash[:]) {
-				newPeer := peer.New(addr, conn, s.torrentList[i].Info)
-				if err := newPeer.RespondHandshake(s.torrentList[i].Info); err != nil {
+			if bytes.Equal(infoHash[:], s.torrents[i].Info.InfoHash[:]) {
+				newPeer := peer.New(addr, conn, s.torrents[i].Info)
+				if err := newPeer.RespondHandshake(s.torrents[i].Info); err != nil {
 					log.WithFields(log.Fields{"peer": newPeer.String(), "error": err.Error()}).Debug("Error when responding to handshake")
 				}
 
-				s.torrentList[i].NewPeers <- newPeer // Send to torrent session
+				s.torrents[i].NewPeers <- newPeer // Send to torrent session
 				log.WithField("peer", newPeer.String()).Debug("Incoming peer was accepted")
 			}
 		}

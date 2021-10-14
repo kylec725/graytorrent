@@ -20,7 +20,7 @@ var (
 // List current managed torrents
 func (s *Session) List(ctx context.Context, in *pb.Empty) (*pb.ListReply, error) {
 	torrentList := make([]*pb.Torrent, 0)
-	for _, to := range s.torrentList {
+	for _, to := range s.torrents {
 		torrentList = append(torrentList,
 			&pb.Torrent{
 				Id:          to.ID,
@@ -51,12 +51,12 @@ func (s *Session) Remove(ctx context.Context, in *pb.RemoveRequest) (*pb.Empty, 
 	var infoHash [20]byte
 	copy(infoHash[:], in.TorrentRequest.GetInfoHash())
 
-	if to, ok := s.torrentList[infoHash]; ok {
+	if to, ok := s.torrents[infoHash]; ok {
 		s.RemoveTorrent(to, in.RmFiles)
 		return &pb.Empty{}, nil
 	}
 	// Check ID instead
-	for _, to := range s.torrentList {
+	for _, to := range s.torrents {
 		if to.ID == in.TorrentRequest.GetId() {
 			s.RemoveTorrent(to, in.RmFiles)
 			return &pb.Empty{}, nil
@@ -71,7 +71,7 @@ func (s *Session) Start(ctx context.Context, in *pb.TorrentRequest) (*pb.Empty, 
 	var infoHash [20]byte
 	copy(infoHash[:], in.GetInfoHash())
 
-	if to, ok := s.torrentList[infoHash]; ok {
+	if to, ok := s.torrents[infoHash]; ok {
 		if !to.Started {
 			newCtx := context.WithValue(context.Background(), common.KeyPort, s.port) // NOTE: using ctx causes to.Start() to end immediately
 			go to.Start(newCtx)
@@ -79,7 +79,7 @@ func (s *Session) Start(ctx context.Context, in *pb.TorrentRequest) (*pb.Empty, 
 		return &pb.Empty{}, nil
 	}
 	// Check ID instead
-	for _, to := range s.torrentList {
+	for _, to := range s.torrents {
 		if to.ID == in.GetId() {
 			if !to.Started {
 				newCtx := context.WithValue(context.Background(), common.KeyPort, s.port)
@@ -97,12 +97,12 @@ func (s *Session) Stop(ctx context.Context, in *pb.TorrentRequest) (*pb.Empty, e
 	var infoHash [20]byte
 	copy(infoHash[:], in.GetInfoHash())
 
-	if to, ok := s.torrentList[infoHash]; ok {
+	if to, ok := s.torrents[infoHash]; ok {
 		to.Stop()
 		return &pb.Empty{}, nil
 	}
 	// Check ID instead
-	for _, to := range s.torrentList {
+	for _, to := range s.torrents {
 		if to.ID == in.GetId() {
 			to.Stop()
 			return &pb.Empty{}, nil

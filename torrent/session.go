@@ -25,7 +25,7 @@ var (
 
 // Session is an instance of gray
 type Session struct {
-	torrentList  map[[20]byte]*Torrent
+	torrents     map[[20]byte]*Torrent
 	peerListener net.Listener
 	port         uint16
 	pb.UnimplementedTorrentServiceServer
@@ -35,7 +35,7 @@ type Session struct {
 func NewSession() (Session, error) {
 	log.Info("Graytorrent started")
 
-	torrentList, err := LoadAll()
+	torrents, err := LoadAll()
 	if err != nil {
 		return Session{}, errors.Wrap(err, "NewSession")
 	}
@@ -46,7 +46,7 @@ func NewSession() (Session, error) {
 	}
 
 	s := Session{
-		torrentList:  torrentList,
+		torrents:     torrents,
 		peerListener: listener,
 		port:         port,
 	}
@@ -58,7 +58,7 @@ func NewSession() (Session, error) {
 
 // Close performs clean up for a session
 func (s *Session) Close() {
-	for _, to := range s.torrentList {
+	for _, to := range s.torrents {
 		to.Stop()
 	}
 
@@ -84,7 +84,7 @@ func (s *Session) AddTorrent(ctx context.Context, name string, magnet bool, dire
 		return nil, err
 	}
 
-	if _, ok := s.torrentList[to.Info.InfoHash]; ok {
+	if _, ok := s.torrents[to.Info.InfoHash]; ok {
 		log.WithFields(log.Fields{"name": name, "error": ErrTorrentExists.Error()}).Info("Failed to add torrent")
 		return nil, errors.Wrap(ErrTorrentExists, "AddTorrent")
 	}
@@ -103,7 +103,7 @@ func (s *Session) AddTorrent(ctx context.Context, name string, magnet bool, dire
 		return nil, errors.Wrap(err, "AddTorrent")
 	}
 
-	s.torrentList[to.Info.InfoHash] = &to
+	s.torrents[to.Info.InfoHash] = &to
 	log.WithFields(log.Fields{"name": to.Info.Name, "infohash": hex.EncodeToString(to.Info.InfoHash[:])}).Info("Torrent added")
 	return &to, nil
 }
@@ -118,7 +118,7 @@ func (s *Session) RemoveTorrent(to *Torrent, rmFiles bool) {
 			log.WithFields(log.Fields{"name": to.Info.Name, "infohash": hex.EncodeToString(to.Info.InfoHash[:])}).Info("Error when removing torrent's file(s)")
 		}
 	}
-	delete(s.torrentList, to.Info.InfoHash)
+	delete(s.torrents, to.Info.InfoHash)
 	log.WithFields(log.Fields{"name": to.Info.Name, "infohash": hex.EncodeToString(to.Info.InfoHash[:])}).Info("Torrent removed")
 }
 
@@ -131,7 +131,7 @@ func Download(ctx context.Context, name string, magnet bool, directory string) e
 	}
 
 	s := Session{
-		torrentList:  make(map[[20]byte]*Torrent),
+		torrents:     make(map[[20]byte]*Torrent),
 		peerListener: listener,
 		port:         port,
 	}
