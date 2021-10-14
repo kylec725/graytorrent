@@ -58,13 +58,6 @@ gray start ID
 gray stop ID
 ```
 
-### Monitor torrents
-You can monitor the status of torrents.
-```
-gray mon
-```
-Exit by sending an interrupt signal (ctrl-c).
-
 ### Remove a torrent
 ```
 gray rm ID
