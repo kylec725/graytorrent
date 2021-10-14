@@ -21,9 +21,10 @@ var (
 		Args:  cobra.MinimumNArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
 			if err := cli.Remove(args[0], isInfoHash, rmFiles); err != nil {
-				fmt.Fprintf(os.Stderr, "Removing torrent failed: %v", err)
+				fmt.Fprintln(os.Stderr, "Removing torrent failed:", err)
+			} else {
+				fmt.Println("Removed torrent")
 			}
-			fmt.Println("Removed torrent")
 		},
 	}
 )

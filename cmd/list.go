@@ -18,7 +18,7 @@ var (
 		Short: "list the currently managed torrents",
 		Run: func(cmd *cobra.Command, args []string) {
 			if err := cli.List(); err != nil {
-				fmt.Fprintf(os.Stderr, "Listing torrents failed: %v", err)
+				fmt.Fprintln(os.Stderr, "Listing torrents failed:", err)
 			}
 		},
 	}

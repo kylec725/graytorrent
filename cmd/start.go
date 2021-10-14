@@ -20,9 +20,10 @@ var (
 		Args:  cobra.MinimumNArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
 			if err := cli.Start(args[0], isInfoHash); err != nil {
-				fmt.Fprintf(os.Stderr, "Starting torrent failed: %v", err)
+				fmt.Fprintln(os.Stderr, "Starting torrent failed:", err)
+			} else {
+				fmt.Println("Started torrent")
 			}
-			fmt.Println("Started torrent")
 		},
 	}
 )

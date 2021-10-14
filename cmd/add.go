@@ -21,9 +21,10 @@ var (
 		Args:  cobra.MinimumNArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
 			if err := cli.Add(args[0], magnet, directory); err != nil {
-				fmt.Fprintf(os.Stderr, "Adding torrent failed: %v", err)
+				fmt.Fprintln(os.Stderr, "Adding torrent failed:", err)
+			} else {
+				fmt.Println("Added torrent")
 			}
-			fmt.Println("Added torrent")
 		},
 	}
 )
