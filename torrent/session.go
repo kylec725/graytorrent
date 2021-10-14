@@ -91,7 +91,7 @@ func (s *Session) AddTorrent(ctx context.Context, name string, magnet bool, dire
 
 	// Initialize files for writing
 	to.Info.Directory = directory
-	if directory == "" {
+	if directory == "" { // If the client does not specify a directory, we use the default path
 		to.Info.Directory = viper.GetViper().GetString("torrent.defaultpath")
 	}
 	absDir, err := filepath.Abs(to.Info.Directory)

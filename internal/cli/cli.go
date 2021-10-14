@@ -65,13 +65,19 @@ func Add(name string, magnet bool, directory string) error {
 		}
 		request.Name = fileAbsPath
 	}
+	if directory == "" { // CLI should always use absolute path since server may have spawned somewhere else
+		directory = viper.GetViper().GetString("torrent.defaultpath")
+		directory, err = filepath.Abs(directory)
+		if err != nil {
+			return errors.WithMessage(err, "Could not resolve filepath")
+		}
+	}
 	request.Directory = directory
 
 	_, err = client.Add(ctx, &request)
 	if err != nil {
 		return errors.WithMessage(err, "Failed to add torrent")
 	}
-	fmt.Printf("Added torrent")
 
 	return nil
 }
@@ -114,7 +120,6 @@ func Remove(input string, isInfoHash, rmFiles bool) error {
 	if err != nil {
 		return errors.WithMessage(err, "Failed to remove torrent")
 	}
-	fmt.Println("Removed torrent")
 
 	return nil
 }
@@ -155,7 +160,6 @@ func Start(input string, isInfoHash bool) error {
 	if err != nil {
 		return errors.WithMessage(err, "Failed to start torrent")
 	}
-	fmt.Println(("Started torrent"))
 
 	return nil
 }
@@ -196,7 +200,6 @@ func Stop(input string, isInfoHash bool) error {
 	if err != nil {
 		return errors.WithMessage(err, "Failed to start torrent")
 	}
-	fmt.Println("Stopped torrent")
 
 	return nil
 }
