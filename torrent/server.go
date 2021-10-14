@@ -6,15 +6,15 @@ import (
 	"github.com/kylec725/graytorrent/internal/common"
 	"github.com/kylec725/graytorrent/rpc"
 	pb "github.com/kylec725/graytorrent/rpc"
-	"github.com/pkg/errors"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 // server.go contains implementations of the required grpc server functions
 
 // Errors
 var (
-	ErrTorrentStarted  = errors.New("Torrent already started")
-	ErrTorrentNotFound = errors.New("Torrent not found")
+	ErrTorrentNotFound = status.Error(codes.NotFound, "Torrent not found")
 )
 
 // List current managed torrents

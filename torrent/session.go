@@ -13,14 +13,16 @@ import (
 	"github.com/kylec725/graytorrent/internal/common"
 	"github.com/kylec725/graytorrent/internal/write"
 	pb "github.com/kylec725/graytorrent/rpc"
-	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 	viper "github.com/spf13/viper"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 // Errors
 var (
-	ErrTorrentExists = errors.New("Torrent is already being managed")
+	ErrTorrentExists = status.Error(codes.AlreadyExists, "Torrent is already being managed")
+	ErrBadDirectory  = status.Error(codes.InvalidArgument, "Failed to parse the directory")
 )
 
 // Session is an instance of gray
@@ -37,12 +39,12 @@ func NewSession() (Session, error) {
 
 	torrents, err := LoadAll()
 	if err != nil {
-		return Session{}, errors.Wrap(err, "NewSession")
+		return Session{}, err
 	}
 
 	listener, port, err := initListener()
 	if err != nil {
-		return Session{}, errors.Wrap(err, "NewSession")
+		return Session{}, err
 	}
 
 	s := Session{
@@ -81,12 +83,12 @@ func (s *Session) AddTorrent(ctx context.Context, name string, magnet bool, dire
 	}
 	if err := to.Init(); err != nil {
 		log.WithFields(log.Fields{"name": name, "error": err.Error()}).Info("Failed to add torrent")
-		return nil, err
+		return nil, status.Error(codes.Internal, err.Error())
 	}
 
 	if _, ok := s.torrents[to.Info.InfoHash]; ok {
 		log.WithFields(log.Fields{"name": name, "error": ErrTorrentExists.Error()}).Info("Failed to add torrent")
-		return nil, errors.Wrap(ErrTorrentExists, "AddTorrent")
+		return nil, ErrTorrentExists
 	}
 
 	// Initialize files for writing
@@ -96,11 +98,11 @@ func (s *Session) AddTorrent(ctx context.Context, name string, magnet bool, dire
 	}
 	absDir, err := filepath.Abs(to.Info.Directory)
 	if err != nil {
-		return nil, errors.Wrap(err, "AddTorrent")
+		return nil, ErrBadDirectory
 	}
 	to.Info.Directory = absDir
 	if err := write.NewWrite(to.Info); err != nil { // Should fail if torrent already is being managed
-		return nil, errors.Wrap(err, "AddTorrent")
+		return nil, ErrBadDirectory
 	}
 
 	s.torrents[to.Info.InfoHash] = &to
@@ -121,6 +123,8 @@ func (s *Session) RemoveTorrent(to *Torrent, rmFiles bool) {
 	delete(s.torrents, to.Info.InfoHash)
 	log.WithFields(log.Fields{"name": to.Info.Name, "infohash": hex.EncodeToString(to.Info.InfoHash[:])}).Info("Torrent removed")
 }
+
+// TODO: download may want to use grpc
 
 // Download begins a download for a single torrent
 func Download(ctx context.Context, name string, magnet bool, directory string) error {
