@@ -8,13 +8,13 @@ service TorrentService {
   // Requests a list of all managed torrents
   rpc List (Empty) returns (ListReply) {}
   // Adds another torrent to be managed
-  rpc Add (AddRequest) returns (TorrentReply) {}
+  rpc Add (AddRequest) returns (Empty) {}
   // Removes a torrent from being managed
-  rpc Remove (RemoveRequest) returns (TorrentReply) {}
+  rpc Remove (RemoveRequest) returns (Empty) {}
   // Starts a torrent's download/upload
-  rpc Start (TorrentRequest) returns (TorrentReply) {}
+  rpc Start (TorrentRequest) returns (Empty) {}
   // Stops a torrent's download/upload
-  rpc Stop (TorrentRequest) returns (TorrentReply) {}
+  rpc Stop (TorrentRequest) returns (Empty) {}
 }
 
 message Empty {
@@ -43,14 +43,8 @@ message ListReply {
 }
 
 message TorrentRequest {
-  uint32 id = 1;
-  bytes infoHash = 2;
-}
-
-message TorrentReply {
-  uint32 id = 1;
-  string name = 2;
-  bytes infoHash = 3;
+  bytes infoHash = 1;
+  uint32 id = 2; // May remove in the future, only here to make cli input easier
 }
 
 message AddRequest {

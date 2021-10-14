@@ -21,13 +21,13 @@ type TorrentServiceClient interface {
 	// Requests a list of all managed torrents
 	List(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*ListReply, error)
 	// Adds another torrent to be managed
-	Add(ctx context.Context, in *AddRequest, opts ...grpc.CallOption) (*TorrentReply, error)
+	Add(ctx context.Context, in *AddRequest, opts ...grpc.CallOption) (*Empty, error)
 	// Removes a torrent from being managed
-	Remove(ctx context.Context, in *RemoveRequest, opts ...grpc.CallOption) (*TorrentReply, error)
+	Remove(ctx context.Context, in *RemoveRequest, opts ...grpc.CallOption) (*Empty, error)
 	// Starts a torrent's download/upload
-	Start(ctx context.Context, in *TorrentRequest, opts ...grpc.CallOption) (*TorrentReply, error)
+	Start(ctx context.Context, in *TorrentRequest, opts ...grpc.CallOption) (*Empty, error)
 	// Stops a torrent's download/upload
-	Stop(ctx context.Context, in *TorrentRequest, opts ...grpc.CallOption) (*TorrentReply, error)
+	Stop(ctx context.Context, in *TorrentRequest, opts ...grpc.CallOption) (*Empty, error)
 }
 
 type torrentServiceClient struct {
@@ -47,8 +47,8 @@ func (c *torrentServiceClient) List(ctx context.Context, in *Empty, opts ...grpc
 	return out, nil
 }
 
-func (c *torrentServiceClient) Add(ctx context.Context, in *AddRequest, opts ...grpc.CallOption) (*TorrentReply, error) {
-	out := new(TorrentReply)
+func (c *torrentServiceClient) Add(ctx context.Context, in *AddRequest, opts ...grpc.CallOption) (*Empty, error) {
+	out := new(Empty)
 	err := c.cc.Invoke(ctx, "/graytorrent.TorrentService/Add", in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -56,8 +56,8 @@ func (c *torrentServiceClient) Add(ctx context.Context, in *AddRequest, opts ...
 	return out, nil
 }
 
-func (c *torrentServiceClient) Remove(ctx context.Context, in *RemoveRequest, opts ...grpc.CallOption) (*TorrentReply, error) {
-	out := new(TorrentReply)
+func (c *torrentServiceClient) Remove(ctx context.Context, in *RemoveRequest, opts ...grpc.CallOption) (*Empty, error) {
+	out := new(Empty)
 	err := c.cc.Invoke(ctx, "/graytorrent.TorrentService/Remove", in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -65,8 +65,8 @@ func (c *torrentServiceClient) Remove(ctx context.Context, in *RemoveRequest, op
 	return out, nil
 }
 
-func (c *torrentServiceClient) Start(ctx context.Context, in *TorrentRequest, opts ...grpc.CallOption) (*TorrentReply, error) {
-	out := new(TorrentReply)
+func (c *torrentServiceClient) Start(ctx context.Context, in *TorrentRequest, opts ...grpc.CallOption) (*Empty, error) {
+	out := new(Empty)
 	err := c.cc.Invoke(ctx, "/graytorrent.TorrentService/Start", in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -74,8 +74,8 @@ func (c *torrentServiceClient) Start(ctx context.Context, in *TorrentRequest, op
 	return out, nil
 }
 
-func (c *torrentServiceClient) Stop(ctx context.Context, in *TorrentRequest, opts ...grpc.CallOption) (*TorrentReply, error) {
-	out := new(TorrentReply)
+func (c *torrentServiceClient) Stop(ctx context.Context, in *TorrentRequest, opts ...grpc.CallOption) (*Empty, error) {
+	out := new(Empty)
 	err := c.cc.Invoke(ctx, "/graytorrent.TorrentService/Stop", in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -90,13 +90,13 @@ type TorrentServiceServer interface {
 	// Requests a list of all managed torrents
 	List(context.Context, *Empty) (*ListReply, error)
 	// Adds another torrent to be managed
-	Add(context.Context, *AddRequest) (*TorrentReply, error)
+	Add(context.Context, *AddRequest) (*Empty, error)
 	// Removes a torrent from being managed
-	Remove(context.Context, *RemoveRequest) (*TorrentReply, error)
+	Remove(context.Context, *RemoveRequest) (*Empty, error)
 	// Starts a torrent's download/upload
-	Start(context.Context, *TorrentRequest) (*TorrentReply, error)
+	Start(context.Context, *TorrentRequest) (*Empty, error)
 	// Stops a torrent's download/upload
-	Stop(context.Context, *TorrentRequest) (*TorrentReply, error)
+	Stop(context.Context, *TorrentRequest) (*Empty, error)
 	mustEmbedUnimplementedTorrentServiceServer()
 }
 
@@ -107,16 +107,16 @@ type UnimplementedTorrentServiceServer struct {
 func (UnimplementedTorrentServiceServer) List(context.Context, *Empty) (*ListReply, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method List not implemented")
 }
-func (UnimplementedTorrentServiceServer) Add(context.Context, *AddRequest) (*TorrentReply, error) {
+func (UnimplementedTorrentServiceServer) Add(context.Context, *AddRequest) (*Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Add not implemented")
 }
-func (UnimplementedTorrentServiceServer) Remove(context.Context, *RemoveRequest) (*TorrentReply, error) {
+func (UnimplementedTorrentServiceServer) Remove(context.Context, *RemoveRequest) (*Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Remove not implemented")
 }
-func (UnimplementedTorrentServiceServer) Start(context.Context, *TorrentRequest) (*TorrentReply, error) {
+func (UnimplementedTorrentServiceServer) Start(context.Context, *TorrentRequest) (*Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Start not implemented")
 }
-func (UnimplementedTorrentServiceServer) Stop(context.Context, *TorrentRequest) (*TorrentReply, error) {
+func (UnimplementedTorrentServiceServer) Stop(context.Context, *TorrentRequest) (*Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Stop not implemented")
 }
 func (UnimplementedTorrentServiceServer) mustEmbedUnimplementedTorrentServiceServer() {}

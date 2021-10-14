@@ -67,11 +67,11 @@ func Add(name string, magnet bool, directory string) error {
 	}
 	request.Directory = directory
 
-	reply, err := client.Add(ctx, &request)
+	_, err = client.Add(ctx, &request)
 	if err != nil {
 		return errors.WithMessage(err, "Failed to add torrent")
 	}
-	fmt.Printf("Added %d: %s %s\n", reply.GetId(), reply.GetName(), hex.EncodeToString(reply.GetInfoHash()))
+	fmt.Printf("Added torrent")
 
 	return nil
 }
@@ -110,11 +110,11 @@ func Remove(input string, isInfoHash, rmFiles bool) error {
 
 	removeRequest := pb.RemoveRequest{TorrentRequest: &torrentRequest, RmFiles: rmFiles}
 
-	reply, err := client.Remove(ctx, &removeRequest)
+	_, err = client.Remove(ctx, &removeRequest)
 	if err != nil {
 		return errors.WithMessage(err, "Failed to remove torrent")
 	}
-	fmt.Printf("Removed %d: %s %s\n", reply.GetId(), reply.GetName(), hex.EncodeToString(reply.GetInfoHash()))
+	fmt.Println("Removed torrent")
 
 	return nil
 }
@@ -151,11 +151,11 @@ func Start(input string, isInfoHash bool) error {
 		torrentRequest.Id = uint32(id)
 	}
 
-	reply, err := client.Start(ctx, &torrentRequest)
+	_, err = client.Start(ctx, &torrentRequest)
 	if err != nil {
 		return errors.WithMessage(err, "Failed to start torrent")
 	}
-	fmt.Printf("Started %d: %s %s\n", reply.GetId(), reply.GetName(), hex.EncodeToString(reply.GetInfoHash()))
+	fmt.Println(("Started torrent"))
 
 	return nil
 }
@@ -192,11 +192,11 @@ func Stop(input string, isInfoHash bool) error {
 		torrentRequest.Id = uint32(id)
 	}
 
-	reply, err := client.Stop(ctx, &torrentRequest)
+	_, err = client.Stop(ctx, &torrentRequest)
 	if err != nil {
 		return errors.WithMessage(err, "Failed to start torrent")
 	}
-	fmt.Printf("Stopped %d: %s %s\n", reply.GetId(), reply.GetName(), hex.EncodeToString(reply.GetInfoHash()))
+	fmt.Println("Stopped torrent")
 
 	return nil
 }
