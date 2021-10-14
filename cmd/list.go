@@ -3,7 +3,7 @@ package cmd
 import (
 	"fmt"
 
-	"github.com/kylec725/graytorrent/internal/client"
+	"github.com/kylec725/graytorrent/internal/cli"
 	"github.com/spf13/cobra"
 )
 
@@ -16,7 +16,7 @@ var (
 		Use:   "ls",
 		Short: "list the currently managed torrents",
 		Run: func(cmd *cobra.Command, args []string) {
-			if err := client.List(); err != nil {
+			if err := cli.List(); err != nil {
 				fmt.Println(err)
 			}
 		},

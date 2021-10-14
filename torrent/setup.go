@@ -13,7 +13,7 @@ import (
 func InfoFromFile(filename string) (*common.TorrentInfo, []*tracker.Tracker, error) {
 	var info common.TorrentInfo
 
-	meta, err := metainfo.Meta(filename)
+	meta, err := metainfo.New(filename)
 	if err != nil {
 		return nil, nil, errors.Wrap(err, "InfoFromFile")
 	}

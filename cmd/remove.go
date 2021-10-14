@@ -3,7 +3,7 @@ package cmd
 import (
 	"fmt"
 
-	"github.com/kylec725/graytorrent/internal/client"
+	"github.com/kylec725/graytorrent/internal/cli"
 	"github.com/spf13/cobra"
 )
 
@@ -19,7 +19,7 @@ var (
 		Short: "removes a managed torrent",
 		Args:  cobra.MinimumNArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
-			if err := client.Remove(args[0], isInfoHash, rmFiles); err != nil {
+			if err := cli.Remove(args[0], isInfoHash, rmFiles); err != nil {
 				fmt.Println(err)
 			}
 		},

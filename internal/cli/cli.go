@@ -1,5 +1,5 @@
-// Package client handles command line interface calls to control the server
-package client
+// Package cli handles command line interface calls to control the server
+package cli
 
 import (
 	"context"
