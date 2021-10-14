@@ -38,7 +38,8 @@ type Tracker struct {
 
 // NOTE: consider structuring trackers as an interface and separate http vs udp trackers
 
-func newTracker(announce string) *Tracker {
+// New returns a new tracker
+func New(announce string) *Tracker {
 	return &Tracker{
 		Announce: announce,
 		Working:  false,
@@ -60,7 +61,7 @@ func GetTrackers(meta metainfo.BencodeMeta) ([]*Tracker, error) {
 		}
 
 		trackers := make([]*Tracker, 1)
-		trackers[0] = newTracker(meta.Announce)
+		trackers[0] = New(meta.Announce)
 		return trackers, nil
 	}
 
@@ -75,7 +76,7 @@ func GetTrackers(meta metainfo.BencodeMeta) ([]*Tracker, error) {
 			} else if announce[:4] != "http" && announce[:3] != "udp" {
 				continue
 			}
-			trackers = append(trackers, newTracker(announce))
+			trackers = append(trackers, New(announce))
 			numAnnounce++
 		}
 	}

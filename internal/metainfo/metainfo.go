@@ -64,8 +64,8 @@ func (meta BencodeMeta) String() string {
 	return result
 }
 
-// Meta grabs bencoded metainfo and stores it into the BencodeMeta struct
-func Meta(filename string) (BencodeMeta, error) {
+// New grabs bencoded metainfo and stores it into the BencodeMeta struct
+func New(filename string) (BencodeMeta, error) {
 	file, err := os.Open(filename)
 	if err != nil {
 		return BencodeMeta{}, errors.Wrap(err, "Meta")
