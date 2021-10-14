@@ -1,7 +1,6 @@
 package torrent
 
 import (
-	"bytes"
 	"net"
 	"strconv"
 
@@ -51,29 +50,31 @@ func (s *Session) peerListen() {
 			}
 			return
 		}
-		addr := conn.RemoteAddr().String()
+		go s.acceptPeer(conn)
+	}
+}
 
-		infoHash, err := handshake.Read(conn)
-		if err != nil {
-			log.WithFields(log.Fields{"peer": addr, "error": err.Error()}).Debug("Error with incoming peer handshake")
-			continue
+func (s *Session) acceptPeer(conn net.Conn) {
+	addr := conn.RemoteAddr().String()
+
+	infoHash, err := handshake.Read(conn)
+	if err != nil {
+		log.WithFields(log.Fields{"peer": addr, "error": err.Error()}).Debug("Error with incoming peer handshake")
+		return
+	}
+
+	// Check if the infohash matches any torrents we are serving
+	if to, ok := s.torrents[infoHash]; ok {
+		// Check if the torrent's goroutine is running first
+		if !to.Started {
+			return
+		}
+		newPeer := peer.New(addr, conn, to.Info)
+		if err := newPeer.RespondHandshake(to.Info); err != nil {
+			log.WithFields(log.Fields{"peer": newPeer.String(), "error": err.Error()}).Debug("Error when responding to handshake")
 		}
 
-		// Check if the infohash matches any torrents we are serving
-		for i := range s.torrents {
-			// Check if the torrent's goroutine is running first
-			if !s.torrents[i].Started {
-				continue
-			}
-			if bytes.Equal(infoHash[:], s.torrents[i].Info.InfoHash[:]) {
-				newPeer := peer.New(addr, conn, s.torrents[i].Info)
-				if err := newPeer.RespondHandshake(s.torrents[i].Info); err != nil {
-					log.WithFields(log.Fields{"peer": newPeer.String(), "error": err.Error()}).Debug("Error when responding to handshake")
-				}
-
-				s.torrents[i].NewPeers <- newPeer // Send to torrent session
-				log.WithField("peer", newPeer.String()).Debug("Incoming peer was accepted")
-			}
-		}
+		to.NewPeers <- newPeer // Send to torrent session
+		log.WithField("peer", newPeer.String()).Debug("Incoming peer was accepted")
 	}
 }
