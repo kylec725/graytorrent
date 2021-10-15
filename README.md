@@ -71,6 +71,7 @@ gray download filepath/example.torrent
 ```
 
 ## Current Work
+- Terminal user interface
 - [Magnet Links](https://www.bittorrent.org/beps/bep_0009.html)
 - Limit global number of connections
 
