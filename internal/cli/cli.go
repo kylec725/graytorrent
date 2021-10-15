@@ -6,6 +6,7 @@ import (
 	"encoding/hex"
 	"fmt"
 	"path/filepath"
+	"sort"
 	"strconv"
 
 	pb "github.com/kylec725/graytorrent/rpc"
@@ -32,6 +33,11 @@ func List() error {
 	if err != nil {
 		return errors.WithMessage(err, "Failed to list torrents")
 	}
+
+	// Sort the torrents
+	sort.Slice(reply.TorrentList, func(i, j int) bool {
+		return reply.TorrentList[i].Name < reply.TorrentList[j].Name
+	})
 
 	for _, to := range reply.TorrentList {
 		torrentPrint(to)
