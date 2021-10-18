@@ -19,9 +19,9 @@ var (
 
 // List current managed torrents
 func (s *Session) List(ctx context.Context, in *pb.Empty) (*pb.ListReply, error) {
-	torrentList := make([]*pb.Torrent, 0)
+	torrents := make([]*pb.Torrent, 0)
 	for _, to := range s.torrents {
-		torrentList = append(torrentList,
+		torrents = append(torrents,
 			&pb.Torrent{
 				Id:          to.ID,
 				Name:        to.Info.Name,
@@ -33,7 +33,7 @@ func (s *Session) List(ctx context.Context, in *pb.Empty) (*pb.ListReply, error)
 				State:       rpc.Torrent_State(to.State()),
 			})
 	}
-	reply := pb.ListReply{Torrents: torrentList}
+	reply := pb.ListReply{Torrents: torrents}
 	return &reply, nil
 }
 
