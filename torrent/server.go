@@ -33,7 +33,7 @@ func (s *Session) List(ctx context.Context, in *pb.Empty) (*pb.ListReply, error)
 				State:       rpc.Torrent_State(to.State()),
 			})
 	}
-	reply := pb.ListReply{TorrentList: torrentList}
+	reply := pb.ListReply{Torrents: torrentList}
 	return &reply, nil
 }
 

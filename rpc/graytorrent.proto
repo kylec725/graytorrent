@@ -21,13 +21,12 @@ message Empty {
 }
 
 message Torrent {
-  uint32 id = 1;
-  string name = 2;
-  bytes infoHash = 3;
-  uint32 totalLength = 4;
-  uint32 left = 5;
-  uint32 downRate = 6;
-  uint32 upRate = 7;
+  string name = 1;
+  bytes infoHash = 2;
+  uint32 totalLength = 3;
+  uint32 left = 4;
+  uint32 downRate = 5;
+  uint32 upRate = 6;
   enum State {
     DOWNLOADING = 0;
     STOPPED = 1;
@@ -35,11 +34,12 @@ message Torrent {
     SEEDING = 3;
     COMPLETE = 4;
   }
-  State state = 8;
+  State state = 7;
+  uint32 id = 8;
 }
 
 message ListReply {
-  repeated Torrent torrentList = 1;
+  repeated Torrent torrents = 1;
 }
 
 message TorrentRequest {
@@ -56,4 +56,16 @@ message AddRequest {
 message RemoveRequest {
   TorrentRequest torrentRequest = 1;
   bool rmFiles = 2;
+}
+
+message TorrentChange {
+  Torrent torrent = 1;
+  enum Event {
+    UPDATE = 0; // Show changes to progress, upload/download rates, and state
+    ADDED = 1;
+    REMOVED = 2;
+    STARTED = 3;
+    STOPPED = 4;
+  }
+  Event event = 2;
 }

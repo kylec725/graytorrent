@@ -34,12 +34,12 @@ func List() error {
 		return errors.WithMessage(err, "Failed to list torrents")
 	}
 
-	// Sort the torrents
-	sort.Slice(reply.TorrentList, func(i, j int) bool {
-		return reply.TorrentList[i].Name < reply.TorrentList[j].Name
+	// Sort the torrents by name
+	sort.Slice(reply.Torrents, func(i, j int) bool {
+		return reply.Torrents[i].Name < reply.Torrents[j].Name
 	})
 
-	for _, to := range reply.TorrentList {
+	for _, to := range reply.Torrents {
 		torrentPrint(to)
 	}
 

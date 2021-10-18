@@ -35,10 +35,10 @@ func (m model) updateTorrents() tea.Cmd { // NOTE: slow to update list all at on
 		}
 
 		// Sort the torrents
-		sort.Slice(reply.TorrentList, func(i, j int) bool {
-			return reply.TorrentList[i].Name < reply.TorrentList[j].Name
+		sort.Slice(reply.Torrents, func(i, j int) bool {
+			return reply.Torrents[i].Name < reply.Torrents[j].Name
 		})
 
-		return updateTorrentsMsg(reply.TorrentList)
+		return updateTorrentsMsg(reply.Torrents)
 	}
 }
