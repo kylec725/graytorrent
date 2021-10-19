@@ -14,7 +14,7 @@ import (
 	"github.com/kylec725/graytorrent/internal/metainfo"
 )
 
-const peerID = "-GR0100-"
+const peerID = "-GT0100-"
 
 var (
 	// GrayTorrentPath is the config directory of graytorrent
