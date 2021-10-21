@@ -15,6 +15,8 @@ service TorrentService {
   rpc Start (TorrentRequest) returns (Empty) {}
   // Stops a torrent's download/upload
   rpc Stop (TorrentRequest) returns (Empty) {}
+  // Streams a session between a client and the server
+  rpc Session (Empty) returns (stream SessionReply) {}
 }
 
 message Empty {
@@ -58,7 +60,24 @@ message RemoveRequest {
   bool rmFiles = 2;
 }
 
-message TorrentChange {
+message SessionRequest {
+  enum Type {
+    ADD = 0;
+    REMOVE = 1;
+    START = 2;
+    STOP = 3;
+  }
+  Type type = 1;
+  // Union (Oneof)
+  oneof request {
+    AddRequest add = 2;
+    RemoveRequest remove = 3;
+    TorrentRequest start = 4;
+    TorrentRequest stop = 5;
+  }
+}
+
+message SessionReply {
   Torrent torrent = 1;
   enum Event {
     UPDATE = 0; // Show changes to progress, upload/download rates, and state
