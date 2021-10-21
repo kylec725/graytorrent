@@ -3,6 +3,7 @@ package cmd
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 
 	"github.com/kylec725/graytorrent/internal/common"
 	"github.com/kylec725/graytorrent/internal/config"
@@ -52,8 +53,8 @@ func initDirs() {
 
 func initLog() {
 	// Logging file
-	logFile, err := os.OpenFile("info.log", os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0644)
-	// logFile, err = os.OpenFile(filepath.Join(common.GrayTorrentPath, "info.log"), os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0644)
+	// logFile, err := os.OpenFile("info.log", os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0644)
+	logFile, err := os.OpenFile(filepath.Join(common.GrayTorrentPath, "info.log"), os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0644)
 	if err != nil {
 		log.WithField("error", err.Error()).Fatal("Could not open log file")
 	}
