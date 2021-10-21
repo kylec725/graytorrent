@@ -16,7 +16,7 @@ service TorrentService {
   // Stops a torrent's download/upload
   rpc Stop (TorrentRequest) returns (Empty) {}
   // Streams a session between a client and the server
-  rpc Session (Empty) returns (stream SessionReply) {}
+  rpc Session (stream SessionRequest) returns (stream SessionReply) {}
 }
 
 message Empty {

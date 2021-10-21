@@ -28,6 +28,8 @@ type TorrentServiceClient interface {
 	Start(ctx context.Context, in *TorrentRequest, opts ...grpc.CallOption) (*Empty, error)
 	// Stops a torrent's download/upload
 	Stop(ctx context.Context, in *TorrentRequest, opts ...grpc.CallOption) (*Empty, error)
+	// Streams a session between a client and the server
+	Session(ctx context.Context, opts ...grpc.CallOption) (TorrentService_SessionClient, error)
 }
 
 type torrentServiceClient struct {
@@ -83,6 +85,37 @@ func (c *torrentServiceClient) Stop(ctx context.Context, in *TorrentRequest, opt
 	return out, nil
 }
 
+func (c *torrentServiceClient) Session(ctx context.Context, opts ...grpc.CallOption) (TorrentService_SessionClient, error) {
+	stream, err := c.cc.NewStream(ctx, &TorrentService_ServiceDesc.Streams[0], "/graytorrent.TorrentService/Session", opts...)
+	if err != nil {
+		return nil, err
+	}
+	x := &torrentServiceSessionClient{stream}
+	return x, nil
+}
+
+type TorrentService_SessionClient interface {
+	Send(*SessionRequest) error
+	Recv() (*SessionReply, error)
+	grpc.ClientStream
+}
+
+type torrentServiceSessionClient struct {
+	grpc.ClientStream
+}
+
+func (x *torrentServiceSessionClient) Send(m *SessionRequest) error {
+	return x.ClientStream.SendMsg(m)
+}
+
+func (x *torrentServiceSessionClient) Recv() (*SessionReply, error) {
+	m := new(SessionReply)
+	if err := x.ClientStream.RecvMsg(m); err != nil {
+		return nil, err
+	}
+	return m, nil
+}
+
 // TorrentServiceServer is the server API for TorrentService service.
 // All implementations must embed UnimplementedTorrentServiceServer
 // for forward compatibility
@@ -97,6 +130,8 @@ type TorrentServiceServer interface {
 	Start(context.Context, *TorrentRequest) (*Empty, error)
 	// Stops a torrent's download/upload
 	Stop(context.Context, *TorrentRequest) (*Empty, error)
+	// Streams a session between a client and the server
+	Session(TorrentService_SessionServer) error
 	mustEmbedUnimplementedTorrentServiceServer()
 }
 
@@ -118,6 +153,9 @@ func (UnimplementedTorrentServiceServer) Start(context.Context, *TorrentRequest)
 }
 func (UnimplementedTorrentServiceServer) Stop(context.Context, *TorrentRequest) (*Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Stop not implemented")
+}
+func (UnimplementedTorrentServiceServer) Session(TorrentService_SessionServer) error {
+	return status.Errorf(codes.Unimplemented, "method Session not implemented")
 }
 func (UnimplementedTorrentServiceServer) mustEmbedUnimplementedTorrentServiceServer() {}
 
@@ -222,6 +260,32 @@ func _TorrentService_Stop_Handler(srv interface{}, ctx context.Context, dec func
 	return interceptor(ctx, in, info, handler)
 }
 
+func _TorrentService_Session_Handler(srv interface{}, stream grpc.ServerStream) error {
+	return srv.(TorrentServiceServer).Session(&torrentServiceSessionServer{stream})
+}
+
+type TorrentService_SessionServer interface {
+	Send(*SessionReply) error
+	Recv() (*SessionRequest, error)
+	grpc.ServerStream
+}
+
+type torrentServiceSessionServer struct {
+	grpc.ServerStream
+}
+
+func (x *torrentServiceSessionServer) Send(m *SessionReply) error {
+	return x.ServerStream.SendMsg(m)
+}
+
+func (x *torrentServiceSessionServer) Recv() (*SessionRequest, error) {
+	m := new(SessionRequest)
+	if err := x.ServerStream.RecvMsg(m); err != nil {
+		return nil, err
+	}
+	return m, nil
+}
+
 // TorrentService_ServiceDesc is the grpc.ServiceDesc for TorrentService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -250,6 +314,13 @@ var TorrentService_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _TorrentService_Stop_Handler,
 		},
 	},
-	Streams:  []grpc.StreamDesc{},
+	Streams: []grpc.StreamDesc{
+		{
+			StreamName:    "Session",
+			Handler:       _TorrentService_Session_Handler,
+			ServerStreams: true,
+			ClientStreams: true,
+		},
+	},
 	Metadata: "graytorrent.proto",
 }
