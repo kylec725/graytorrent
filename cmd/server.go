@@ -10,11 +10,11 @@ import (
 	"strconv"
 	"syscall"
 
+	"github.com/kylec725/graytorrent/internal/config"
 	pb "github.com/kylec725/graytorrent/rpc"
 	"github.com/kylec725/graytorrent/torrent"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 	"google.golang.org/grpc"
 )
 
@@ -70,7 +70,7 @@ var (
 
 			// Setup grpc server
 			// TODO: Want to use TLS for encrypting communication
-			serverAddr := ":" + strconv.Itoa(int(viper.GetInt("server.port")))
+			serverAddr := ":" + strconv.Itoa(config.GetConfig().Network.ServerPort)
 			serverListener, err := net.Listen("tcp", serverAddr)
 			if err != nil {
 				log.WithFields(log.Fields{"error": err.Error(), "port": serverAddr[1:]}).Fatal("Failed to listen for rpc")

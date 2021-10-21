@@ -6,7 +6,7 @@ import (
 	"strconv"
 
 	tea "github.com/charmbracelet/bubbletea"
-	"github.com/spf13/viper"
+	"github.com/kylec725/graytorrent/internal/config"
 )
 
 var (
@@ -15,7 +15,7 @@ var (
 
 // Run launches a TUI session
 func Run() {
-	serverAddr = "localhost:" + strconv.Itoa(int(viper.GetViper().GetInt("server.port")))
+	serverAddr = "localhost:" + strconv.Itoa(config.GetConfig().Network.ServerPort)
 
 	p := tea.NewProgram(initialModel(), tea.WithAltScreen())
 	if err := p.Start(); err != nil {

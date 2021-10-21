@@ -5,14 +5,14 @@ import (
 	"os"
 
 	"github.com/kylec725/graytorrent/internal/common"
+	"github.com/kylec725/graytorrent/internal/config"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 	prefixed "github.com/x-cray/logrus-prefixed-formatter"
 )
 
 func init() {
-	cobra.OnInitialize(initDirs, initConfig)
+	cobra.OnInitialize(initDirs, config.InitConfig)
 }
 
 var (
@@ -71,29 +71,4 @@ func initLog() {
 		logLevel = log.TraceLevel
 	}
 	log.SetLevel(logLevel)
-}
-
-func initConfig() {
-	viper.SetDefault("torrent.defaultpath", ".")
-	viper.SetDefault("torrent.autoseed", true)
-	viper.SetDefault("network.portrange", [2]int{6881, 6889})
-	viper.SetDefault("network.connections.max.global", 300)
-	viper.SetDefault("network.connections.max.torrent", 30)
-	viper.SetDefault("server.port", 7001)
-
-	viper.SetConfigName("config")
-	viper.SetConfigType("toml")
-	viper.AddConfigPath(common.GrayTorrentPath)
-	// viper.AddConfigPath("/etc/gray")
-
-	if err := viper.ReadInConfig(); err != nil {
-		if _, ok := err.(viper.ConfigFileNotFoundError); ok {
-			// Config file not found, create default config
-			viper.SafeWriteConfig()
-			log.Info("Config file written at " + common.GrayTorrentPath)
-		} else {
-			// Some other error was found
-			log.Panic("Fatal error reading config file:", err)
-		}
-	}
 }

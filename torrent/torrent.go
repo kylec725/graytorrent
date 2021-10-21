@@ -16,12 +16,12 @@ import (
 	"time"
 
 	"github.com/kylec725/graytorrent/internal/common"
+	"github.com/kylec725/graytorrent/internal/config"
 	"github.com/kylec725/graytorrent/internal/peer"
 	"github.com/kylec725/graytorrent/internal/peer/message"
 	"github.com/kylec725/graytorrent/internal/tracker"
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
-	viper "github.com/spf13/viper"
 )
 
 // Errors
@@ -113,7 +113,7 @@ func (to *Torrent) Start(ctx context.Context) {
 		case deadPeer := <-deadPeers: // Don't exit since trackers may find peers
 			to.removePeer(deadPeer)
 		case newPeer := <-to.NewPeers: // Incoming peers that contacted us
-			if !to.hasPeer(newPeer.String()) && len(to.Peers) < viper.GetViper().GetInt("network.connections.max.torrent") {
+			if !to.hasPeer(newPeer.String()) && len(to.Peers) < config.GetConfig().Network.MaxTorrentConnections {
 				go to.addPeer(ctx, &newPeer, work, results, deadPeers)
 			}
 		case index := <-results:

@@ -9,16 +9,16 @@ import (
 	"sort"
 	"strconv"
 
+	"github.com/kylec725/graytorrent/internal/config"
 	pb "github.com/kylec725/graytorrent/rpc"
 	"github.com/pkg/errors"
-	"github.com/spf13/viper"
 	"google.golang.org/grpc"
 )
 
 // List the currently managed torrents
 func List() error {
 	// Set up a connection to the server.
-	serverAddr := "localhost:" + strconv.Itoa(int(viper.GetViper().GetInt("server.port")))
+	serverAddr := "localhost:" + strconv.Itoa(config.GetConfig().Network.ServerPort)
 	conn, err := grpc.Dial(serverAddr, grpc.WithInsecure())
 	if err != nil {
 		return errors.WithMessage(err, "Did not connect")
@@ -49,7 +49,7 @@ func List() error {
 // Add a new torrent
 func Add(name string, magnet bool, directory string) error {
 	// Set up a connection to the server.
-	serverAddr := "localhost:" + strconv.Itoa(int(viper.GetViper().GetInt("server.port")))
+	serverAddr := "localhost:" + strconv.Itoa(config.GetConfig().Network.ServerPort)
 	conn, err := grpc.Dial(serverAddr, grpc.WithInsecure())
 	if err != nil {
 		return errors.WithMessage(err, "Did not connect")
@@ -72,7 +72,7 @@ func Add(name string, magnet bool, directory string) error {
 		request.Name = fileAbsPath
 	}
 	if directory == "" { // CLI should always use absolute path since server may have spawned somewhere else
-		directory = viper.GetViper().GetString("torrent.defaultpath")
+		directory = config.GetConfig().Torrent.DefaultPath
 		directory, err = filepath.Abs(directory)
 		if err != nil {
 			return errors.WithMessage(err, "Could not resolve filepath")
@@ -91,7 +91,7 @@ func Add(name string, magnet bool, directory string) error {
 // Remove a managed torrent
 func Remove(input string, isInfoHash, rmFiles bool) error {
 	// Set up a connection to the server.
-	serverAddr := "localhost:" + strconv.Itoa(int(viper.GetViper().GetInt("server.port")))
+	serverAddr := "localhost:" + strconv.Itoa(config.GetConfig().Network.ServerPort)
 	conn, err := grpc.Dial(serverAddr, grpc.WithInsecure())
 	if err != nil {
 		return errors.WithMessage(err, "Did not connect")
@@ -133,7 +133,7 @@ func Remove(input string, isInfoHash, rmFiles bool) error {
 // Start a torrent's download/upload
 func Start(input string, isInfoHash bool) error {
 	// Set up a connection to the server.
-	serverAddr := "localhost:" + strconv.Itoa(int(viper.GetViper().GetInt("server.port")))
+	serverAddr := "localhost:" + strconv.Itoa(config.GetConfig().Network.ServerPort)
 	conn, err := grpc.Dial(serverAddr, grpc.WithInsecure())
 	if err != nil {
 		return errors.WithMessage(err, "Did not connect")
@@ -173,7 +173,7 @@ func Start(input string, isInfoHash bool) error {
 // Stop a torrent's download/upload
 func Stop(input string, isInfoHash bool) error {
 	// Set up a connection to the server.
-	serverAddr := "localhost:" + strconv.Itoa(int(viper.GetViper().GetInt("server.port")))
+	serverAddr := "localhost:" + strconv.Itoa(config.GetConfig().Network.ServerPort)
 	conn, err := grpc.Dial(serverAddr, grpc.WithInsecure())
 	if err != nil {
 		return errors.WithMessage(err, "Did not connect")

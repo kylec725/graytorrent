@@ -4,12 +4,12 @@ import (
 	"net"
 	"strconv"
 
+	"github.com/kylec725/graytorrent/internal/config"
 	"github.com/kylec725/graytorrent/internal/connect"
 	"github.com/kylec725/graytorrent/internal/peer"
 	"github.com/kylec725/graytorrent/internal/peer/handshake"
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
-	viper "github.com/spf13/viper"
 )
 
 // ErrListener is used to close the peerListener safely
@@ -17,7 +17,7 @@ var ErrListener = errors.New("use of closed network connection")
 
 // initListener initializes a listener and gets an open port for incoming peers
 func initListener() (net.Listener, uint16, error) {
-	portRange := viper.GetViper().GetIntSlice("network.portrange")
+	portRange := config.GetConfig().Network.ListenerPort
 	port, err := connect.OpenPort(portRange)
 	if err != nil {
 		log.WithFields(log.Fields{

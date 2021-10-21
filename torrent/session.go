@@ -11,10 +11,10 @@ import (
 	"time"
 
 	"github.com/kylec725/graytorrent/internal/common"
+	"github.com/kylec725/graytorrent/internal/config"
 	"github.com/kylec725/graytorrent/internal/write"
 	pb "github.com/kylec725/graytorrent/rpc"
 	log "github.com/sirupsen/logrus"
-	viper "github.com/spf13/viper"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
@@ -94,7 +94,7 @@ func (s *Session) AddTorrent(ctx context.Context, name string, magnet bool, dire
 	// Initialize files for writing
 	to.Info.Directory = directory
 	if directory == "" { // If the client does not specify a directory, we use the default path
-		to.Info.Directory = viper.GetViper().GetString("torrent.defaultpath")
+		to.Info.Directory = config.GetConfig().Torrent.DefaultPath
 	}
 	absDir, err := filepath.Abs(to.Info.Directory)
 	if err != nil {
