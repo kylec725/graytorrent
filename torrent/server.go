@@ -111,3 +111,5 @@ func (s *Session) Stop(ctx context.Context, in *pb.TorrentRequest) (*pb.Empty, e
 
 	return nil, ErrTorrentNotFound
 }
+
+// TODO: session will send updates based on a ticker (every second)

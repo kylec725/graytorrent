@@ -48,6 +48,7 @@ var (
 			if err != nil {
 				log.WithField("error", err).Info("Error when starting a new session for server")
 			}
+
 			// Initialize signal catching
 			signalChan := make(chan os.Signal, 1)
 			signal.Notify(signalChan, os.Interrupt, os.Kill, syscall.SIGTERM, syscall.SIGKILL)
@@ -55,13 +56,12 @@ var (
 				_ = <-signalChan
 				signal.Stop(signalChan)
 
-				// this is a good place to flush everything to disk
-				// before terminating.
+				// Cleanup
 				session.Close()
 				server.Stop()
 				logFile.Close()
 
-				// remove PID file
+				// Remove PID file
 				os.Remove(pidFile)
 
 				os.Exit(0)
@@ -87,7 +87,7 @@ var (
 		Use:   "start",
 		Short: "starts the graytorrent server",
 		Run: func(cmd *cobra.Command, args []string) {
-			// check if daemon already running.
+			// Check if daemon already running.
 			if _, err := os.Stat(pidFile); !os.IsNotExist(err) {
 				data, err := ioutil.ReadFile(pidFile)
 				if err != nil {
@@ -177,5 +177,5 @@ func savePID(pid int) {
 	if err != nil {
 		log.Fatalf("Unable to create pid file : %v\n", err)
 	}
-	file.Sync() // flush to disk
+	file.Sync() // Flush to disk
 }
