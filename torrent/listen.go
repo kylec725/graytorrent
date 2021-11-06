@@ -43,6 +43,7 @@ func initListener() (net.Listener, uint16, error) {
 func (s *Session) peerListen() {
 	// loop will exit as long as we call listener.Close()
 	for {
+		// TODO: limit max number of accepted peers at any time (don't want too many open TCP connections)
 		conn, err := s.peerListener.Accept()
 		if err != nil { // Exit if the peerListener encounters an error
 			if errors.Is(err, ErrListener) {
