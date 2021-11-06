@@ -2,6 +2,8 @@ package common
 
 import (
 	"context"
+
+	log "github.com/sirupsen/logrus"
 )
 
 type contextKey string // Custom key types are recommended
@@ -15,7 +17,7 @@ var (
 func Port(ctx context.Context) uint16 {
 	port, ok := ctx.Value(KeyPort).(uint16)
 	if !ok {
-		panic("Failed to get port from context")
+		log.Fatal("Failed to get port from context")
 	}
 	return port
 }
