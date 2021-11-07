@@ -141,6 +141,7 @@ func (to *Torrent) Start(ctx context.Context) {
 
 // Stop stops the download or upload of a torrent
 func (to *Torrent) Stop() {
+	// NOTE: get increased CPU usage after stopping a torrent
 	to.cancel()
 }
 
