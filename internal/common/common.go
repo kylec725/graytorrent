@@ -69,19 +69,19 @@ func (info *TorrentInfo) SetPeerID() {
 }
 
 // GetPaths retrieves the paths from metainfo
-func GetPaths(meta metainfo.BencodeMeta) []Path {
+func GetPaths(m metainfo.Metainfo) []Path {
 	// Single file
-	if meta.Info.Length > 0 {
+	if m.Info.Length > 0 {
 		paths := make([]Path, 1)
-		paths[0] = Path{Length: meta.Info.Length, Path: meta.Info.Name}
+		paths[0] = Path{Length: m.Info.Length, Path: m.Info.Name}
 		return paths
 	}
 
 	// Multiple files
 	var paths []Path
-	for _, file := range meta.Info.Files {
+	for _, file := range m.Info.Files {
 		newPath := filepath.Join(file.Path...)
-		newPath = filepath.Join(meta.Info.Name, newPath)
+		newPath = filepath.Join(m.Info.Name, newPath)
 		paths = append(paths, Path{Length: file.Length, Path: newPath})
 	}
 

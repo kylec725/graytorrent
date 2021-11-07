@@ -52,16 +52,16 @@ func New(announce string) *Tracker {
 // TODO: change to use tiers of trackers
 
 // GetTrackers parses metainfo to retrieve a list of trackers
-func GetTrackers(meta metainfo.BencodeMeta) ([]*Tracker, error) {
+func GetTrackers(m metainfo.Metainfo) ([]*Tracker, error) {
 	// If announce-list is empty, use announce only
-	if len(meta.AnnounceList) == 0 {
+	if len(m.AnnounceList) == 0 {
 		// Check if no announce strings exist
-		if meta.Announce == "" {
+		if m.Announce == "" {
 			return nil, errors.Wrap(ErrNoAnnounce, "GetTrackers")
 		}
 
 		trackers := make([]*Tracker, 1)
-		trackers[0] = New(meta.Announce)
+		trackers[0] = New(m.Announce)
 		return trackers, nil
 	}
 
@@ -69,7 +69,7 @@ func GetTrackers(meta metainfo.BencodeMeta) ([]*Tracker, error) {
 	var trackers []*Tracker
 	var numAnnounce int
 	// Add each announce in announce-list as a tracker
-	for _, group := range meta.AnnounceList {
+	for _, group := range m.AnnounceList {
 		for _, announce := range group {
 			if len(announce) < 4 {
 				continue

@@ -19,8 +19,8 @@ var (
 	ErrPieceHashes = errors.New("Got malformed pieces from metainfo")
 )
 
-// BencodeMeta stores metainfo about a torrent file
-type BencodeMeta struct {
+// Metainfo stores metainfo about a torrent file
+type Metainfo struct {
 	Info         bencodeInfo `bencode:"info"`
 	Announce     string      `bencode:"announce"`
 	AnnounceList [][]string  `bencode:"announce-list"`
@@ -40,19 +40,19 @@ type bencodeFile struct {
 	Path   []string `bencode:"path"`
 }
 
-func (meta BencodeMeta) String() string {
+func (m Metainfo) String() string {
 	var result string
-	result += "Name: " + meta.Info.Name + "\n"
-	result += "Announce: " + meta.Announce + "\n"
-	for _, group := range meta.AnnounceList {
+	result += "Name: " + m.Info.Name + "\n"
+	result += "Announce: " + m.Announce + "\n"
+	for _, group := range m.AnnounceList {
 		for _, addr := range group {
 			result += "Announce: " + addr + "\n"
 		}
 	}
-	result += "PieceLength: " + strconv.Itoa(meta.Info.PieceLength) + "\n"
+	result += "PieceLength: " + strconv.Itoa(m.Info.PieceLength) + "\n"
 
-	totalLen, paths := meta.Info.Length, ""
-	for _, file := range meta.Info.Files {
+	totalLen, paths := m.Info.Length, ""
+	for _, file := range m.Info.Files {
 		totalLen += file.Length
 		paths += file.Path[0] + " "
 	}
@@ -64,36 +64,36 @@ func (meta BencodeMeta) String() string {
 	return result
 }
 
-// New grabs bencoded metainfo and stores it into the BencodeMeta struct
-func New(filename string) (BencodeMeta, error) {
+// New grabs bencoded metainfo and stores it into the Metainfo struct
+func New(filename string) (Metainfo, error) {
 	file, err := os.Open(filename)
 	if err != nil {
-		return BencodeMeta{}, errors.Wrap(err, "Meta")
+		return Metainfo{}, errors.Wrap(err, "Meta")
 	}
 	defer file.Close()
 
-	var meta BencodeMeta
-	err = bencode.Unmarshal(file, &meta)
+	var m Metainfo
+	err = bencode.Unmarshal(file, &m)
 	if err != nil {
-		return BencodeMeta{}, errors.Wrap(err, "Meta")
+		return Metainfo{}, errors.Wrap(err, "Meta")
 	}
 
-	return meta, nil
+	return m, nil
 }
 
 // Length returns the total torrent length
-func (meta BencodeMeta) Length() int {
-	totalLen := meta.Info.Length
-	for _, file := range meta.Info.Files {
+func (m Metainfo) Length() int {
+	totalLen := m.Info.Length
+	for _, file := range m.Info.Files {
 		totalLen += file.Length
 	}
 	return totalLen
 }
 
 // InfoHash generates the infohash of the torrent file
-func (meta BencodeMeta) InfoHash() ([20]byte, error) {
+func (m Metainfo) InfoHash() ([20]byte, error) {
 	var serialInfo bytes.Buffer
-	err := bencode.Marshal(&serialInfo, meta.Info)
+	err := bencode.Marshal(&serialInfo, m.Info)
 	if err != nil {
 		return [20]byte{}, errors.Wrap(err, "InfoHash")
 	}
@@ -103,8 +103,8 @@ func (meta BencodeMeta) InfoHash() ([20]byte, error) {
 }
 
 // PieceHashes returns an array of the piece hashes of the torrent
-func (meta BencodeMeta) PieceHashes() ([][20]byte, error) {
-	piecesBytes := []byte(meta.Info.Pieces)
+func (m Metainfo) PieceHashes() ([][20]byte, error) {
+	piecesBytes := []byte(m.Info.Pieces)
 	if len(piecesBytes)%20 != 0 {
 		return nil, errors.Wrap(ErrPieceHashes, "Piecehashes")
 	}
