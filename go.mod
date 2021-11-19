@@ -3,10 +3,8 @@ module github.com/kylec725/graytorrent
 go 1.17
 
 require (
-	github.com/gizak/termui/v3 v3.1.0
 	github.com/jackpal/bencode-go v1.0.0
 	github.com/mgutz/ansi v0.0.0-20200706080929-d51e80ef957d // indirect
-	github.com/nsf/termbox-go v1.1.1 // indirect
 	github.com/pkg/errors v0.9.1
 	github.com/sirupsen/logrus v1.8.1
 	github.com/spf13/cobra v1.2.1
@@ -17,8 +15,9 @@ require (
 	google.golang.org/protobuf v1.27.1
 )
 
+require github.com/charmbracelet/bubbletea v0.17.0
+
 require (
-	github.com/charmbracelet/bubbletea v0.17.0 // indirect
 	github.com/containerd/console v1.0.2 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/fsnotify/fsnotify v1.5.1 // indirect
@@ -30,7 +29,6 @@ require (
 	github.com/mattn/go-colorable v0.1.8 // indirect
 	github.com/mattn/go-isatty v0.0.14 // indirect
 	github.com/mattn/go-runewidth v0.0.13 // indirect
-	github.com/mitchellh/go-wordwrap v0.0.0-20150314170334-ad45545899c7 // indirect
 	github.com/mitchellh/mapstructure v1.4.1 // indirect
 	github.com/muesli/reflow v0.2.1-0.20210115123740-9e1d0d53df68 // indirect
 	github.com/muesli/termenv v0.8.1 // indirect
