@@ -19,7 +19,7 @@ Alternatively
 ```
 git clone https://github.com/kylec725/graytorrent.git
 cd graytorrent/cmd/gray
-go install
+go install github.com/kylec725/graytorrent/cmd/gray
 ```
 Could also use `go build` or `go run main.go`
 
