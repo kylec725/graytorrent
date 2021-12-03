@@ -70,6 +70,9 @@ You can download a single torrent, and you do not need the server to be running.
 gray download filepath/example.torrent
 ```
 
+## Configuration
+Configuration will be written to `~/.config/graytorrent/config.toml`
+
 ## Current Work
 - Terminal user interface
 - [Magnet Links](https://www.bittorrent.org/beps/bep_0009.html)
