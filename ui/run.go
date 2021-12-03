@@ -15,7 +15,8 @@ var (
 
 // Run launches a TUI session
 func Run() {
-	serverAddr = "localhost:" + strconv.Itoa(config.GetConfig().Network.ServerPort)
+	cfg := config.GetConfig()
+	serverAddr = cfg.Network.ServerAddress + ":" + strconv.Itoa(cfg.Network.ServerPort)
 
 	p := tea.NewProgram(initialModel(), tea.WithAltScreen())
 	if err := p.Start(); err != nil {

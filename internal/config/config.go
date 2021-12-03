@@ -20,10 +20,11 @@ type TorrentConfig struct {
 
 // NetworkConfig provides settings for network options
 type NetworkConfig struct {
-	ListenerPort          []int `mapstructure:"listener_port"`
-	ServerPort            int   `mapstructure:"server_port"`
-	MaxGlobalConnections  int   `mapstructure:"max_global_connections"`
-	MaxTorrentConnections int   `mapstructure:"max_torrent_connections"`
+	ListenerPort          []int  `mapstructure:"listener_port"`
+	ServerAddress         string `mapstructure:"server_port"`
+	ServerPort            int    `mapstructure:"server_port"`
+	MaxGlobalConnections  int    `mapstructure:"max_global_connections"`
+	MaxTorrentConnections int    `mapstructure:"max_torrent_connections"`
 }
 
 // InitConfig initializes the config file and default values
@@ -33,6 +34,7 @@ func InitConfig() {
 	viper.SetDefault("network.listener_port", [2]int{6881, 6889})
 	viper.SetDefault("network.max_global_connections", 300)
 	viper.SetDefault("network.max_torrent_connections", 30)
+	viper.SetDefault("network.server_address", "localhost")
 	viper.SetDefault("network.server_port", 7001)
 
 	viper.SetConfigName("config")
