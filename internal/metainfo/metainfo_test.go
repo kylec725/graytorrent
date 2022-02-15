@@ -13,7 +13,7 @@ const debugMetainfo = false
 func TestMetaBasic(t *testing.T) {
 	assert := assert.New(t)
 
-	meta, err := Meta("../tmp/1056.txt.utf-8.torrent")
+	meta, err := New("../tmp/1056.txt.utf-8.torrent")
 	if assert.Nil(err) {
 		if debugMetainfo {
 			fmt.Println(meta)
@@ -25,7 +25,7 @@ func TestMetaBasic(t *testing.T) {
 func TestMetaExtra(t *testing.T) {
 	assert := assert.New(t)
 
-	meta, err := Meta("../tmp/shared.torrent")
+	meta, err := New("../tmp/shared.torrent")
 	if assert.Nil(err) {
 		if debugMetainfo {
 			fmt.Println(meta)
@@ -33,7 +33,7 @@ func TestMetaExtra(t *testing.T) {
 		assert.NotNil(meta)
 	}
 
-	meta, err = Meta("../tmp/change.torrent")
+	meta, err = New("../tmp/change.torrent")
 	if assert.Nil(err) {
 		if debugMetainfo {
 			fmt.Println(meta)
@@ -45,7 +45,7 @@ func TestMetaExtra(t *testing.T) {
 func TestInfoHash(t *testing.T) {
 	assert := assert.New(t)
 
-	meta, err := Meta("../tmp/1056.txt.utf-8.torrent")
+	meta, err := New("../tmp/1056.txt.utf-8.torrent")
 	if assert.Nil(err) {
 		infoHash, err := meta.InfoHash()
 		if assert.Nil(err) {
@@ -56,7 +56,7 @@ func TestInfoHash(t *testing.T) {
 		}
 	}
 
-	meta, err = Meta("../tmp/change.torrent")
+	meta, err = New("../tmp/change.torrent")
 	if assert.Nil(err) {
 		infoHash, err := meta.InfoHash()
 		if assert.Nil(err) {
@@ -67,7 +67,7 @@ func TestInfoHash(t *testing.T) {
 		}
 	}
 
-	meta, err = Meta("../tmp/batonroad.torrent")
+	meta, err = New("../tmp/batonroad.torrent")
 	if assert.Nil(err) {
 		infoHash, err := meta.InfoHash()
 		if assert.Nil(err) {
@@ -82,7 +82,7 @@ func TestInfoHash(t *testing.T) {
 func TestPieceHashes(t *testing.T) {
 	assert := assert.New(t)
 
-	meta, err := Meta("../tmp/1056.txt.utf-8.torrent")
+	meta, err := New("../tmp/1056.txt.utf-8.torrent")
 	if assert.Nil(err) {
 		pieceHashes, err := meta.PieceHashes()
 		if assert.Nil(err) {
