@@ -17,6 +17,8 @@ func init() {
 }
 
 var (
+	version string
+
 	logLevel = log.InfoLevel
 	logFile  *os.File
 
@@ -31,7 +33,7 @@ var (
 		Use:     "gray",
 		Short:   "graytorrent is a BitTorrent engine",
 		Long:    `graytorrent is an engine that implements the BitTorrent Protocol and allows for the management of torrents.`,
-		Version: "0.30",
+		Version: version,
 	}
 )
 

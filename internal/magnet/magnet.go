@@ -30,8 +30,8 @@ type Magnet struct {
 	xpe      string
 }
 
-// Unmarshal unpacks a magnet link string
-func Unmarshal(s string) (Magnet, error) {
+// New unpacks a magnet link string
+func New(s string) (Magnet, error) {
 	var m Magnet
 	fmt.Println("link:", s)
 
