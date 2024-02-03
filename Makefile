@@ -11,7 +11,7 @@ PREFIX="github.com/kylec725/graytorrent/cmd"
 LDFLAGS = -ldflags "-X ${PREFIX}.version=${VERSION} -X ${PREFIX}.commit=${COMMIT} -X ${PREFIX}.branch=${BRANCH}"
 
 build:
-	go build ${LDFLAGS} -o ${BINARY} ./cmd/gray
+	go build ${LDFLAGS} -o ${BINARY}
 
 clean:
 	go clean
